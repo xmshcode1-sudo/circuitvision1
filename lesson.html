@@ -129,6 +129,15 @@
   @media (max-width: 1080px) { .l-grid { grid-template-columns: 1fr; } .l-aside { position: static; order: -1; } .toc { display: none; } }
   @media (max-width: 760px) { .cases { grid-template-columns: repeat(2, minmax(0, 1fr)); } .connected { grid-template-columns: 1fr; } .ex-split { grid-template-columns: 1fr; } .pb-head { grid-template-columns: 1fr; } .terms { grid-template-columns: 1fr; } .terms dt { margin-top: 6px; } }
   @media (max-width: 900px) { .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } .l-sec { padding: 16px; } }
+  /* Real-World Visuals: a real photo of the law at work, under the laws section */
+  .rwv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; margin-top: 14px; }
+  .rwv-fig { margin: 0; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; background: var(--surface-2); display: grid; }
+  .rwv-img { aspect-ratio: 16 / 10; background: #071029; overflow: hidden; }
+  .rwv-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .rwv-fig figcaption { padding: 10px 12px 12px; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.65; }
+  .rwv-law { font-family: var(--font-mono, monospace); font-size: 12px; color: var(--glow); justify-self: start; }
+  .rwv-cap { color: var(--fg); }
+  .rwv-cr { font-size: 11.5px; color: var(--fg-3); } .rwv-cr a { color: inherit; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -178,7 +187,7 @@
 <script src="c1-techniques.js"></script>
 <script src="c1-sinusoidal.js"></script>
 <script src="c1-power.js"></script>
-<script src="summaries.js"></script>
+<script src="summaries.js"></script><script src="visuals.js"></script>
 <script src="labsim.js"></script>
 <script src="experiments.js"></script>
 <script>
@@ -254,7 +263,7 @@
     var body = "";
     var toc = [];
     var SUM = (CV.lessonSum || {})[L.id];
-    order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM)); toc.push([s.id, s.title]); });
+    order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
     body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
       '<div class="vids">' +
