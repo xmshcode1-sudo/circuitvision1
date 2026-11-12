@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة الطالب — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+
+  /* ---------- Main ---------- */
+  .main { min-width: 0; padding-block: 24px 48px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; align-content: start; max-width: 1180px; width: 100%; }
+  .greet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 20px; align-items: center; }
+  .greet h1 { font-size: clamp(24px, 3vw, 30px); }
+  .greet p { color: var(--fg-2); margin-top: 4px; }
+  .overall { padding: 16px 18px; display: grid; gap: 8px; }
+  .overall .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; color: var(--fg-2); gap: 8px; }
+  .overall .row b { font-family: var(--font-mono); color: var(--fg); font-size: 15px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .tile { padding: 16px 18px; display: flex; gap: 14px; align-items: center; min-width: 0; }
+  .tile .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .tile .ic svg { width: 22px; height: 22px; }
+  .tile small { display: block; color: var(--fg-2); font-size: 13px; }
+  .tile b { font-family: var(--font-mono); font-size: 22px; font-weight: 500; direction: ltr; display: inline-block; }
+  .tile .hint { display: block; font-size: 12px; color: var(--fg-3); }
+  .ic-blue { background: var(--blue-soft); color: var(--glow); }
+  .ic-ok { background: var(--ok-soft); color: var(--ok); }
+  .ic-or { background: var(--orange-soft); color: var(--orange); }
+
+  .sec-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sec-title h2 { font-size: 20px; }
+  .sec-title .note { max-width: 40em; }
+
+  .courses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .course { overflow: hidden; }
+  .thumb { height: 128px; background: linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 18px 18px, linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 18px 18px, #071029; display: grid; place-items: center; border-bottom: 1px solid var(--line-soft); }
+  .thumb svg { width: 72%; max-width: 300px; height: auto; }
+  .course-body { padding: 16px 18px 18px; display: grid; gap: 10px; }
+  .course-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+  .course-head h3 { font-size: 17px; }
+  .course-head .code { font-family: var(--font-display); color: var(--fg-3); font-size: 12.5px; direction: ltr; display: block; text-align: start; }
+  .course .meta { font-size: 13.5px; color: var(--fg-2); }
+  .prog-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--fg-3); gap: 8px; }
+  .prog-row b { font-family: var(--font-mono); color: var(--fg-2); font-weight: 500; }
+  .chapters { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .chapters > li { border-radius: 9px; background: var(--surface-2); font-size: 14px; }
+  .chapters summary { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; cursor: pointer; list-style: none; }
+  .chapters summary::-webkit-details-marker { display: none; }
+  .chapters details[open] summary { border-bottom: 1px solid var(--line-soft); }
+  .chapters .n { font-family: var(--font-mono); color: var(--fg-3); font-size: 12.5px; }
+  .chapters .en { display: block; font-size: 11.5px; color: var(--fg-3); direction: ltr; text-align: start; }
+  .chapters .st { font-size: 11.5px; color: var(--fg-3); white-space: nowrap; }
+  .topics { list-style: none; margin: 0; padding: 8px 46px 10px 12px; display: grid; gap: 4px; }
+  .topics li { direction: ltr; text-align: right; font-size: 13px; color: var(--fg-2); position: relative; padding-right: 14px; }
+  .topics li.pub a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+  .topics li.pub a:hover { color: var(--glow); }
+  .topics li.done::before { background: var(--ok); }
+  .topics li::before { content: ""; position: absolute; right: 0; top: .7em; width: 5px; height: 5px; border-radius: 50%; background: var(--fg-3); }
+  .toggle { justify-self: start; }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 16px; align-items: start; }
+  .panel { padding: 18px; display: grid; gap: 14px; }
+  .panel h2 { font-size: 17px; }
+  .next { padding: 20px; display: grid; gap: 10px; border-color: color-mix(in srgb, var(--orange) 40%, transparent); background: linear-gradient(135deg, var(--orange-soft), transparent 60%), var(--surface); }
+  .next h2 { font-size: 18px; }
+  .next p { color: var(--fg-2); font-size: 14.5px; }
+  .status-list { display: grid; gap: 4px; }
+  .st-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+  .st-row:last-child { border-bottom: 0; }
+  .st-row .stp { font-size: 12px; color: var(--fg-3); font-family: var(--font-mono); }
+  .activity { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .activity li { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+  .activity time { color: var(--fg-3); font-size: 12.5px; white-space: nowrap; }
+  .empty { padding: 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--fg-3); font-size: 13.5px; text-align: center; }
+  .banner { padding: 10px 14px; border-radius: 10px; background: var(--orange-soft); color: var(--fg); font-size: 13.5px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; font-size: 13.5px; color: var(--fg-2); }
+  .seg input:checked + label { border-color: var(--blue); background: var(--blue-soft); color: var(--fg); }
+  .seg input:focus-visible + label { outline: 2px solid var(--glow); outline-offset: 2px; }
+  .danger-zone { border-top: 1px solid var(--line-soft); padding-top: 14px; display: grid; gap: 10px; }
+  .confirm { display: grid; gap: 10px; padding: 12px; border-radius: 10px; border: 1px solid #d0465a; }
+
+  @media (max-width: 1080px) {
+    .split, .courses { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    .greet { grid-template-columns: 1fr; }
+    .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  }
+  @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+
+    <div class="banner" id="storage-banner" hidden>المتصفح يمنع حفظ البيانات هنا، لذلك سيضيع تقدمك عند إغلاق الصفحة.</div>
+
+    <section class="greet">
+      <div>
+        <h1 id="greet-title">أهلًا بك</h1>
+        <p id="greet-sub">لوحتك تعرض تقدّمك الحقيقي فقط، وتبدأ من الصفر.</p>
+      </div>
+      <div class="overall card">
+        <div class="row"><span>التقدم الكلي</span><b id="overall-pct">—</b></div>
+        <div class="bar"><span id="overall-bar" style="width:0%"></span></div>
+        <span class="note" id="overall-note"></span>
+      </div>
+    </section>
+
+    <section class="tiles" aria-label="ملخص التقدم">
+      <div class="tile card"><span class="ic ic-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><div><small>الدروس المكتملة</small><b id="t-lessons">0</b><span class="hint" id="t-lessons-h"></span></div></div>
+      <div class="tile card"><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg></span><div><small>الأسئلة المحلولة</small><b id="t-questions">0</b><span class="hint">من <a href="practice.html" style="text-decoration:underline">مولّد التمارين</a> و<a href="bank.html" style="text-decoration:underline">بنك الأسئلة</a></span></div></div>
+      <div class="tile card"><span class="ic ic-or"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/></svg></span><div><small>المشاريع المنجزة</small><b id="t-projects">0</b><span class="hint">من <a href="academy.html" style="text-decoration:underline">أكاديمية المشاريع</a></span></div></div>
+    </section>
+
+    <section style="display:grid; gap:14px">
+      <div class="sec-title"><h2>مقرراتي</h2><span class="note">الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه.</span></div>
+      <div class="courses" id="courses"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Onboarding / profile -->
+<div class="modal-back" id="m-profile" hidden>
+  <form class="modal" id="f-profile" novalidate>
+    <h3 id="m-profile-title">أهلًا بك في CircuitVision</h3>
+    <p class="note" style="font-size:14px; color:var(--fg-2)">اكتب اسمك لنبدأ. يُحفظ الاسم وتقدمك في هذا المتصفح فقط حتى نضيف الحسابات الحقيقية لاحقًا.</p>
+    <div class="field">
+      <label for="in-name">الاسم</label>
+      <input class="input" id="in-name" name="name" autocomplete="given-name" maxlength="40" required>
+      <span class="err" id="name-err" hidden>اكتب اسمًا من حرفين على الأقل.</span>
+    </div>
+    <div class="row-end">
+      <button type="button" class="btn btn-ghost btn-sm" id="profile-cancel" hidden>إلغاء</button>
+      <button type="submit" class="btn btn-primary btn-sm">حفظ ومتابعة</button>
+    </div>
+  </form>
+</div>
+
+<!-- Settings -->
+<div class="modal-back" id="m-settings" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <h3 id="set-title">الإعدادات</h3>
+    <div class="field">
+      <label>الاسم</label>
+      <div style="display:flex; gap:10px; align-items:center; justify-content:space-between"><span id="set-name"></span><button class="btn btn-ghost btn-sm" id="set-edit-name" type="button">تعديل</button></div>
+    </div>
+    <div class="field">
+      <label id="theme-lbl">المظهر</label>
+      <div class="seg" role="radiogroup" aria-labelledby="theme-lbl">
+        <input type="radio" name="theme" id="th-system" value="system"><label for="th-system">حسب الجهاز</label>
+        <input type="radio" name="theme" id="th-dark" value="dark"><label for="th-dark">داكن</label>
+        <input type="radio" name="theme" id="th-light" value="light"><label for="th-light">فاتح</label>
+      </div>
+    </div>
+    <div class="danger-zone">
+      <span class="note">مسح بياناتك من هذا المتصفح: الاسم والتقدم والنشاط.</span>
+      <button class="btn btn-danger btn-sm" id="reset-btn" type="button" style="justify-self:start">مسح بياناتي</button>
+      <div class="confirm" id="reset-confirm" hidden>
+        <span>سيُحذف اسمك وتقدمك من هذا المتصفح نهائيًا. هل تريد المتابعة؟</span>
+        <div class="row-end"><button class="btn btn-ghost btn-sm" id="reset-no" type="button">تراجع</button><button class="btn btn-danger btn-sm" id="reset-yes" type="button">نعم، امسح</button></div>
+      </div>
+    </div>
+    <div class="row-end"><button class="btn btn-primary btn-sm" id="set-close" type="button">تم</button></div>
+  </div>
+</div>
+
+<script src="store.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script>
+(function () {
+  "use strict";
+  var S = CV.store, $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  /* ---------- Sidebar ---------- */
+  var setMenu = CV.shell.init({ active: "dashboard", onSettings: function () { openSettings(); } }).setMenu;
+
+  /* ---------- Course thumbnails ---------- */
+  function thumb(kind) {
+    if (kind === "dc") return '<svg viewBox="0 0 300 110" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M40 25 H105 M165 25 H240 V45 M240 85 V95 H40 V68 M40 52 V25" stroke="#a9b8da" stroke-width="2"/>' +
+      '<path d="M105 25 l5 -7 l10 14 l10 -14 l10 14 l10 -14 l10 14 l5 -7" stroke="#ff8a2b" stroke-width="2.2"/>' +
+      '<path d="M240 45 l7 5 l-14 8 l14 8 l-14 8 l14 8 l-7 3" stroke="#ff8a2b" stroke-width="2.2"/>' +
+      '<circle cx="40" cy="60" r="12" stroke="#3fb6ff" stroke-width="2" fill="#071029"/><path d="M36 56h8M40 52v8M36 66h8" stroke="#3fb6ff" stroke-width="1.6"/></svg>';
+    var d = "M10 55", x;
+    for (x = 0; x <= 280; x += 4) d += " L" + (10 + x) + " " + (55 - 34 * Math.sin(x / 280 * Math.PI * 4)).toFixed(1);
+    var d2 = "M10 55";
+    for (x = 0; x <= 280; x += 4) d2 += " L" + (10 + x) + " " + (55 - 22 * Math.sin(x / 280 * Math.PI * 4 - 1.1)).toFixed(1);
+    return '<svg viewBox="0 0 300 110" fill="none" aria-hidden="true"><path d="M10 55 H290" stroke="#2a3d6e" stroke-width="1"/><path d="' + d + '" stroke="#3fb6ff" stroke-width="2.2"/><path d="' + d2 + '" stroke="#ff8a2b" stroke-width="2" stroke-dasharray="5 4"/></svg>';
+  }
+
+  /* ---------- Render ---------- */
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString("ar-SA-u-nu-latn", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
+    catch (e) { return iso.slice(0, 10); }
+  }
+
+  function render() {
+    var d = S.get();
+    var name = d.profile ? d.profile.name : null;
+    $("greet-title").textContent = name ? "أهلًا، " + name : "أهلًا بك";
+    var ov = S.overall(CV.courses, d);
+    if (ov.pct === null) {
+      $("overall-pct").textContent = "—";
+      $("overall-bar").style.width = "0%";
+      $("overall-note").textContent = "لا توجد دروس منشورة بعد. يبدأ الحساب مع أول درس في الخطوة 2.";
+      $("greet-sub").textContent = "حسابك جاهز. الدروس الأولى قيد الإعداد، وسيظهر تقدمك هنا بمجرد نشرها.";
+    } else {
+      $("overall-pct").textContent = ov.pct + "%";
+      $("overall-bar").style.width = ov.pct + "%";
+      $("overall-note").textContent = ov.done + " من " + ov.total + " دروس متاحة";
+      $("greet-sub").textContent = "واصل من حيث توقفت.";
+    }
+    $("t-lessons").textContent = ov.total ? ov.done + " / " + ov.total : "0";
+    $("t-lessons-h").textContent = ov.total ? "من الدروس المتاحة" : "تُنشر الدروس في الخطوة 2";
+    $("t-questions").textContent = Object.keys(d.questions).length;
+    $("t-projects").textContent = Object.keys(d.projects).filter(function (k) { return d.projects[k].completedAt; }).length;
+
+    // Courses
+    var wrap = $("courses"); wrap.innerHTML = "";
+    CV.courses.forEach(function (c) {
+      var p = S.courseProgress(c, d);
+      var el = document.createElement("article");
+      el.className = "course card";
+      var chs = c.chapters.map(function (ch, i) {
+        var pub = ch.lessons.filter(function (l) { return l.published; }).length;
+        var topics = ch.lessons.map(function (l) {
+          if (!l.published) return '<li>' + esc(l.en) + '</li>';
+          return '<li class="pub' + (d.lessons[l.id] ? ' done' : '') + '"><a href="lesson.html#' + l.id + '">' + esc(l.en) + '</a></li>';
+        }).join("");
+        return '<li><details><summary><span class="n">' + (i + 1) + '</span><span>' + esc(ch.ar) + '<span class="en">' + esc(ch.en) + '</span></span><span class="st">' + (pub ? pub + ' دروس متاحة' : ch.lessons.length + ' مواضيع · قيد الإعداد') + '</span></summary><ul class="topics">' + topics + '</ul></details></li>';
+      }).join("");
+      el.innerHTML = '<div class="thumb">' + thumb(c.thumb) + '</div><div class="course-body">' +
+        '<div class="course-head"><div><span class="code">' + c.code + '</span><h3>' + c.ar + '</h3></div><span class="chip ' + (p.total ? "chip-ok" : "chip-plan") + '">' + (p.total ? p.total + " دروس متاحة" : "المحتوى قيد الإعداد") + '</span></div>' +
+        '<p class="meta">' + c.level + ' · ' + c.chapters.length + ' فصول · ' + c.chapters.reduce(function (a, x) { return a + x.lessons.length; }, 0) + ' موضوعًا</p>' +
+        '<div class="prog-row"><span>التقدم</span><b>' + (p.pct === null ? "لم يبدأ" : p.pct + "%") + '</b></div><div class="bar"><span style="width:' + (p.pct || 0) + '%"></span></div>' +
+        '<button class="btn btn-ghost btn-sm toggle" type="button" aria-expanded="false" aria-controls="ch-' + c.id + '">عرض الفصول</button>' +
+        '<ol class="chapters" id="ch-' + c.id + '" hidden>' + chs + '</ol></div>';
+      wrap.appendChild(el);
+    });
+
+    // Settings bits
+    $("set-name").textContent = name || "—";
+    var th = document.querySelector('input[name="theme"][value="' + d.settings.theme + '"]'); if (th) th.checked = true;
+  }
+
+  $("courses").addEventListener("click", function (e) {
+    var b = e.target.closest(".toggle"); if (!b) return;
+    var list = $(b.getAttribute("aria-controls")), open = list.hidden;
+    list.hidden = !open; b.setAttribute("aria-expanded", open ? "true" : "false"); b.textContent = open ? "إخفاء الفصول" : "عرض الفصول";
+  });
+
+  /* ---------- Profile modal ---------- */
+  function openProfile(editing) {
+    $("m-profile").hidden = false;
+    $("m-profile-title").textContent = editing ? "تعديل الاسم" : "أهلًا بك في CircuitVision";
+    $("profile-cancel").hidden = !editing;
+    var d = S.get(); $("in-name").value = d.profile ? d.profile.name : "";
+    $("name-err").hidden = true;
+    setTimeout(function () { $("in-name").focus(); }, 30);
+  }
+  $("f-profile").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = $("in-name").value.trim().replace(/\s+/g, " ");
+    if (v.length < 2) { $("name-err").hidden = false; return; }
+    S.setProfile(v); $("m-profile").hidden = true; render();
+  });
+  $("profile-cancel").addEventListener("click", function () { $("m-profile").hidden = true; });
+
+  /* ---------- Settings modal ---------- */
+  function openSettings() { setMenu(false); $("reset-confirm").hidden = true; $("m-settings").hidden = false; $("set-close").focus(); }
+  $("set-close").addEventListener("click", function () { $("m-settings").hidden = true; });
+  $("set-edit-name").addEventListener("click", function () { $("m-settings").hidden = true; openProfile(true); });
+  document.querySelectorAll('input[name="theme"]').forEach(function (r) { r.addEventListener("change", function () { S.setTheme(r.value); }); });
+  $("reset-btn").addEventListener("click", function () { $("reset-confirm").hidden = false; });
+  $("reset-no").addEventListener("click", function () { $("reset-confirm").hidden = true; });
+  $("reset-yes").addEventListener("click", function () { S.reset(); S.applyTheme(); $("m-settings").hidden = true; render(); openProfile(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (!$("m-settings").hidden) $("m-settings").hidden = true;
+    else if (!$("m-profile").hidden && !$("profile-cancel").hidden) $("m-profile").hidden = true;
+    setMenu(false);
+  });
+
+  /* ---------- Boot ---------- */
+  if (!S.storageWorks()) $("storage-banner").hidden = false;
+  render();
+  if (!S.get().profile) openProfile(false);
+  else if (location.hash === "#prefs") openSettings();
+  window.addEventListener("hashchange", function () { if (location.hash === "#prefs" && S.get().profile) openSettings(); });
+})();
+</script>
+</body>
+</html>

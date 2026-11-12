@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مولّد التمارين — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .main { min-width: 0; padding-block: 22px 56px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; align-content: start; max-width: 1180px; width: 100%; }
+  .p-head { display: grid; gap: 8px; max-width: 64ch; }
+  .p-head h1 { font-size: clamp(25px, 3.2vw, 34px); }
+  .p-head p { color: var(--fg-2); }
+  .fams { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .fam { padding: 12px; display: grid; gap: 8px; text-align: start; cursor: pointer; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r); min-width: 0; }
+  .fam:hover { border-color: var(--blue); }
+  .fam[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); }
+  .fam .thumb { background: var(--bg-2); border-radius: 9px; padding: 6px; height: 120px; display: grid; place-items: center; overflow: hidden; }
+  .fam .thumb .sc { max-height: 108px; width: auto; max-width: 100%; }
+  .fam .thumb .sc-name, .fam .thumb .sc-val { display: none; }
+  .fam b { font-family: var(--font-display); font-size: 15px; }
+  .fam span { font-size: 12.5px; color: var(--fg-3); }
+  .work { padding: 20px 22px; display: grid; gap: 14px; }
+  .work h2 { font-size: 19px; }
+  .stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--fg-2); }
+  .stats b { font-family: var(--font-mono); color: var(--fg); }
+  .how { padding: 18px 22px; display: grid; gap: 8px; }
+  .how h2 { font-size: 17px; }
+  .how ol { margin: 0; padding-inline-start: 20px; color: var(--fg-2); display: grid; gap: 6px; }
+  @media (max-width: 900px) { .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } .fams { grid-template-columns: repeat(2, minmax(0, 1fr)); } .work { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+
+    <header class="p-head">
+      <span class="eyebrow ltr" style="justify-self:start">Circuit Generator</span>
+      <h1>مولّد التمارين</h1>
+      <p>كل ضغطة تولّد دائرة جديدة بشكل مختلف، وليس بقيم مختلفة فقط. المحرك يحل كل دائرة قبل عرضها ويرفض أي دائرة غير صحيحة، ثم يصحح إجابتك ويشرح أين أخطأت.</p>
+    </header>
+
+    <section aria-label="أشكال الدوائر">
+      <div class="fams" id="fams"></div>
+    </section>
+
+    <section class="work card">
+      <div class="sec-title" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline"><h2>تمرين</h2><div class="stats"><span>حللت في هذه الجلسة: <b id="st-session">0</b></span><span>كل التمارين المولّدة المحلولة: <b id="st-all">0</b></span></div></div>
+      <div id="gen"></div>
+    </section>
+
+    <section class="how card">
+      <h2>كيف يعمل المولّد؟</h2>
+      <ol>
+        <li>يختار شكلًا للدائرة: حلقة واحدة، أو عناصر على التوازي، أو سُلّم، أو شبكة 3×3 يحذف منها فروعًا عشوائيًا فينتج أشكالًا مثل الجسر وحرف L.</li>
+        <li>يضع المقاومات والمصادر وقيمها، ويمكنه تحويل أحد المصادر إلى مصدر تابع من الأنواع الأربعة.</li>
+        <li>يحل الدائرة بطريقة <span class="ltr">Modified Nodal Analysis</span>، ويرفضها إذا كانت غير صحيحة (مصدرا جهد مختلفان على التوازي، عنصر مقصور، فرع معلّق) أو إذا لم يتحقق توازن القدرة.</li>
+        <li>يفضّل الدوائر التي تخرج إجاباتها أرقامًا نظيفة، لأنك تحلها بيدك.</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<script src="store.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script src="feedback.js"></script>
+<script src="tutor.js"></script>
+<script src="mna.js"></script>
+<script src="draw.js"></script>
+<script src="gen.js"></script>
+<script src="analysis.js"></script>
+<script src="ac.js"></script>
+<script src="mathcheck.js"></script>
+<script src="workspace.js"></script>
+<script src="practice.js"></script>
+<script>
+(function () {
+  "use strict";
+  CV.shell.init({ active: "generator" });
+  var info = {
+    loop: ["حلقة واحدة", "KVL: نفس التيار في كل العناصر"],
+    pair: ["عناصر على التوازي", "KCL: نفس الجهد على كل العناصر"],
+    ladder: ["سُلّم", "KCL و KVL معًا"],
+    grid: ["شبكة متعددة الحلقات", "حتى 4 حلقات بأشكال مختلفة"]
+  };
+  var sessionCount = 0;
+  function counts() {
+    document.getElementById("st-session").textContent = sessionCount;
+    document.getElementById("st-all").textContent = Object.keys(CV.store.get().questions).filter(function (k) { return k.indexOf("gen-") === 0; }).length;
+  }
+  var widget = CV.practice.mount(document.getElementById("gen"), { controls: true, families: ["loop", "pair", "ladder", "grid"], onSolved: function () { sessionCount++; counts(); } });
+  var famSel = document.querySelector("#gen select");
+  var fams = document.getElementById("fams");
+  Object.keys(info).forEach(function (f, i) {
+    var g = CV.gen.generate({ seed: 4100 + i * 13, families: [f], types: ["iR"] });
+    g.circuit.edges.forEach(function (e) { delete e.asked; });
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "fam"; b.setAttribute("aria-pressed", "false"); b.dataset.f = f;
+    b.innerHTML = '<div class="thumb">' + CV.draw.render(g.circuit, { aria: "مثال لشكل " + info[f][0] }) + '</div><b>' + info[f][0] + '</b><span>' + info[f][1] + '</span>';
+    b.addEventListener("click", function () {
+      var on = b.getAttribute("aria-pressed") !== "true";
+      fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      famSel.value = on ? f : "auto";
+      famSel.dispatchEvent(new Event("change"));
+      document.getElementById("gen").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    fams.appendChild(b);
+  });
+  famSel.addEventListener("change", function () { fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
+  counts();
+})();
+</script>
+<script src="calc.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ---------- Header ---------- */
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line-soft); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+  .nav { display: flex; gap: 22px; font-size: 14.5px; color: var(--fg-2); }
+  .nav a:hover { color: var(--fg); }
+  @media (max-width: 760px) { .nav { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line-soft);
+    background:
+      radial-gradient(700px 420px at 22% 45%, rgba(47,123,255,.20), transparent 70%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 32px 32px,
+      var(--bg); }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: center; gap: 32px; padding-block: 56px 48px; }
+  .hero h1 { font-size: clamp(34px, 5.2vw, 60px); font-weight: 700; line-height: 1.15; letter-spacing: -.01em; }
+  .hero h1 em { font-style: normal; color: var(--blue-2); background: linear-gradient(90deg, var(--glow), var(--blue)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .tagline-en { margin-top: 12px; font-family: var(--font-display); color: var(--fg-3); font-size: 15px; }
+  .hero .lead { margin-top: 18px; max-width: 34em; color: var(--fg-2); font-size: 17px; }
+  .hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 36px; }
+  .fact { display: grid; gap: 2px; min-width: 0; }
+  .fact b { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+  .fact span { font-size: 12.5px; color: var(--fg-3); }
+  .chipviz { width: 100%; max-width: 520px; justify-self: center; }
+  .chipviz svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .trace { fill: none; stroke: color-mix(in srgb, var(--glow) 45%, transparent); stroke-width: 1.4; }
+  .pulse { fill: none; stroke: var(--glow); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 10 400; animation: run 3.6s linear infinite; filter: drop-shadow(0 0 4px var(--glow)); }
+  .pad { fill: var(--bg-2); stroke: color-mix(in srgb, var(--glow) 55%, transparent); stroke-width: 1.2; }
+  @keyframes run { from { stroke-dashoffset: 410; } to { stroke-dashoffset: 0; } }
+  @media (max-width: 860px) {
+    .hero .wrap { grid-template-columns: 1fr; padding-block: 36px 32px; }
+    .chipviz { max-width: 380px; order: -1; }
+  }
+
+  /* ---------- Sections ---------- */
+  section.block { padding-block: 64px; }
+  .sec-head { display: grid; gap: 8px; margin-bottom: 28px; max-width: 46em; }
+  .sec-head h2 { font-size: clamp(24px, 3vw, 32px); }
+  .sec-head p { color: var(--fg-2); }
+
+  /* ---------- Modules ---------- */
+  .mods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .mod { padding: 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .mod-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .mod-ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-soft); color: var(--glow); }
+  .mod-ico svg { width: 21px; height: 21px; }
+  .mod h3 { font-size: 16.5px; }
+  .mod .en { font-size: 12px; color: var(--fg-3); direction: ltr; text-align: end; font-family: var(--font-display); }
+  .mod p { font-size: 14px; color: var(--fg-2); }
+  a.mod { color: inherit; text-decoration: none; transition: border-color .2s, transform .2s; }
+  a.mod:hover, a.mod:focus-visible { border-color: var(--glow); transform: translateY(-2px); }
+  @media (max-width: 1000px) { .mods { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .mods { grid-template-columns: 1fr; } }
+
+  /* ---------- Philosophy ---------- */
+  .philo { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; position: relative; }
+  .ph { padding: 18px 16px; display: grid; gap: 6px; position: relative; min-width: 0; }
+  .ph + .ph { border-inline-start: 1px dashed var(--line); }
+  .ph .n { font-family: var(--font-mono); color: var(--orange); font-size: 13px; }
+  .ph b { font-family: var(--font-display); font-size: 19px; }
+  .ph .en { font-size: 12px; color: var(--fg-3); font-family: var(--font-display); }
+  .ph p { font-size: 13.5px; color: var(--fg-2); }
+  @media (max-width: 860px) { .philo { grid-template-columns: 1fr; } .ph + .ph { border-inline-start: 0; border-top: 1px dashed var(--line); } }
+
+  /* ---------- Roadmap ---------- */
+  .road { display: grid; gap: 10px; }
+  .rd { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; }
+  .rd .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 14px; border: 1px solid var(--line); color: var(--fg-2); }
+  .rd.now { border-color: color-mix(in srgb, var(--orange) 55%, transparent); }
+  .rd.now .n { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .rd b { font-family: var(--font-display); font-weight: 600; }
+  .rd span.d { display: block; font-size: 13px; color: var(--fg-3); }
+
+  /* ---------- Footer ---------- */
+  footer { border-top: 1px solid var(--line-soft); padding-block: 28px; color: var(--fg-3); font-size: 13.5px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <a class="btn btn-primary btn-sm" href="dashboard.html">ابدأ التعلم <span class="arr">→</span></a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">منصة تفاعلية لتعلّم وتحليل الدوائر الكهربائية</div>
+        <h1 style="margin-top:14px">من معرفة القوانين<br>إلى <em>فهم الدائرة.</em></h1>
+        <p class="tagline-en ltr">From Knowing the Laws to Understanding the Circuit.</p>
+        <p class="lead">تعلّم المفهوم، جرّبه في معمل افتراضي يحسب النتائج بدقة، واكتشف أين أخطأت ولماذا. CircuitVision تساعدك تفكر كمهندس، لا أن تحفظ القانون فقط.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="dashboard.html">ابدأ التعلم <span class="arr">→</span></a>
+          <a class="btn btn-ghost" href="#modules">استكشف الأقسام</a>
+        </div>
+      </div>
+      <div class="chipviz" aria-hidden="true">
+        <svg id="chip" viewBox="0 0 480 400"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="modules">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">أقسام المنصة</div>
+        <h2>كل ما تحتاجه لتفهم الدائرة</h2>
+      </div>
+      <div class="mods" id="mods"></div>
+    </div>
+  </section>
+
+  <section class="block" style="padding-top:8px">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow">فلسفة المنصة</div>
+        <h2>افهم ← جرّب ← أخطئ ← حلّل ← ابنِ</h2>
+      </div>
+      <div class="philo glass">
+        <div class="ph"><span class="n">1</span><b>افهم</b><span class="en ltr">Understand</span><p>المفهوم أولًا، ثم القانون، ثم متى ولماذا نستخدمه.</p></div>
+        <div class="ph"><span class="n">2</span><b>جرّب</b><span class="en ltr">Experiment</span><p>ابنِ الدائرة في المعمل وغيّر القيم بنفسك.</p></div>
+        <div class="ph"><span class="n">3</span><b>أخطئ</b><span class="en ltr">Make Mistakes</span><p>الخطأ جزء من التعلّم، والمنصة لا تعاقبك عليه.</p></div>
+        <div class="ph"><span class="n">4</span><b>حلّل</b><span class="en ltr">Analyze</span><p>اعرف أين الخطأ ونوعه: مفهوم، قانون، إشارة، أو وحدة.</p></div>
+        <div class="ph"><span class="n">5</span><b>ابنِ</b><span class="en ltr">Build</span><p>حوّل الفهم إلى مشروع حقيقي تختبره وتوثّقه.</p></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="ltr">CircuitVision — From Knowing the Laws to Understanding the Circuit.</span>
+    <span>مرتبطة مستقبلًا بنادي <span class="ltr">Beyond Theory</span></span>
+  </div>
+</footer>
+
+<script src="store.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+  /* ---------- Hero chip with circuit traces ---------- */
+  (function drawChip() {
+    var svg = document.getElementById("chip");
+    var cx = 240, cy = 200, half = 74;
+    var defs = el("defs", {}, svg);
+    var g1 = el("linearGradient", { id: "chipFace", x1: "0", y1: "0", x2: "1", y2: "1" }, defs);
+    el("stop", { offset: "0", "stop-color": "#16264d" }, g1); el("stop", { offset: "1", "stop-color": "#0a1430" }, g1);
+    var g2 = el("radialGradient", { id: "halo" }, defs);
+    el("stop", { offset: "0", "stop-color": "#2f7bff", "stop-opacity": ".55" }, g2); el("stop", { offset: "1", "stop-color": "#2f7bff", "stop-opacity": "0" }, g2);
+    var g3 = el("linearGradient", { id: "cvg", x1: "0", x2: "1" }, defs);
+    el("stop", { offset: "0", "stop-color": "#7fd3ff" }, g3); el("stop", { offset: "1", "stop-color": "#2f7bff" }, g3);
+    el("circle", { cx: cx, cy: cy, r: 190, fill: "url(#halo)" }, svg);
+
+    // Traces: from each chip side, step outward with one 45° bend, end in a pad.
+    var seed = 7; function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    var traces = el("g", {}, svg), pulses = el("g", {}, svg), pads = el("g", {}, svg);
+    var n = 7, gap = (half * 2 - 20) / (n - 1);
+    ["N", "S", "E", "W"].forEach(function (side, si) {
+      for (var i = 0; i < n; i++) {
+        var o = -half + 10 + i * gap, len1 = 22 + rnd() * 26, len2 = 40 + rnd() * 80, bend = (rnd() < .5 ? -1 : 1) * (14 + rnd() * 22);
+        var pts;
+        if (side === "N") pts = [[cx + o, cy - half], [cx + o, cy - half - len1], [cx + o + bend, cy - half - len1 - Math.abs(bend)], [cx + o + bend, cy - half - len1 - Math.abs(bend) - len2]];
+        if (side === "S") pts = [[cx + o, cy + half], [cx + o, cy + half + len1], [cx + o + bend, cy + half + len1 + Math.abs(bend)], [cx + o + bend, cy + half + len1 + Math.abs(bend) + len2]];
+        if (side === "E") pts = [[cx + half, cy + o], [cx + half + len1, cy + o], [cx + half + len1 + Math.abs(bend), cy + o + bend], [cx + half + len1 + Math.abs(bend) + len2, cy + o + bend]];
+        if (side === "W") pts = [[cx - half, cy + o], [cx - half - len1, cy + o], [cx - half - len1 - Math.abs(bend), cy + o + bend], [cx - half - len1 - Math.abs(bend) - len2, cy + o + bend]];
+        var d = "M" + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L");
+        el("path", { d: d, class: "trace" }, traces);
+        if ((i + si) % 2 === 0) { var p = el("path", { d: d, class: "pulse" }, pulses); p.style.animationDelay = (-rnd() * 3.6).toFixed(2) + "s"; p.style.animationDuration = (2.8 + rnd() * 2).toFixed(2) + "s"; }
+        var end = pts[3]; el("circle", { cx: end[0], cy: end[1], r: 3.6, class: "pad" }, pads);
+      }
+    });
+    // Package
+    el("rect", { x: cx - half - 6, y: cy - half - 6, width: (half + 6) * 2, height: (half + 6) * 2, rx: 14, fill: "#050a18", stroke: "#2f7bff", "stroke-opacity": ".55" }, svg);
+    el("rect", { x: cx - half + 8, y: cy - half + 8, width: (half - 8) * 2, height: (half - 8) * 2, rx: 10, fill: "url(#chipFace)", stroke: "#3fb6ff", "stroke-opacity": ".35" }, svg);
+    // CV mark
+    var m = el("g", { transform: "translate(" + (cx - 46) + " " + (cy - 30) + ") scale(2.7)", fill: "none", stroke: "url(#cvg)", "stroke-width": "3", "stroke-linecap": "round", "stroke-linejoin": "round" }, svg);
+    m.style.filter = "drop-shadow(0 0 6px #3fb6ff)";
+    el("path", { d: "M14 4.5A8.5 8.5 0 1 0 14 19.5" }, m); el("path", { d: "M16 4l7 16 7-16" }, m);
+  })();
+
+  /* ---------- Modules + roadmap from the shared status list ---------- */
+  var icons = {
+    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    dashboard: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/>',
+    courses: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
+    feedback: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 10l2 2 4-4"/>',
+    lab: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+    generator: '<path d="M4 7h4l2-3 2 6 2-3h6"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+    bank: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    tutor: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>',
+    challenges: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>',
+    academy: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M7 10.5V16c3 2 7 2 10 0v-5.5"/>',
+    club: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.5-3.5 3-5 6-5s5.5 1.5 6 5M15 15c3 0 5 1.5 5.5 4.5"/>',
+    realworld: '<path d="M4 12h3M17 12h3"/><rect x="7" y="9" width="10" height="6" rx="3"/><path d="M10 9v6M14 9v6"/>',
+    portfolio: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
+    notebook: '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>'
+  };
+  var desc = {
+    courses: "فصول ودروس منظمة لـ Circuits 1 و2 بشرح مبسّط وأمثلة محلولة خطوة بخطوة.",
+    feedback: "بدل «إجابة خاطئة»: أين الخطأ، ولماذا، وما المفهوم الذي تراجعه.",
+    generator: "دوائر بأشكال مختلفة: تيارات وجهود، مقاومة مكافئة، جهود عقد، تيارات حلقات، ثيفنن، تراكب، وفيزورات التيار المتردد. يحلها المحرك قبل عرضها.",
+    lab: "ابنِ الدائرة ووصّل الأسلاك وقِس بالملتيميتر والأوسيلوسكوب، بمحرك حساب حقيقي.",
+    bank: "أسئلة من المراجع بمصدرها الحقيقي: الكتاب والفصل ورقم السؤال.",
+    tutor: "يفهم خطوات حلّك ويعطيك تلميحات تدريجية بدل الحل النهائي مباشرة.",
+    challenges: "تحديات تصميم وتشخيص أعطال وتحسين، يومية وأسبوعية.",
+    academy: "مشاريع من الفكرة إلى المحاكاة ثم التنفيذ والاختبار والتوثيق.",
+    club: "النادي الطلابي: ورش عمل وبناء مشاريع جماعية وعرضها.",
+    realworld: "مكتبة المكونات الحقيقية: الشكل والرمز وطريقة القياس والأعطال الشائعة.",
+    portfolio: "ملف إنجاز هندسي تستخدمه في السيرة الذاتية والتدريب التعاوني.",
+    notebook: "وثّق ملاحظاتك وحساباتك وقياساتك وأخطاءك وتصحيحاتها."
+  };
+  var mods = document.getElementById("mods");
+  CV.modules.filter(function (m) { return desc[m.id]; }).forEach(function (m) {
+    var d = document.createElement("a");
+    d.className = "mod card"; d.href = m.href || "dashboard.html";
+    d.innerHTML = '<div class="mod-top"><span class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + icons[m.id] + '</svg></span></div>' +
+      '<div><h3>' + m.ar + '</h3><div class="en">' + m.en + '</div></div><p>' + desc[m.id] + '</p>';
+    mods.appendChild(d);
+  });
+
+})();
+</script>
+</body>
+</html>
