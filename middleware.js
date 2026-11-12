@@ -53,20 +53,36 @@ module.exports = async function handler(req, res) {
 
   const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM + ctxText }] }, contents, generationConfig: { temperature: 0.3, maxOutputTokens: 700 } })
-    });
+    const r = await callGemini(model, key, { systemInstruction: { parts: [{ text: SYSTEM + ctxText }] }, contents, generationConfig: { temperature: 0.3, maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: "low" } } });
     if (r.status === 429) return res.status(429).json({ error: "وصل المعلم لحد الاستخدام المجاني مؤقتًا. حاول بعد دقيقة." });
     if (!r.ok) return res.status(502).json({ error: "تعذّر الوصول للمعلم الآن. حاول مرة أخرى." });
     const j = await r.json();
-    const text = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts.map((p) => p.text || "").join("").trim();
+    const text = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts.filter((p) => !p.thought).map((p) => p.text || "").join("").trim();
     if (!text) return res.status(502).json({ error: "لم يصل رد من المعلم. أعد صياغة سؤالك." });
     return res.status(200).json({ reply: text });
   } catch (e) {
+    if (e && e.name === "AbortError") return res.status(504).json({ error: "المعلم تأخر في الرد. أعد إرسال سؤالك." });
     return res.status(502).json({ error: "تعذّر الوصول للمعلم الآن." });
   }
 };
+
+/* Calls Gemini with a 20 s limit (the platform cuts the request at ~25 s). If the model rejects thinkingConfig,
+   retries once without it. Logs Google's status and message for debugging; the key is never logged. */
+async function callGemini(model, key, body) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  async function once(b) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    try { return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(b), signal: ctl.signal }); }
+    finally { clearTimeout(t); }
+  }
+  let r = await once(body);
+  if (r.status === 400 && body.generationConfig && body.generationConfig.thinkingConfig) {
+    const msg = await r.clone().text().catch(() => "");
+    if (/thinking/i.test(msg)) { const b2 = JSON.parse(JSON.stringify(body)); delete b2.generationConfig.thinkingConfig; r = await once(b2); }
+  }
+  if (!r.ok) { const msg = await r.clone().text().catch(() => ""); console.error("gemini", model, r.status, msg.slice(0, 300)); }
+  return r;
+}
 
 function safeJson(s) { try { return JSON.parse(s); } catch (e) { return {}; } }
 
@@ -121,19 +137,19 @@ module.exports = async function handler(req, res) {
     ] }],
     generationConfig: {
       temperature: 0,
+      maxOutputTokens: 4096,
+      thinkingConfig: { thinkingLevel: "low" },
       responseMimeType: "application/json",
       responseSchema: { type: "OBJECT", properties: { lines: { type: "ARRAY", items: { type: "STRING" } }, unreadable: { type: "BOOLEAN" } }, required: ["lines", "unreadable"] }
     }
   };
 
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(payload)
-    });
+    const r = await callGemini(model, key, payload);
     if (r.status === 429) return res.status(429).json({ error: "وصلت خدمة التعرف لحدها المجاني مؤقتًا. حاول بعد دقيقة." });
     if (!r.ok) return res.status(502).json({ error: "تعذّر التعرف على الكتابة الآن. حاول مرة أخرى." });
     const j = await r.json();
-    const text = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts.map((p) => p.text || "").join("");
+    const text = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts.filter((p) => !p.thought).map((p) => p.text || "").join("");
     const out = safeJson(text) || {};
     const lines = Array.isArray(out.lines) ? out.lines.map((l) => String(l).slice(0, 300)).slice(0, 60) : [];
     return res.status(200).json({ lines, unreadable: !!out.unreadable || !lines.length });
@@ -141,6 +157,24 @@ module.exports = async function handler(req, res) {
     return res.status(502).json({ error: "تعذّر الاتصال بخدمة التعرف. حاول مرة أخرى." });
   }
 };
+
+/* Calls Gemini with a 20 s limit (the platform cuts the request at ~25 s). If the model rejects thinkingConfig,
+   retries once without it. Logs Google's status and message for debugging; the key is never logged. */
+async function callGemini(model, key, body) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  async function once(b) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    try { return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(b), signal: ctl.signal }); }
+    finally { clearTimeout(t); }
+  }
+  let r = await once(body);
+  if (r.status === 400 && body.generationConfig && body.generationConfig.thinkingConfig) {
+    const msg = await r.clone().text().catch(() => "");
+    if (/thinking/i.test(msg)) { const b2 = JSON.parse(JSON.stringify(body)); delete b2.generationConfig.thinkingConfig; r = await once(b2); }
+  }
+  if (!r.ok) { const msg = await r.clone().text().catch(() => ""); console.error("gemini", model, r.status, msg.slice(0, 300)); }
+  return r;
+}
 
 function safeJson(s) { try { return JSON.parse(s); } catch (e) { return null; } }
 
