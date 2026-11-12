@@ -114,7 +114,8 @@
     canvas.addEventListener("pointerdown", function (e) {
       if (e.pointerType === "pen" && !penSeen) { penSeen = true; canvas.style.touchAction = "pan-y"; }
       if (penSeen && e.pointerType === "touch") return; // palm rejection: fingers scroll once a pen is in use
-      e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+      e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (x) {}
+      if (e.pointerType === "pen") penDown = true;
       cur = { c: color, e: tool === "eraser", p: [pos(e)] }; data.strokes.push(cur); redraw();
     });
     canvas.addEventListener("pointermove", function (e) {
@@ -123,8 +124,19 @@
       evs.forEach(function (ev) { cur.p.push(pos(ev)); });
       redraw();
     });
-    function end() { if (cur) { cur = null; persist(); } }
+    var penDown = false;
+    function end(e) { if (e && e.pointerType === "pen") penDown = false; if (cur) { cur = null; persist(); } }
     canvas.addEventListener("pointerup", end); canvas.addEventListener("pointercancel", end);
+    /* iPad: touch-action alone does not stop Safari from scrolling while the Apple Pencil writes (after a pen is seen
+       the canvas allows pan-y so fingers can scroll). Cancelling the stylus touches themselves keeps the page still,
+       and fingers stay free to scroll. Before any pen is seen, a finger draws, so its touches are cancelled too. */
+    function stopScroll(e) {
+      var ts = e.changedTouches || [], stylus = false;
+      for (var i = 0; i < ts.length; i++) if (ts[i].touchType === "stylus") stylus = true;
+      if (stylus || penDown || !penSeen) e.preventDefault();
+    }
+    canvas.addEventListener("touchstart", stopScroll, { passive: false });
+    canvas.addEventListener("touchmove", stopScroll, { passive: false });
     window.addEventListener("resize", function () { if (!panel.hidden) sizeCanvas(); });
 
     root.querySelectorAll("[data-tool]").forEach(function (b) { b.addEventListener("click", function () { tool = b.dataset.tool; root.querySelectorAll("[data-tool]").forEach(function (x) { x.classList.toggle("on", x === b); }); }); });
