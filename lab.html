@@ -302,6 +302,12 @@
   @media (max-width: 640px) { .sc-ctl, .ps-chs, .fg-chs { grid-template-columns: 1fr; } }
   @media (max-width: 980px) { .lab-main, .lab-low { grid-template-columns: 1fr; } }
   .exp-vid { margin: 10px 0 0; font-size: 12.5px; color: var(--fg-3); border-top: 1px dashed var(--line-soft); padding-top: 8px; } .exp-vid span { color: var(--orange); }
+  .wc { border: 1px solid color-mix(in srgb, #ff5a6e 45%, var(--line-soft)); background: color-mix(in srgb, #ff5a6e 7%, var(--surface)); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; margin-bottom: 8px; }
+  .wc-h { font-size: 13.5px; color: #ff7a8b; }
+  .wc ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 5px; font-size: 13.5px; }
+  .wc li.wc-err { color: var(--fg); font-weight: 600; } .wc li.wc-err::marker { color: #ff5a6e; } .wc li.wc-warn::marker { color: var(--orange); }
+  .wc-badge { font: inherit; font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center; margin: 0 0 8px; padding: 7px 12px; border-radius: 9px; cursor: pointer; color: #ff8a99; background: color-mix(in srgb, #ff5a6e 10%, var(--surface)); border: 1px solid color-mix(in srgb, #ff5a6e 45%, var(--line-soft)); text-align: start; }
+  .wc-badge:hover { border-color: #ff5a6e; }
 </style>
 </head>
 <body>
@@ -341,12 +347,12 @@
       <span class="zoom"><button type="button" class="tl" id="zoom-out" aria-label="تصغير">−</button><span id="zoom-v" class="mono">100%</span><button type="button" class="tl" id="zoom-in" aria-label="تكبير">+</button></span>
       <button type="button" class="tl" id="labels-t" aria-pressed="true">الأسماء والقيم</button></div></div>
   <p class="lab-hint" id="lab-hint" aria-live="polite"></p>
-  <div class="card bench"><div class="bb-scroll" id="lab-canvas"></div><p class="bb-tip" id="bb-tip" aria-live="polite"></p></div>
+  <div class="card bench"><button type="button" class="wc-badge" id="wc-badge" hidden></button><div class="bb-scroll" id="lab-canvas"></div><p class="bb-tip" id="bb-tip" aria-live="polite"></p></div>
   <div class="lab-main">
     <div class="inst" id="lab-inst"></div>
     <aside class="side">
       <div class="card"><h2>القطعة المحددة</h2><div id="lab-insp"></div></div>
-      <div class="card"><h2>حالة الدائرة</h2><div id="lab-status" aria-live="polite"></div></div>
+      <div class="card" id="status-card"><h2>حالة الدائرة</h2><div id="lab-status" aria-live="polite"></div></div>
       <div class="card env"><h2>البيئة</h2>
         <label for="env-light"><span>الإضاءة (للـ LDR)</span><output id="env-light-o" class="mono"></output></label><input type="range" id="env-light" min="0" max="100" step="1">
         <label for="env-temp"><span>الحرارة (للـ NTC)</span><output id="env-temp-o" class="mono"></output></label><input type="range" id="env-temp" min="0" max="80" step="1">
@@ -403,7 +409,7 @@
 <script src="benchview.js"></script>
 <script src="instruments.js"></script>
 <script>CV.shell.init({ active: "lab" });</script>
-<script src="icons.js"></script><script src="lab.js"></script>
+<script src="icons.js"></script><script src="wirecheck.js"></script><script src="lab.js"></script>
 <script src="experiments.js"></script>
 <script src="calc.js"></script>
 </body>

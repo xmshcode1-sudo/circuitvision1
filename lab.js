@@ -46,7 +46,14 @@
 
 
   /* ---------- solve & render ---------- */
-  function solveNow() { if (!dirty && solved) return solved; solved = B.solve(bench, bench.inst.ard ? pins : null); dirty = false; return solved; }
+  function solveNow() {
+    if (!dirty && solved) return solved;
+    solved = B.solve(bench, bench.inst.ard ? pins : null); dirty = false;
+    // wiring check: its parts are drawn in red on the board, its messages lead the status card
+    solved.check = CV.wireCheck ? CV.wireCheck.check(bench, solved, V.names(bench)) : [];
+    solved.check.forEach(function (x) { x.parts.forEach(function (id) { solved.c.warn.push({ part: id, t: "wire" }); }); });
+    return solved;
+  }
   var hooks = [], rafId = 0, needInst = false;
   function changed(rebuild) { dirty = true; save(); needInst = needInst || !!rebuild; schedule(); }
   function schedule() {
@@ -139,21 +146,26 @@
   /* ---------- status ---------- */
   function renderStatus() {
     var st = $("lab-status"), res = solved.res, w = [], nm = V.names(bench);
+    if (CV.bi) (solved.check || []).forEach(function (x) { if (x.en) { var o = {}; o[x.t] = x.en; CV.bi.add(o); } });
+    var nChk = (solved.check || []).length, badge = $("wc-badge");
+    if (badge) { badge.hidden = !nChk; badge.textContent = "⚠ تنبيهات التشبيك: " + nChk + " · اعرضها ←"; }
+    var chk = (solved.check || []).length ? '<div class="wc" role="alert"><b class="wc-h">تنبيهات التشبيك</b><ul>' + solved.check.map(function (x) { return '<li class="wc-' + x.sev + '">' + x.t + '</li>'; }).join("") + '</ul></div>' : "";
     solved.c.warn.forEach(function (x) { if (x.t === "short") w.push("رجلا " + (nm[x.part] || "القطعة") + " في نفس الشريط الموصّل (أو موصولان بسلك)، فهي مقصورة ولا يمر فيها تيار. انقل إحدى رجليها إلى عمود آخر."); });
     bench.inst.ps.forEach(function (c, i) { if (c.on && !solved.c.info.ps[i].plugged && bench.parts.some(function (p) { return p.legs.indexOf("PS" + (i + 1) + "+") > -1 || p.legs.indexOf("PS" + (i + 1) + "-") > -1; })) w.push("CH" + (i + 1) + " لمزود الجهد موصولة من طرف واحد فقط."); });
     bench.inst.fg.forEach(function (c, i) { if (c.on && !solved.c.info.fg[i].plugged && bench.parts.some(function (p) { return p.legs.indexOf("FG" + (i + 1)) > -1 || p.legs.indexOf("FG" + (i + 1) + "g") > -1; })) w.push("CH" + (i + 1) + " لمولد الإشارة يحتاج سلكين: الإشارة والأرضي."); });
     bench.inst.ps.forEach(function (c, i) { if (!c.on && solved.c.info.ps[i].plugged) w.push("CH" + (i + 1) + " لمزود الجهد موصولة لكنها مطفأة (OFF)."); });
     bench.inst.fg.forEach(function (c, i) { if (!c.on && solved.c.info.fg[i].plugged) w.push("CH" + (i + 1) + " لمولد الإشارة موصولة لكنها مطفأة (OFF)."); });
     if (!res.ok) {
-      st.innerHTML = '<p class="lab-err">' + (res.error === "short" ? "قصر كهربائي: طرفا مصدر جهد (بطارية أو قناة مزود) موصولان ببعض مباشرة. في الواقع يسحب تيارًا كبيرًا جدًا." : res.error === "ctrl" ? "وحدة مصدر تابع بلا عنصر تحكم: حددها واختر مقاومة التحكم." : "لا يمكن حل الدائرة بهذا الشكل: غالبًا مصدرا جهد على التوازي بقيمتين مختلفتين، أو حلقة من مصادر الجهد.") + '</p>' + (w.length ? '<ul class="lab-warn">' + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul>' : "");
+      st.innerHTML = chk + '<p class="lab-err">' + (res.error === "short" ? "قصر كهربائي: طرفا مصدر جهد (بطارية أو قناة مزود) موصولان ببعض مباشرة. في الواقع يسحب تيارًا كبيرًا جدًا." : res.error === "ctrl" ? "وحدة مصدر تابع بلا عنصر تحكم: حددها واختر مقاومة التحكم." : "لا يمكن حل الدائرة بهذا الشكل: غالبًا مصدرا جهد على التوازي بقيمتين مختلفتين، أو حلقة من مصادر الجهد.") + '</p>' + (w.length ? '<ul class="lab-warn">' + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul>' : "");
       return;
     }
-    w = w.concat(res.warn);
+    // overloads are named by the wiring check (with the part marked on the board), so the solver's short notes are not repeated
+    w = w.concat(res.warn.filter(function (t) { return !CV.wireCheck || !/^⚠ (تيار الـ LED|اللمبة تأخذ|المقاومة )/.test(t); }));
     bench.inst.ps.forEach(function (c, i) { var x = res.el["ps" + (i + 1)]; if (x && x.p > 1e-6) w.push("CH" + (i + 1) + " لمزود الجهد تمتص قدرة (" + si(x.p, "W") + "): التيار يدخل من طرفها الموجب. المزود الحقيقي لا يستطيع امتصاص قدرة؛ المحاكاة تعامله كمصدر مثالي كما في الكتاب."); });
     if (Object.keys(solved.cc).some(function (k) { return solved.cc[k]; })) w.push("مزود الجهد في وضع CC: الحمل يطلب تيارًا أكبر من حد التيار، فالقناة تثبّت التيار وتنزل الجهد.");
     var hv = solved.c.lab.edges.some(function (e) { return Math.abs(res.dcV(e.a)) > 1000; });
     if (hv) w.push("⚠ جهد كبير جدًا في الدائرة: غالبًا مصدر تيار بلا مسار مغلق.");
-    st.innerHTML = w.length ? '<ul class="lab-warn">' + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul>' : '<p class="muted">✓ الدائرة محلولة' + (res.ac ? " (تيار مستمر + إشارة " + si(res.ac.f, "Hz") + ")" : "") + '.</p>';
+    st.innerHTML = chk + (w.length ? '<ul class="lab-warn">' + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul>' : chk ? "" : '<p class="muted">✓ الدائرة محلولة' + (res.ac ? " (تيار مستمر + إشارة " + si(res.ac.f, "Hz") + ")" : "") + '.</p>');
     if (bench.inst.ard) {
       var pl = [];
       [[13, "D13"], [9, "D9"], [2, "D2"]].forEach(function (q) {
@@ -306,6 +318,7 @@
       else if (key === "Escape") { pick("select"); act = 1; }
       if (act) e.preventDefault();
     });
+    $("wc-badge").addEventListener("click", function () { $("status-card").scrollIntoView({ behavior: "smooth", block: "center" }); });
     $("wire-c").addEventListener("change", function () { V.color(this.value); });
     var z = 1; function zoom(d) { z = Math.max(0.8, Math.min(2.4, Math.round((z + d) * 10) / 10)); $("zoom-v").textContent = Math.round(z * 100) + "%"; V.zoom(z); }
     $("zoom-in").addEventListener("click", function () { zoom(0.2); }); $("zoom-out").addEventListener("click", function () { zoom(-0.2); });

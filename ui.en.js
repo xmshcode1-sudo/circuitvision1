@@ -716,6 +716,8 @@
   ].forEach(function (q) { bi.pattern(q[0], q[1]); });
   bi.add({
     "المستوى المتقدم": "Advanced level",
+    "تنبيهات التشبيك": "Wiring alerts",
+    "⚠ تنبيهات التشبيك: # · اعرضها ←": "⚠ Wiring alerts: # · show them →",
     "مسائل مركّبة: أكثر من متطلب على نفس الدائرة": "Compound problems: several prerequisites on one circuit",
     "كل مسألة دائرة واحدة وعدة أجزاء، وكل جزء يحتاج درسًا مختلفًا: قانونا كيرشوف وطرق التحليل، قانون أوم، اصطلاح الإشارة، توازن القدرة، والمصادر التابعة. تحت كل جزء الدروس التي يعتمد عليها. كل القيم من محرك الحل.": "Each problem is one circuit with several parts, and each part needs a different lesson: Kirchhoff’s laws and analysis methods, Ohm’s law, the sign convention, power balance, and dependent sources. Under each part are the lessons it relies on. Every value comes from the solver.",
     "مسألة جديدة ↻": "New problem ↻",
