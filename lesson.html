@@ -252,7 +252,7 @@
     if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, '<div class="prose">' + byId.realworld.html + '</div>'); toc.push(["realworld", "في الواقع"]); }
 
     body += sec("connected", "مرتبط بهذا الدرس", "Connected",
-      '<div class="connected">' + labCard(L) +
+      '<div class="connected">' + labCard(L) + '<div class="pending"><span class="ic">' + CV.shell.icon("academy") + '</span><p><b>مشروع الدرس</b>مشروع يطبّق فكرة هذا الدرس بالضبط: تصمم، تحاكي، تبني على لوحة التجارب، وتقيس. <a href="academy.html#' + L.id + '" style="color:var(--glow);text-decoration:underline">افتح المشروع</a></p></div>' +
       '<div class="pending"><span class="ic">' + CV.shell.icon("bank") + '</span><p><b>بنك الأسئلة</b>كل أسئلة هذا الدرس وتمارينه في مكان واحد. <a href="bank.html" style="color:var(--glow);text-decoration:underline">افتح بنك الأسئلة</a>. أسئلة الكتب (Nilsson و Sadiku) تُضاف فقط من نصوص يوفّرها المؤسس.</p></div></div>');
 
     var prev = list[idx - 1], next = list[idx + 1];

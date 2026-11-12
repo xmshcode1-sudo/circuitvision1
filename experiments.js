@@ -19,7 +19,7 @@
   /* helpers available to checks */
   function H(L, res) {
     var parent = {};
-    function f(p) { var k = p.join(","); if (parent[k] === undefined) parent[k] = k; while (parent[k] !== k) k = parent[k] = parent[parent[k]]; return k; }
+    function f(p) { var k = p.join(","); if (L.alias && L.alias[k]) k = L.alias[k]; if (parent[k] === undefined) parent[k] = k; while (parent[k] !== k) k = parent[k] = parent[parent[k]]; return k; }
     L.edges.forEach(function (e) { if (e.k === "W" || (e.k === "SW" && e.closed)) parent[f(e.a)] = f(e.b); });
     var h = {
       L: L, res: res,
@@ -45,18 +45,18 @@
   EXP["c1-variables-2"] = { title: "قياس التيار والجهد", intro: "أميتر على التوالي وفولتميتر على التوازي، ومعنى التيار السالب.",
     lab: lab([["V", [1, 0], [2, 0], { value: 9, plus: "a", tag: "Vs" }], ["AM", [1, 0], [1, 1], { tag: "A1" }], ["R", [1, 1], [2, 1], { value: 1000, tag: "R" }], ["W", [2, 0], [2, 1]]]),
     steps: [
-      { t: "ضع الفولتميتر على المقاومة R: المجس الأحمر على طرفها العلوي والأسود على السفلي.", check: function (h) { return h.across("R"); } },
-      { t: "كم يقرأ الفولتميتر؟", ask: function (h) { return h.vm(); }, units: V },
-      { t: "كم يقرأ الأميتر (التيار من يساره إلى يمينه)؟", ask: function (h) { return h.el("A1").i; }, units: A },
-      { t: "اعكس قطبية المصدر (حدده ثم «اعكس القطبية»).", check: function (h) { return h.e("Vs") && h.e("Vs").plus === "b"; } },
+      { t: "صِل الملتيميتر 1 على طرفي المقاومة R: سلك VΩ بالرجل القريبة من الموجب، وسلك COM بالرجل الأخرى (الوضع V⎓).", check: function (h) { return h.across("R"); } },
+      { t: "كم يقرأ الملتيميتر 1؟", ask: function (h) { return h.vm(); }, units: V },
+      { t: "كم يقرأ أميتر اللوحة {A1}؟ (يقرأ التيار الداخل من رجله الأولى)", ask: function (h) { return h.el("A1").i; }, units: A },
+      { t: "اعكس قطبية المصدر: بدّل مكاني سلكي {Vs} (الأحمر مكان الأسود). بأداة التحديد اضغط السلك واسحب طرفه المضيء.", check: function (h) { return h.e("Vs") && h.same(h.e("Vs").a, [2, 0]); } },
       { t: "كم يقرأ الأميتر الآن؟ الإشارة السالبة تعني أن التيار الفعلي عكس اتجاه القياس.", ask: function (h) { return h.el("A1").i; }, units: A }
     ] };
   EXP["c1-variables-3"] = { title: "اتجاه التيار وإشارة القدرة", intro: "القدرة الممتصة موجبة للمقاومة وسالبة للمصدر الذي يسلّم الطاقة، مهما عكست الاتجاهات.",
     lab: lab([["V", [1, 0], [2, 0], { value: 6, plus: "a", tag: "Vs" }], ["R", [1, 0], [1, 1], { value: 2000, tag: "R" }], ["W", [1, 1], [2, 1]], ["W", [2, 0], [2, 1]]]),
     steps: [
       { t: "حدد المقاومة واقرأ القدرة الممتصة فيها.", ask: function (h) { return h.el("R").p; }, units: W },
-      { t: "حدد المصدر واقرأ القدرة «الممتصة» فيه. لماذا هي سالبة؟", ask: function (h) { return h.el("Vs").p; }, units: W },
-      { t: "اعكس قطبية المصدر.", check: function (h) { return h.e("Vs") && h.e("Vs").plus === "b"; } },
+      { t: "القدرة «الممتصة» في المصدر {Vs} = −(الجهد × التيار) كما يعرضهما مزود الجهد. كم هي؟ ولماذا سالبة؟", ask: function (h) { return h.el("Vs").p; }, units: W },
+      { t: "اعكس قطبية المصدر: بدّل مكاني سلكي {Vs} الأحمر والأسود.", check: function (h) { return h.e("Vs") && h.same(h.e("Vs").a, [2, 0]); } },
       { t: "اقرأ قدرة المصدر مرة أخرى: انعكس التيار والجهد معًا، والنتيجة الفيزيائية نفسها.", ask: function (h) { return h.el("Vs").p; }, units: W }
     ] };
   EXP["c1-variables-4"] = { title: "توازن القدرة", intro: "مجموع القدرات الممتصة في أي دائرة = صفر.",
@@ -73,13 +73,13 @@
     lab: lab([["V", [1, 0], [2, 0], { value: 5, plus: "a", tag: "V1" }], ["W", [1, 0], [1, 1]], ["R", [1, 1], [2, 1], { value: 1000, tag: "R" }], ["W", [2, 0], [2, 1]], ["W", [1, 1], [1, 2]], ["W", [2, 1], [2, 2]]]),
     steps: [
       { t: "اقرأ التيار في المقاومة R.", ask: function (h) { return h.el("R").i; }, units: A },
-      { t: "ضع مصدر جهد DC بقيمة 9 V في الفراغ الأيمن (موازيًا لـ V1). لاحظ رسالة «حالة الدائرة».", check: function (h) { return h.count("V", function (e) { return e.tag !== "V1" && Math.abs(e.value - 5) > 1e-9; }) > 0 && !h.ok; } },
-      { t: "احذف المصدر الجديد بالممحاة. (حتى لو تساوى المصدران، لا يمكن تحديد تيار كل منهما، لذلك لا يُوصل مصدرا جهد مثاليان على التوازي.)", check: function (h) { return h.ok && h.count("V") === 1; } }
+      { t: "وصّل قناة ثانية من مزود الجهد (CH2 بجهد 9 V وشغّلها) على نفس النقطتين اللتين عليهما {V1}، أي على التوازي معها. لاحظ رسالة «حالة الدائرة».", check: function (h) { return h.count("V", function (e) { return e.tag !== "V1" && Math.abs(e.value - 5) > 1e-9; }) > 0 && !h.ok; } },
+      { t: "أطفئ القناة الجديدة (OFF) أو احذف سلكيها. (حتى لو تساوى المصدران، لا يمكن تحديد تيار كل منهما، لذلك لا يُوصل مصدرا جهد مثاليان على التوازي.)", check: function (h) { return h.ok && h.count("V") === 1; } }
     ] };
   EXP["c1-elements-2"] = { title: "قياس قانون أوم", intro: "غيّر جهد المصدر وسجّل التيار؛ العلاقة خط مستقيم ميله مقلوب المقاومة.",
     lab: lab([["V", [1, 0], [2, 0], { value: 2, plus: "a", tag: "Vs" }], ["AM", [1, 0], [1, 1], { tag: "A1" }], ["R", [1, 1], [2, 1], { value: 470, tag: "R" }], ["W", [2, 0], [2, 1]]]),
     steps: [
-      { t: "سجّل نقطة، ثم غيّر جهد المصدر (حدده واكتب قيمة جديدة) وسجّل نقطة أخرى. سجّل 4 نقاط بجهود مختلفة على الأقل.", rec: { x: ["جهد المصدر", "V", function (h) { return h.e("Vs").value; }], y: ["التيار", "A", function (h) { return h.el("A1").i; }], min: 4 } },
+      { t: "سجّل نقطة، ثم غيّر جهد {Vs} من لوحة مزود الجهد وسجّل نقطة أخرى. سجّل 4 نقاط بجهود مختلفة على الأقل.", rec: { x: ["جهد المصدر", "V", function (h) { return h.e("Vs").value; }], y: ["التيار", "A", function (h) { return h.el("A1").i; }], min: 4 } },
       { t: "ما ميل الخط (التيار ÷ الجهد)؟", ask: function (h) { return 1 / h.e("R").value; }, units: S_ },
       { t: "وما المقاومة؟", ask: function (h) { return h.e("R").value; }, units: OHM }
     ] };
@@ -91,7 +91,7 @@
       { t: "التيار الخارج لأسفل (A2):", ask: function (h) { return h.el("A2").i; }, units: A },
       { t: "التيار الخارج لليمين (A3):", ask: function (h) { return h.el("A3").i; }, units: A },
       { t: "احسب A1 − A2 − A3 (KCL):", ask: function (h) { return h.el("A1").i - h.el("A2").i - h.el("A3").i; }, units: A, abs: 1e-7 },
-      { t: "ضع الفولتميتر على R1 واقرأه:", check: function (h) { return h.across("R1"); } },
+      { t: "صِل الملتيميتر 1 على طرفي R1 واقرأه:", check: function (h) { return h.across("R1"); } },
       { t: "جهد R1:", ask: function (h) { return Math.abs(h.vm()); }, units: V },
       { t: "جهد R2 (حدد R2 واقرأ جهده). مجموع جهدي R1 و R2 يساوي جهد المصدر 12 V (KVL):", ask: function (h) { return h.el("R2").v; }, units: V }
     ] };
@@ -101,7 +101,7 @@
     lab: lab([["V", [1, 0], [2, 0], { value: 10, plus: "a" }], ["AM", [1, 0], [1, 1], { tag: "A1" }], ["R", [1, 1], [1, 2], { value: 1000, tag: "R1" }], ["R", [1, 2], [2, 2], { value: 2200, tag: "R2" }], ["W", [2, 0], [2, 1], { tag: "slot" }], ["W", [2, 1], [2, 2]]]),
     steps: [
       { t: "التيار الآن:", ask: function (h) { return h.el("A1").i; }, units: A },
-      { t: "ضع مقاومة 4.7 kΩ مكان السلك السفلي الأيسر (أداة المقاومة ثم انقر على السلك، ثم غيّر قيمتها).", check: function (h) { return h.ok && h.count("R", function (e) { return Math.abs(e.value - 4700) < 1; }) > 0 && h.count("R") >= 3; } },
+      { t: "استبدل السلك البرتقالي بمقاومة 4.7 kΩ: احذف السلك بالممحاة، وركّب مقاومة بين نفس الثقبين (أو نفس العمودين)، ثم غيّر قيمتها.", check: function (h) { return h.ok && h.count("R", function (e) { return Math.abs(e.value - 4700) < 1; }) > 0 && h.count("R") >= 3; } },
       { t: "التيار الجديد:", ask: function (h) { return h.el("A1").i; }, units: A },
       { t: "جهد المقاومة 4.7 kΩ:", ask: function (h) { var e = h.L.edges.filter(function (x) { return x.k === "R" && Math.abs(x.value - 4700) < 1; })[0]; return Math.abs(h.res.el[e.id].v); }, units: V }
     ] };
@@ -116,9 +116,9 @@
   EXP["c1-resistive-3"] = { title: "مقسّم جهد تحت الحمل", intro: "الحمل على التوازي مع R2 يخفض جهد الخرج، وكلما صغر الحمل زاد الانخفاض.",
     lab: lab([["V", [1, 0], [2, 0], { value: 10, plus: "a" }], ["W", [2, 0], [3, 0]], ["W", [1, 0], [1, 1]], ["R", [1, 1], [2, 1], { value: 10000, tag: "R1" }], ["R", [2, 1], [3, 1], { value: 10000, tag: "R2" }], ["W", [3, 0], [3, 1]], ["W", [2, 1], [2, 2]], ["W", [3, 1], [3, 2]]], { ground: [3, 0] }),
     steps: [
-      { t: "ضع الفولتميتر على R2 (الخرج).", check: function (h) { return h.across("R2"); } },
+      { t: "صِل الملتيميتر 1 على طرفي R2 (الخرج).", check: function (h) { return h.across("R2"); } },
       { t: "جهد الخرج بدون حمل:", ask: function (h) { return Math.abs(h.vm()); }, units: V },
-      { t: "ضع مقاومة حمل 10 kΩ في الفراغ الأيمن (بين الخرج والأرضي).", check: function (h) { return h.ok && h.count("R", function (e) { return !e.tag && Math.abs(e.value - 10000) < 1; }) > 0 && Math.abs(h.vm()) < 4; } },
+      { t: "ركّب مقاومة حمل 10 kΩ على التوازي مع R2: رجل في عمود الخرج {@2,1} والأخرى في الأرضي {@3,0}.", check: function (h) { return h.ok && h.count("R", function (e) { return !e.tag && Math.abs(e.value - 10000) < 1; }) > 0 && Math.abs(h.vm()) < 4; } },
       { t: "جهد الخرج مع 10 kΩ:", ask: function (h) { return Math.abs(h.vm()); }, units: V },
       { t: "غيّر الحمل إلى 1 kΩ.", check: function (h) { return h.count("R", function (e) { return !e.tag && Math.abs(e.value - 1000) < 1; }) > 0; } },
       { t: "جهد الخرج مع 1 kΩ:", ask: function (h) { return Math.abs(h.vm()); }, units: V }
@@ -144,18 +144,18 @@
 
   /* ===== Chapter 4 ===== */
   var NODE_NET = [["V", [1, 0], [2, 0], { value: 10, plus: "a" }], ["R", [1, 0], [1, 1], { value: 1000 }], ["R", [1, 1], [2, 1], { value: 2000 }], ["R", [1, 1], [1, 2], { value: 1000 }], ["R", [1, 2], [2, 2], { value: 1000 }], ["W", [2, 0], [2, 1]], ["W", [2, 1], [2, 2]]];
-  EXP["c1-techniques-1"] = { title: "قياس جهود العقد", intro: "جهد العقدة = قراءة الفولتميتر وطرفه الأسود على الأرضي.",
+  EXP["c1-techniques-1"] = { title: "قياس جهود العقد", intro: "جهد العقدة = قراءة الملتيميتر وسلك COM على الأرضي.",
     lab: lab(NODE_NET),
     steps: [
-      { t: "ضع المجس الأحمر على العقدة الوسطى العلوية (بين R1 و R3)، والأسود على الأرضي.", check: function (h) { return h.same(h.L.probes.vp, [1, 1]) && h.same(h.L.probes.vn, [2, 0]); } },
+      { t: "صِل VΩ للملتيميتر 1 بالعقدة بين R1 و R3 ({@1,1})، و COM بالأرضي ({@2,0}).", check: function (h) { return h.same(h.L.probes.vp, [1, 1]) && h.same(h.L.probes.vn, [2, 0]); } },
       { t: "جهد العقدة الأولى:", ask: function (h) { return h.vm(); }, units: V },
-      { t: "انقل المجس الأحمر إلى العقدة العلوية اليمنى.", check: function (h) { return h.same(h.L.probes.vp, [1, 2]) && h.same(h.L.probes.vn, [2, 0]); } },
+      { t: "انقل طرف سلك VΩ إلى العقدة الثانية ({@1,2}).", check: function (h) { return h.same(h.L.probes.vp, [1, 2]) && h.same(h.L.probes.vn, [2, 0]); } },
       { t: "جهد العقدة الثانية:", ask: function (h) { return h.vm(); }, units: V }
     ] };
   EXP["c1-techniques-3"] = { title: "العقدة العظمى", intro: "مصدر الجهد بين عقدتين يثبت فرق جهدهما مهما تغيرت الأحمال.",
     lab: lab([["V", [1, 0], [2, 0], { value: 10, plus: "a" }], ["R", [1, 0], [1, 1], { value: 1000 }], ["V", [1, 1], [1, 2], { value: 4, plus: "a", tag: "V2" }], ["R", [1, 1], [2, 1], { value: 2000 }], ["R", [1, 2], [2, 2], { value: 3000, tag: "RL" }], ["W", [2, 0], [2, 1]], ["W", [2, 1], [2, 2]]]),
     steps: [
-      { t: "ضع الفولتميتر على المصدر V2 (بين العقدتين).", check: function (h) { return h.across("V2"); } },
+      { t: "صِل الملتيميتر 1 على طرفي المصدر {V2} (بين العقدتين).", check: function (h) { return h.across("V2"); } },
       { t: "فرق الجهد:", ask: function (h) { return Math.abs(h.vm()); }, units: V },
       { t: "غيّر RL (أقصى اليمين) إلى أي قيمة أخرى.", check: function (h) { return h.e("RL") && Math.abs(h.e("RL").value - 3000) > 1; } },
       { t: "فرق الجهد الآن:", ask: function (h) { return Math.abs(h.vm()); }, units: V }
@@ -165,8 +165,8 @@
   EXP["c1-techniques-4"] = { title: "تيار الفرع المشترك", intro: "تيار الفرع المشترك = فرق تياري الحلقتين (مع عقارب الساعة).",
     lab: lab(TWO_MESH([["R", [1, 2], [2, 2], { value: 3000, tag: "R3" }], ["AM", [2, 2], [3, 2], { tag: "AS" }]]), { ground: [3, 0] }),
     steps: [
-      { t: "تيار الحلقة اليسرى I₁ (الأميتر العلوي الأيسر):", ask: function (h) { return h.el("A1").i; }, units: A },
-      { t: "تيار الحلقة اليمنى I₂ (الأميتر العلوي الأيمن):", ask: function (h) { return h.el("A2").i; }, units: A },
+      { t: "تيار الحلقة الأولى I₁ (أميتر اللوحة {A1}):", ask: function (h) { return h.el("A1").i; }, units: A },
+      { t: "تيار الحلقة الثانية I₂ (أميتر اللوحة {A2}):", ask: function (h) { return h.el("A2").i; }, units: A },
       { t: "تيار الفرع المشترك لأسفل I_shared:", ask: function (h) { return h.el("AS").i; }, units: A },
       { t: "احسب: I₁ − I₂ − I_shared =", ask: function (h) { return h.el("A1").i - h.el("A2").i - h.el("AS").i; }, units: A, abs: 1e-7 }
     ] };
@@ -174,21 +174,21 @@
     lab: lab(TWO_MESH([["I", [1, 2], [2, 2], { value: 2e-3, dir: "ab", tag: "Is" }], ["R", [2, 2], [3, 2], { value: 1000, tag: "R3" }]]), { ground: [3, 0] }),
     steps: [
       { t: "الفرق بين I₁ و I₂ (اقرأ الأميترين):", ask: function (h) { return h.el("A1").i - h.el("A2").i; }, units: A },
-      { t: "حدد مصدر التيار واقرأ جهده v_ab:", ask: function (h) { return h.el("Is").v; }, units: V },
-      { t: "تحقق من KVL في الحلقة اليسرى: جهد المصدر 10 V مطروحًا منه جهود {R1} ومصدر التيار و {R3} يساوي:", ask: function (h) { return 10 - h.el("R1").v - h.el("Is").v - h.el("R3").v; }, units: V, abs: 1e-4 }
+      { t: "جهد {Is} كما يعرضه مزود الجهد (الأحمر ناقص الأسود):", ask: function (h) { return h.el("Is").v; }, units: V },
+      { t: "تحقق من KVL في الحلقة اليسرى: 10 V مطروحًا منها جهد {R1} وجهد مصدر التيار (من {@1,2} إلى {@2,2}، أي سالب قراءة المزود) وجهد {R3}:", ask: function (h) { return 10 - h.el("R1").v - (h.res.dcV([1, 2]) - h.res.dcV([2, 2])) - h.el("R3").v; }, units: V, abs: 1e-4 }
     ] };
   EXP["c1-techniques-7"] = { title: "حل بطريقتين", intro: "حل الدائرة بالعقد أو بالحلقات يعطي القياسات نفسها.",
     lab: lab(NODE_NET.concat([])),
     steps: [
-      { t: "قس جهد العقدة الوسطى العلوية بالنسبة للأرضي.", check: function (h) { return h.same(h.L.probes.vp, [1, 1]) && h.same(h.L.probes.vn, [2, 0]); } },
+      { t: "قس بالملتيميتر 1 جهد العقدة {@1,1} بالنسبة للأرضي {@2,0}.", check: function (h) { return h.same(h.L.probes.vp, [1, 1]) && h.same(h.L.probes.vn, [2, 0]); } },
       { t: "القراءة (قارنها بحلك بالعقد):", ask: function (h) { return h.vm(); }, units: V },
-      { t: "حدد المقاومة اليمنى العمودية واقرأ تيارها (قارنه بتيار الحلقة اليمنى في حلك):", ask: function (h) { var e = h.L.edges.filter(function (x) { return x.k === "R" && h.same(x.a, [1, 2]); })[0]; return h.res.el[e.id].i; }, units: A }
+      { t: "حدد المقاومة بين {@1,2} والأرضي واقرأ تيارها (قارنه بتيار الحلقة اليمنى في حلك):", ask: function (h) { var e = h.L.edges.filter(function (x) { return x.k === "R" && h.same(x.a, [1, 2]); })[0]; return h.res.el[e.id].i; }, units: A }
     ] };
   EXP["c1-techniques-8"] = { title: "مكافئ البطارية", intro: "البطارية = مصدر مثالي + مقاومة داخلية. القياس بدون حمل ومع حمل يكشفها.",
     lab: lab([["V", [1, 0], [2, 0], { value: 9, plus: "a", bat: true, tag: "E" }], ["R", [1, 0], [1, 1], { value: 50, tag: "Rint" }], ["W", [2, 0], [2, 1]], ["W", [1, 1], [1, 2]], ["W", [2, 1], [2, 2]]], { probes: { vp: [1, 1], vn: [2, 1] } }),
     steps: [
-      { t: "R = 50 Ω هنا هي المقاومة الداخلية لبطارية مستهلكة (داخل البطارية)، والفولتميتر على طرفي البطارية الخارجيين. اقرأ الجهد بدون حمل:", ask: function (h) { return h.vm(); }, units: V },
-      { t: "ضع حملًا 220 Ω في الفراغ الأيمن.", check: function (h) { return h.ok && h.count("R", function (e) { return !e.tag && Math.abs(e.value - 220) < 1e-6; }) > 0; } },
+      { t: "R = 50 Ω هنا هي المقاومة الداخلية لبطارية مستهلكة (داخل البطارية)، والملتيميتر 1 على طرفي البطارية الخارجيين. اقرأ الجهد بدون حمل:", ask: function (h) { return h.vm(); }, units: V },
+      { t: "ركّب مقاومة حمل 220 Ω على الطرفين الخارجيين: رجل في {@1,1} والأخرى في {@2,1}.", check: function (h) { return h.ok && h.count("R", function (e) { return !e.tag && Math.abs(e.value - 220) < 1e-6; }) > 0; } },
       { t: "الجهد مع الحمل:", ask: function (h) { return h.vm(); }, units: V },
       { t: "استنتج المقاومة الداخلية: R_int = R_L (V_oc / V_L − 1)", ask: function (h) { return h.e("Rint").value; }, units: OHM }
     ] };
@@ -196,18 +196,18 @@
   EXP["c1-techniques-9"] = { title: "قياس مكافئ ثيفنن", intro: "V_Th من جهد الدائرة المفتوحة، و I_N من تيار القصر، و R_Th = V_Th / I_N.",
     lab: lab(TH_NET, { probes: { vp: [1, 2], vn: [2, 2] } }),
     steps: [
-      { t: "الفولتميتر على الطرفين (أعلى وأسفل العمود الأيمن). جهد الدائرة المفتوحة:", ask: function (h) { return h.vm(); }, units: V },
-      { t: "ضع أميترًا بين الطرفين (في الفراغ الأيمن) ليقصرهما.", check: function (h) { return h.between([1, 2], [2, 2], "AM").length > 0; } },
+      { t: "الملتيميتر 1 على الطرفين a و b ({@1,2} و {@2,2}). جهد الدائرة المفتوحة:", ask: function (h) { return h.vm(); }, units: V },
+      { t: "ركّب أميتر لوحة بين الطرفين ({@1,2} و {@2,2}) ليقصرهما.", check: function (h) { return h.between([1, 2], [2, 2], "AM").length > 0; } },
       { t: "تيار القصر:", ask: function (h) { return h.res.el[h.between([1, 2], [2, 2], "AM")[0].id].i; }, units: A },
       { t: "استنتج R_Th:", ask: function () { return 4000; }, units: OHM },
-      { t: "استبدل الأميتر بمقاومة تساوي R_Th.", check: function (h) { return h.between([1, 2], [2, 2], "R").some(function (e) { return Math.abs(e.value - 4000) < 1; }); } },
+      { t: "استبدل الأميتر بمقاومة تساوي R_Th بين نفس الطرفين.", check: function (h) { return h.between([1, 2], [2, 2], "R").some(function (e) { return Math.abs(e.value - 4000) < 1; }); } },
       { t: "جهد الحمل الآن (يجب أن يكون نصف V_Th):", ask: function (h) { return h.vm(); }, units: V }
     ] };
   EXP["c1-techniques-10"] = { title: "مصدر اختبار", intro: "أطفئ المصادر المستقلة، واحقن تيار اختبار، و R_Th = v / i.",
     lab: lab(TH_NET, { probes: { vp: [1, 2], vn: [2, 2] } }),
     steps: [
-      { t: "أطفئ مصدر الجهد: حدده واجعل قيمته 0 V (أو استبدله بسلك).", check: function (h) { return h.count("V", function (e) { return Math.abs(e.value) > 1e-12; }) === 0; } },
-      { t: "ضع مصدر تيار 1 mA بين الطرفين، اتجاهه من الأسفل إلى الأعلى (حدده واعكس الاتجاه إذا لزم).", check: function (h) { return h.ok && h.between([1, 2], [2, 2], "I").length > 0 && h.vm() > 0; } },
+      { t: "أطفئ مصدر الجهد: اجعل جهد {Vs} في مزود الجهد 0 V (تصير القناة قصرًا).", check: function (h) { return h.count("V", function (e) { return Math.abs(e.value) > 1e-12; }) === 0; } },
+      { t: "استخدم CH2 لمزود الجهد مصدرَ تيار 1 mA: اضبط حد التيار 1 mA والجهد 30 V وشغّلها، ثم وصّل الأحمر بالطرف {@1,2} والأسود بالطرف {@2,2}.", check: function (h) { return h.ok && h.between([1, 2], [2, 2], "I").length > 0 && h.vm() > 0; } },
       { t: "جهد الطرفين:", ask: function (h) { return h.vm(); }, units: V },
       { t: "R_Th = v ÷ i_test:", ask: function (h) { return h.vm() / Math.abs(h.between([1, 2], [2, 2], "I")[0].value); }, units: OHM }
     ] };
@@ -223,9 +223,9 @@
       ["W", [2, 0], [3, 0]], ["W", [2, 2], [3, 2]], ["W", [3, 0], [3, 1]], ["W", [3, 1], [3, 2]]], { ground: [3, 0] }),
     steps: [
       { t: "تيار الحمل بالمصدرين:", ask: function (h) { return h.el("AL").i; }, units: A },
-      { t: "أطفئ V2: استبدله بسلك (أداة السلك فوقه).", check: function (h) { return h.ok && !h.e("V2") && !!h.e("V1"); } },
+      { t: "أطفئ {V2}: أطفئ قناته (OFF) وضع سلكًا مكانه، بين الثقبين اللذين فيهما سلكاه.", check: function (h) { return h.ok && !h.e("V2") && !!h.e("V1"); } },
       { t: "تيار الحمل مع V1 وحده:", ask: function (h) { return h.el("AL").i; }, units: A },
-      { t: "أعد V2 (4 V، الموجب للأعلى) واستبدل V1 بسلك.", check: function (h) { return h.ok && !h.e("V1") && h.count("V", function (e) { return Math.abs(e.value - 4) < 1e-9 && h.same(e.plus === "b" ? e.b : e.a, [1, 2]); }) === 1; } },
+      { t: "أعد V2: احذف السلك وشغّل قناته (4 V، الأحمر في {@1,2})، ثم أطفئ {V1} بنفس الطريقة (OFF وسلك مكانه).", check: function (h) { return h.ok && !h.e("V1") && h.count("V", function (e) { return Math.abs(e.value - 4) < 1e-9 && h.same(e.plus === "b" ? e.b : e.a, [1, 2]); }) === 1; } },
       { t: "تيار الحمل مع V2 وحده:", ask: function (h) { return h.el("AL").i; }, units: A },
       { t: "مجموع القراءتين الجزئيتين (قارنه بالقراءة الأولى):", ask: function () { var a = 10 / (2000 + 2000 * 1000 / 3000) * (2000 / 3000), b = 4 / (2000 + 2000 * 1000 / 3000) * (2000 / 3000); return a + b; }, units: A }
     ] };
@@ -236,15 +236,15 @@
     steps: [
       { t: "القيمة العظمى على CH1 (عدّ المربعات × الجهد لكل مربع):", ask: function (h) { return mag(h.res.acV([1, 1])); }, units: V },
       { t: "الزمن الدوري (الشاشة تعرض دورتين):", ask: function (h) { return 1 / h.e("G").freq; }, units: MS },
-      { t: "غيّر تردد المولد إلى 2 kHz.", check: function (h) { return Math.abs(h.e("G").freq - 2000) < 1e-6; } },
+      { t: "غيّر تردد {G} من لوحة مولد الإشارة إلى 2 kHz.", check: function (h) { return Math.abs(h.e("G").freq - 2000) < 1e-6; } },
       { t: "الزمن الدوري الجديد:", ask: function (h) { return 1 / h.e("G").freq; }, units: MS }
     ] };
   EXP["c1-sinusoidal-2"] = { title: "جمع موجتين", intro: "مولدان على التوالي: الناتج مجموع فيزوريهما وليس مجموع قيمتيهما العظميين.",
     lab: lab([["GEN", [2, 0], [3, 0], { amp: 3, freq: 1000, rs: 0.01, plus: "a", phase: 0, tag: "G1" }], ["GEN", [1, 0], [2, 0], { amp: 4, freq: 1000, rs: 0.01, plus: "a", phase: 90, tag: "G2" }]], { ground: [3, 0], probes: { ch1: [2, 0], ch2: [1, 0] } }),
     steps: [
-      { t: "CH1 يعرض المولد السفلي وحده، و CH2 المجموع. القيمة العظمى للمجموع:", ask: function (h) { return mag(h.res.acV([1, 0])); }, units: V },
+      { t: "CH1 للأوسيلوسكوب يعرض {G1} وحده، و CH2 يعرض المجموع. القيمة العظمى للمجموع:", ask: function (h) { return mag(h.res.acV([1, 0])); }, units: V },
       { t: "هل تساوي 3 + 4؟ احسب |3∠0° + 4∠90°| بنفسك. ثم: طور المجموع بالنسبة لـ CH1:", ask: function (h) { return wrap(ph(h.res.acV([1, 0])) - ph(h.res.acV([2, 0]))); }, units: DEG, abs: 0.5 },
-      { t: "اجعل طور المولد العلوي 0° (حدده وعدّل الطور).", check: function (h) { return Math.abs((h.e("G2").phase || 0)) < 1e-9; } },
+      { t: "اجعل طور {G2} 0° من لوحة مولد الإشارة.", check: function (h) { return Math.abs((h.e("G2").phase || 0)) < 1e-9; } },
       { t: "القيمة العظمى للمجموع الآن (الموجتان في طور واحد):", ask: function (h) { return mag(h.res.acV([1, 0])); }, units: V }
     ] };
   var RL = function (k, v) { return lab([["GEN", [1, 0], [2, 0], { amp: 5, freq: 1000, rs: 0.01, plus: "a", tag: "G" }], [k, [1, 0], [1, 1], { value: v, tag: "X" }], ["R", [1, 1], [2, 1], { value: 100, tag: "R" }], ["W", [2, 0], [2, 1]]], { probes: { ch1: [1, 0], ch2: [1, 1] } }); };
@@ -252,15 +252,15 @@
     lab: RL("L", 10e-3),
     steps: [
       { t: "حدد الملف L واقرأ طور جهده وطور تياره. فرق الطور (جهد − تيار):", ask: function (h) { var x = h.el("X"); return wrap(ph(x.vac) - ph(x.iac)); }, units: DEG, abs: 0.5 },
-      { t: "على الأوسيلوسكوب: CH2 (جهد R) يتبع التيار. ضع مكثفًا 1 µF مكان الملف.", check: function (h) { return h.count("C", function (e) { return Math.abs(e.value - 1e-6) < 1e-12; }) > 0 && h.count("L") === 0; } },
+      { t: "على الأوسيلوسكوب: CH2 (جهد R) يتبع التيار. احذف الملف وركّب مكثفًا 1 µF مكانه.", check: function (h) { return h.count("C", function (e) { return Math.abs(e.value - 1e-6) < 1e-12; }) > 0 && h.count("L") === 0; } },
       { t: "فرق الطور (جهد المكثف − تياره):", ask: function (h) { var e = h.L.edges.filter(function (x) { return x.k === "C"; })[0], x = h.res.el[e.id]; return wrap(ph(x.vac) - ph(x.iac)); }, units: DEG, abs: 0.5 }
     ] };
-  EXP["c1-sinusoidal-4"] = { title: "KVL بالفولتميتر", intro: "في AC: مجموع قراءات الفولتميترات (rms) أكبر من جهد المصدر، لأن الجهود فيزورات بأطوار مختلفة.",
+  EXP["c1-sinusoidal-4"] = { title: "KVL بالملتيميتر", intro: "في AC: مجموع قراءات الملتيميتر (rms) أكبر من جهد المصدر، لأن الجهود فيزورات بأطوار مختلفة.",
     lab: RL("L", 20e-3),
     steps: [
-      { t: "الفولتميتر على R. القراءة V AC (rms):", check: function (h) { return h.across("R"); } },
+      { t: "الملتيميتر 1 على R (الوضع V~). القراءة rms:", check: function (h) { return h.across("R"); } },
       { t: "V_R (rms):", ask: function (h) { return mag(h.vmAC()) / Math.SQRT2; }, units: V },
-      { t: "انقل الفولتميتر إلى الملف L.", check: function (h) { return h.across("X"); } },
+      { t: "انقل سلكي الملتيميتر 1 إلى طرفي الملف L.", check: function (h) { return h.across("X"); } },
       { t: "V_L (rms):", ask: function (h) { return mag(h.vmAC()) / Math.SQRT2; }, units: V },
       { t: "جهد المصدر rms = 5/√2. اجمع V_R و V_L جمعًا فيزوريًا: √(V_R² + V_L²) =", ask: function (h) { return 5 / Math.SQRT2; }, units: V }
     ] };
@@ -276,9 +276,9 @@
   EXP["c1-sinusoidal-6"] = { title: "مكافئ ثيفنن بالقياس", intro: "V_Th من الدائرة المفتوحة، و Z_Th = V_Th / I_sc (فيزورات).",
     lab: lab(ACTH, { probes: { vp: [1, 2], vn: [2, 2] } }),
     steps: [
-      { t: "مقدار V_Th (القيمة العظمى على الفولتميتر):", ask: function (h) { return mag(h.vmAC()); }, units: V },
+      { t: "مقدار V_Th (القيمة العظمى = قراءة الملتيميتر V~ × √2):", ask: function (h) { return mag(h.vmAC()); }, units: V },
       { t: "طور V_Th:", ask: function (h) { return ph(h.vmAC()); }, units: DEG, abs: 0.5 },
-      { t: "ضع أميترًا بين الطرفين لتقصرهما.", check: function (h) { return h.between([1, 2], [2, 2], "AM").length > 0; } },
+      { t: "ركّب أميتر لوحة بين الطرفين ({@1,2} و {@2,2}) ليقصرهما.", check: function (h) { return h.between([1, 2], [2, 2], "AM").length > 0; } },
       { t: "مقدار تيار القصر:", ask: function (h) { return mag(h.res.el[h.between([1, 2], [2, 2], "AM")[0].id].iac); }, units: A },
       { t: "|Z_Th| = |V_Th| / |I_sc|:", ask: function () { var w = 2 * Math.PI * 1000, zc = Cx.c(0, -1 / (w * 1.5e-6)), z = Cx.div(Cx.mul(Cx.c(100.01), zc), Cx.add(Cx.c(100.01), zc)); return Cx.abs(z); }, units: OHM }
     ] };
@@ -287,14 +287,14 @@
     steps: [
       { t: "CH2 على العقدة الأولى. مقدار جهدها (قيمة عظمى):", ask: function (h) { return mag(h.res.acV([1, 1])); }, units: V },
       { t: "طورها بالنسبة للمصدر (CH1):", ask: function (h) { return wrap(ph(h.res.acV([1, 1])) - ph(h.res.acV([1, 0]))); }, units: DEG, abs: 0.5 },
-      { t: "انقل CH2 إلى العقدة اليمنى (أداة الأوسيلوسكوب: انقر CH1 ثم CH2).", check: function (h) { return h.same(h.L.probes.ch2, [1, 2]); } },
+      { t: "انقل مجس CH2 للأوسيلوسكوب إلى العقدة الثانية ({@1,2}).", check: function (h) { return h.same(h.L.probes.ch2, [1, 2]); } },
       { t: "مقدار جهد العقدة الثانية:", ask: function (h) { return mag(h.res.acV([1, 2])); }, units: V }
     ] };
   EXP["c1-sinusoidal-8"] = { title: "تيارات الحلقات", intro: "تيار الفرع المشترك = I₁ − I₂ فيزوريًا (المقادير لا تُطرح مباشرة).",
     lab: lab([["GEN", [1, 0], [2, 0], { amp: 10, freq: 1000, rs: 0.01, plus: "a" }], ["W", [2, 0], [3, 0]], ["AM", [1, 0], [1, 1], { tag: "A1" }], ["R", [1, 1], [1, 2], { value: 100 }], ["C", [1, 2], [2, 2], { value: 2e-6 }], ["AM", [2, 2], [3, 2], { tag: "AS" }],
       ["L", [1, 2], [1, 3], { value: 15e-3 }], ["AM", [1, 3], [1, 4], { tag: "A2" }], ["R", [1, 4], [2, 4], { value: 100 }], ["W", [2, 4], [3, 4]], ["W", [3, 0], [3, 1]], ["W", [3, 1], [3, 2]], ["W", [3, 2], [3, 3]], ["W", [3, 3], [3, 4]]], { ground: [3, 0] }),
     steps: [
-      { t: "مقدار I₁ (حدد الأميتر الأيسر):", ask: function (h) { return mag(h.el("A1").iac); }, units: A },
+      { t: "مقدار I₁ (أميتر اللوحة {A1}، اضغطه لترى القيمة العظمى):", ask: function (h) { return mag(h.el("A1").iac); }, units: A },
       { t: "مقدار I₂:", ask: function (h) { return mag(h.el("A2").iac); }, units: A },
       { t: "مقدار تيار الفرع المشترك:", ask: function (h) { return mag(h.el("AS").iac); }, units: A },
       { t: "احسب |I₁ − I₂| من الفيزورين (بأطوارهما):", ask: function (h) { return mag(Cx.sub(h.el("A1").iac, h.el("A2").iac)); }, units: A }
@@ -323,19 +323,19 @@
     steps: [
       { t: "P للمقاومة:", ask: function (h) { return Sab(h.el("R")).re; }, units: W },
       { t: "Q للملف:", ask: function (h) { return Sab(h.el("X")).im; }, units: VAR },
-      { t: "حدد المولد: القدرة التي يسلّمها P = −(P الممتصة):", ask: function (h) { return -Sab(h.el("G")).re; }, units: W }
+      { t: "القدرة المتوسطة التي يسلّمها المولد P:", ask: function (h) { return -Sab(h.el("G")).re; }, units: W }
     ] };
   EXP["c1-power-3"] = { title: "القيمة الفعالة", intro: "فولتميتر AC يقرأ القيمة الفعالة: للموجة الجيبية Vm/√2.",
     lab: lab([["GEN", [1, 0], [2, 0], { amp: 10, freq: 1000, rs: 0.01, plus: "a", tag: "G" }], ["W", [1, 0], [1, 1]], ["R", [1, 1], [2, 1], { value: 100, tag: "R" }], ["W", [2, 0], [2, 1]]], { probes: { vp: [1, 1], vn: [2, 1], ch1: [1, 1] } }),
     steps: [
       { t: "القيمة العظمى على الأوسيلوسكوب:", ask: function (h) { return mag(h.res.acV([1, 1])); }, units: V },
-      { t: "قراءة الفولتميتر V AC (rms):", ask: function (h) { return mag(h.vmAC()) / Math.SQRT2; }, units: V },
+      { t: "قراءة الملتيميتر 1 (V~، rms):", ask: function (h) { return mag(h.vmAC()) / Math.SQRT2; }, units: V },
       { t: "قدرة المقاومة = V_rms² / R:", ask: function (h) { return Sab(h.el("R")).re; }, units: W }
     ] };
   EXP["c1-power-4"] = { title: "مثلث القدرة", intro: "غيّر الملف وراقب P و Q و |S|.",
     lab: LOAD(),
     steps: [
-      { t: "حدد المولد: |S| التي يسلّمها = √(P² + Q²):", ask: function (h) { return mag(Sab(h.el("G"))); }, units: [{ l: "VA", f: 1 }] },
+      { t: "|S| التي يسلّمها المولد = √(P² + Q²):", ask: function (h) { return mag(Sab(h.el("G"))); }, units: [{ l: "VA", f: 1 }] },
       { t: "معامل القدرة = P / |S|:", ask: function (h) { var s = Sab(h.el("G")); return Math.abs(s.re) / mag(s); }, units: NONE },
       { t: "ضاعف الملف إلى 30 mH.", check: function (h) { return h.e("X") && Math.abs(h.e("X").value - 30e-3) < 1e-9; } },
       { t: "معامل القدرة الجديد:", ask: function (h) { var s = Sab(h.el("G")); return Math.abs(s.re) / mag(s); }, units: NONE }
@@ -346,14 +346,14 @@
       { t: "Q للملف:", ask: function (h) { return Sab(h.el("X")).im; }, units: VAR },
       { t: "Q للمكثف (سالبة):", ask: function (h) { return Sab(h.el("C2")).im; }, units: VAR },
       { t: "P الكلية للمقاومتين:", ask: function (h) { return Sab(h.el("R")).re + Sab(h.el("R2")).re; }, units: W },
-      { t: "حدد المولد: Q التي يسلّمها (= مجموع Q للأحمال):", ask: function (h) { return -Sab(h.el("G")).im; }, units: VAR }
+      { t: "Q التي يسلّمها المولد (= مجموع Q للأحمال):", ask: function (h) { return -Sab(h.el("G")).im; }, units: VAR }
     ] };
   var Pm = function () { var v = 5, r = 50; return v * v / (8 * r); };
   EXP["c1-power-6"] = { title: "دائرة المطابقة", intro: "مصدر Z_Th = 50 + j50.27 Ω (مولد 50 Ω مع ملف 8 mH). أقصى قدرة عندما الحمل = المرافق.",
     lab: lab([["GEN", [1, 0], [2, 0], { amp: 5, freq: 1000, rs: 50, plus: "a", tag: "G" }], ["L", [1, 0], [1, 1], { value: 8e-3, tag: "Ls" }], ["R", [1, 1], [2, 1], { value: 50, tag: "RL" }], ["W", [2, 0], [2, 1]], ["W", [1, 1], [1, 2]], ["W", [2, 1], [2, 2]]]),
     steps: [
       { t: "قدرة الحمل 50 Ω وحده:", ask: function (h) { return Sab(h.el("RL")).re; }, units: W },
-      { t: "أضف مكثفًا على التوالي مع الحمل يلغي مفاعلة الملف (X_C = 50.27 Ω عند 1 kHz): ضعه مكان السلك السفلي بين المولد والحمل، ثم اضبط قيمته.", check: function (h) { return h.ok && h.count("C") > 0 && Sab(h.el("RL")).re > 0.98 * Pm(); } },
+      { t: "أضف مكثفًا على التوالي مع الحمل يلغي مفاعلة الملف (X_C = 50.27 Ω عند 1 kHz): انقل سلك أرضي المولد إلى عمود فارغ، وركّب المكثف بين ذلك العمود والخط الأزرق، ثم اضبط قيمته.", check: function (h) { return h.ok && h.count("C") > 0 && Sab(h.el("RL")).re > 0.98 * Pm(); } },
       { t: "قدرة الحمل الآن (قارنها بأقصى قدرة نظرية):", ask: function (h) { return Sab(h.el("RL")).re; }, units: W }
     ] };
   EXP["c1-power-7"] = { title: "بنك المكثفات", intro: "محرك (R + L) على 220 V rms، 60 Hz — محاكاة فقط. مكثف على التوازي يخفض تيار الخط.",
@@ -361,7 +361,7 @@
     steps: [
       { t: "تيار الخط (القيمة العظمى على الأميتر):", ask: function (h) { return mag(h.el("AL").iac); }, units: A },
       { t: "معامل القدرة للمولد:", ask: function (h) { var s = Sab(h.el("G")); return Math.abs(s.re) / mag(s); }, units: NONE },
-      { t: "أضف مكثفًا في الفراغ الأيمن (على التوازي مع المحرك) حتى يصبح معامل القدرة 0.95 أو أكثر.", check: function (h) { var s = h.ok && Sab(h.el("G")); return s && h.count("C") > 0 && Math.abs(s.re) / mag(s) >= 0.95; } },
+      { t: "ركّب مكثفًا على التوازي مع المحرك (على طرفيه نفسهما) حتى يصبح معامل القدرة 0.95 أو أكثر.", check: function (h) { var s = h.ok && Sab(h.el("G")); return s && h.count("C") > 0 && Math.abs(s.re) / mag(s) >= 0.95; } },
       { t: "تيار الخط بعد التصحيح:", ask: function (h) { return mag(h.el("AL").iac); }, units: A }
     ] };
 
@@ -372,7 +372,7 @@
     steps: [
       { t: "حدد {RB} (مقاومة القاعدة R_B) واقرأ تيار القاعدة i_B:", ask: function (h) { return h.el("RB").i; }, units: A },
       { t: "حدد المصدر التابع واقرأ تيار المجمّع i_C:", ask: function (h) { return h.el("Q").i; }, units: A },
-      { t: "جهد المجمّع v_CE (على الفولتميتر):", ask: function (h) { return h.vm(); }, units: V },
+      { t: "جهد المجمّع v_CE (على الملتيميتر 1):", ask: function (h) { return h.vm(); }, units: V },
       { t: "خفّض {RB} إلى 50 kΩ لتزيد تيار القاعدة.", check: function (h) { return Math.abs(h.e("RB").value - 50000) < 1; } },
       { t: "تيار المجمّع الجديد:", ask: function (h) { return h.el("Q").i; }, units: A },
       { t: "جهد المجمّع الجديد (ينخفض كلما زاد i_C). تنبيه: هذا النموذج الخطي لا يُظهر التشبع؛ الترانزستور الحقيقي يتوقف عند v_CE ≈ 0.2 V:", ask: function (h) { return h.vm(); }, units: V },
@@ -382,10 +382,10 @@
     lab: lab([["V", [1, 0], [2, 0], { value: 10, plus: "a" }], ["R", [1, 0], [1, 1], { value: 1000 }], ["R", [1, 1], [2, 1], { value: 2000, tag: "R2" }], ["R", [1, 1], [1, 2], { value: 1000 }],
       ["DEP", [1, 2], [2, 2], { dk: "VCCS", gain: 0.5e-3, ctrl: "R2", dir: "ba", tag: "G" }], ["W", [1, 2], [1, 3]], ["R", [1, 3], [2, 3], { value: 2000 }], ["W", [2, 0], [2, 1]], ["W", [2, 1], [2, 2]], ["W", [2, 2], [2, 3]]], { probes: { vp: [1, 1], vn: [2, 1] } }),
     steps: [
-      { t: "الفولتميتر على العقدة 1. جهدها v₁:", ask: function (h) { return h.vm(); }, units: V },
-      { t: "انقل المجس الأحمر إلى العقدة 2 (العقدة العلوية اليمنى).", check: function (h) { return h.same(h.L.probes.vp, [1, 2]) && h.same(h.L.probes.vn, [2, 0]); } },
+      { t: "الملتيميتر 1 على العقدة 1 والأرضي. جهدها v₁:", ask: function (h) { return h.vm(); }, units: V },
+      { t: "انقل طرف سلك VΩ إلى العقدة 2 ({@1,2}).", check: function (h) { return h.same(h.L.probes.vp, [1, 2]) && h.same(h.L.probes.vn, [2, 0]); } },
       { t: "جهد العقدة 2:", ask: function (h) { return h.vm(); }, units: V },
-      { t: "حدد المصدر التابع واقرأ تياره (اتجاهه لأعلى داخل المصدر، أي التيار الداخل إلى العقدة 2 = 0.0005 × v₁):", ask: function (h) { return -h.el("G").i; }, units: A },
+      { t: "حدد المصدر التابع واقرأ تياره (من رجله الثانية إلى الأولى داخله، أي التيار الداخل إلى العقدة 2 = 0.0005 × v₁):", ask: function (h) { return -h.el("G").i; }, units: A },
       { t: "ضاعف ثابت المصدر التابع إلى 1 mS (اكتب 1m).", check: function (h) { return Math.abs(h.e("G").gain - 1e-3) < 1e-9; } },
       { t: "جهد العقدة 2 الآن:", ask: function (h) { return h.vm(); }, units: V },
       { t: "وجهد العقدة 1 الآن (هل تغيّر؟ لماذا؟):", ask: function (h) { return h.res.dcV([1, 1]); }, units: V }
@@ -395,7 +395,7 @@
     steps: [
       { t: "تيار الحلقة اليسرى I₁:", ask: function (h) { return h.el("A1").i; }, units: A },
       { t: "تيار الحلقة اليمنى I₂:", ask: function (h) { return h.el("A2").i; }, units: A },
-      { t: "حدد المصدر التابع واقرأ جهده (يساوي 500 × تيار {R3} لأسفل):", ask: function (h) { return h.el("H").v; }, units: V },
+      { t: "حدد المصدر التابع واقرأ جهده (يساوي 500 × تيار {R3} من رجله الأولى إلى الثانية):", ask: function (h) { return h.el("H").v; }, units: V },
       { t: "غيّر ثابت المصدر التابع إلى 1500 Ω.", check: function (h) { return Math.abs(h.e("H").gain - 1500) < 1e-6; } },
       { t: "تيار الحلقة اليمنى الآن:", ask: function (h) { return h.el("A2").i; }, units: A },
       { t: "تيار {R3} الآن (= I₁ − I₂):", ask: function (h) { return h.el("R3").i; }, units: A }
@@ -518,7 +518,7 @@
       if (!cur) return; var x = EXP[cur], d = card.querySelector(".exp-dia");
       if (d && x.diagram) { var h = helpers(); try { d.innerHTML = h.ok ? phasors(x.diagram(h)) : ""; } catch (e) { d.innerHTML = ""; } }
     }
-    function label(t) { var L = CV.lab.state(), nm = CV.lab.names(); return t.replace(/\{(\w+)\}/g, function (m, tag) { var e = L.edges.filter(function (x) { return x.tag === tag; })[0]; return e && nm[e.id] ? nm[e.id] : tag; }); }
+    function label(t) { var L = CV.lab.state(), nm = CV.lab.names(); t = t.replace(/\{@(\d+),(\d+)\}/g, function (m, r, c) { return CV.lab.where ? CV.lab.where(r + "," + c) : m; }); return t.replace(/\{(\w+)\}/g, function (m, tag) { var e = L.edges.filter(function (x) { return x.tag === tag; })[0]; return e && nm[e.id] ? nm[e.id] : tag; }); }
     function draw() {
       if (!cur) return; var x = EXP[cur], n = x.steps.length, i = curIdx(), done = i >= n, lt = lessonTitle(cur);
       var h = '<header class="exp-hd"><div><span class="eyebrow">تجربة موجّهة' + (lt ? ' · <a href="lesson.html#' + cur + '">' + esc(lt) + '</a>' : "") + '</span><h2>' + esc(x.title) + '</h2><p>' + esc(x.intro) + '</p></div>' +

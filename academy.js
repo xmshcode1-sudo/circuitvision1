@@ -33,20 +33,27 @@
   /* ---------- catalogue ---------- */
   function catalogue() {
     document.title = "أكاديمية المشاريع — CircuitVision";
-    var cards = CV.projectOrder.map(function (id) {
-      var p = CV.projects[id], g = progress(p);
-      return '<a class="pj card" href="#' + p.id + '"><div class="pj-top"><span class="chip chip-plan">' + p.level + '</span>' + (g.done ? '<span class="chip chip-ok">منجز</span>' : g.count ? '<span class="chip chip-build">' + g.count + ' من 5 مراحل</span>' : '') + '</div>' +
-        '<div class="pj-fig">' + CV.draw.render(p.sim.compute(simValues(p)).circuit || p.sim.compute(defaults(p)).circuit, { aria: p.ar }) + '</div>' +
-        '<b>' + p.ar + '</b><span class="ltr pj-en">' + p.en + '</span><p>' + p.summary + '</p>' +
-        '<div class="pj-ls">' + p.lessons.map(function (l) { return '<span>' + arTitle(l) + '</span>'; }).join("") + '</div></a>';
+    var total = CV.projectOrder.length, done = CV.projectOrder.filter(function (id) { return progress(CV.projects[id]).done; }).length;
+    var chapters = CV.courses[0].chapters.map(function (ch) {
+      var ids = ch.lessons.map(function (l) { return l.id; }).filter(function (id) { return CV.projects[id]; });
+      if (!ids.length) return "";
+      var cards = ids.map(function (id) {
+        var p = CV.projects[id], g = progress(p);
+        return '<a class="pj card" href="#' + p.id + '"><div class="pj-top"><span class="chip chip-plan">' + p.level + '</span>' + (g.done ? '<span class="chip chip-ok">منجز</span>' : g.count ? '<span class="chip chip-build">' + g.count + ' من 5 مراحل</span>' : '') + '</div>' +
+          '<div class="pj-fig">' + K.figure(p) + '</div>' +
+          '<b>' + p.ar + '</b><span class="ltr pj-en">' + p.en + '</span><p>' + p.summary + '</p>' +
+          '<div class="pj-ls"><span>الدرس: ' + arTitle(p.lesson) + '</span></div></a>';
+      }).join("");
+      var n = ids.filter(function (id) { return progress(CV.projects[id]).done; }).length;
+      return '<section class="pj-ch" id="ch-' + ch.id + '"><div class="pj-chh"><h2>' + ch.ar + '</h2><span class="muted">' + n + ' من ' + ids.length + ' منجز</span></div><div class="pj-grid">' + cards + '</div></section>';
     }).join("");
     root.innerHTML =
       '<header class="a-head"><span class="eyebrow ltr" style="justify-self:start">Project Academy</span><h1>أكاديمية المشاريع</h1>' +
-      '<p>مشاريع حقيقية تبنيها بيدك، مبنية على دروس Circuits 1. كل مشروع يمر بست مراحل، وكل رقم في التصميم والمحاكاة يحسبه محرك الحل نفسه المستخدم في الدروس.</p></header>' +
+      '<p>لكل درس في Circuits 1 مشروع يطبّق فكرته بالضبط: تصمم بالحساب، تحاكي، تبني على لوحة تجارب بأجهزة المعمل، تقيس، وتوثق. كل رقم يحسبه محرك الحل نفسه المستخدم في الدروس والمعمل.</p>' +
+      '<p class="muted" style="margin:0">أنجزت ' + done + ' من ' + total + ' مشروعًا.</p></header>' +
       '<ol class="stages card">' + STAGES.map(function (s, i) { return '<li><span class="n">' + (i + 1) + '</span><b>' + s[1] + '</b><span class="ltr">' + s[2] + '</span></li>'; }).join("") + '</ol>' +
-      '<div class="pj-grid">' + cards + '</div>' +
       '<a class="bt-band card" href="club.html"><span class="bt-band-mk ltr">Beyond Theory</span><span class="bt-band-t"><b>أنجزت مشروعًا؟ اعرضه في النادي</b>انشر صورة الدائرة التي بنيتها مع تقرير المشروع، وشاهد ما بناه زملاؤك في كل مشروع.</span><span class="bt-band-go">افتح النادي ←</span></a>' +
-      '<p class="muted" style="margin:0;font-size:13px">مشاريع Circuits 2 لم تُبنَ بعد.</p>';
+      chapters + '<p class="muted" style="margin:0;font-size:13px">مشاريع Circuits 2 لم تُبنَ بعد.</p>';
     fixBidi(root);
   }
   var defaults = K.defaults;
@@ -61,10 +68,10 @@
       '<div class="l-grid"><div class="l-body">' +
       sec("idea", "1. الفكرة", "Idea", '<div class="prose">' + p.idea.html + '<div class="callout"><b>مواصفات التصميم</b><ul class="ticks">' + p.idea.specs.map(function (s) { return "<li>" + s + "</li>"; }).join("") + '</ul></div></div>') +
       sec("design", "2. التصميم", "Design", '<div id="pj-design"></div>') +
-      sec("sim", "3. المحاكاة", "Simulation", '<p class="muted">' + p.sim.intro + ' <a class="lk" href="lab.html#ex-' + p.id + '">افتحها في المعمل الذكي ←</a></p><form class="sim-ctl" id="sim-ctl" novalidate></form><div id="sim-out"></div>') +
+      sec("sim", "3. المحاكاة", "Simulation", '<p class="muted">' + p.sim.intro + ' <a class="lk" href="lab.html#proj" id="to-lab">ابنِها في المعمل الذكي على لوحة التجارب ←</a></p><form class="sim-ctl" id="sim-ctl" novalidate></form><div id="sim-out"></div>') +
       sec("build", "4. التنفيذ", "Build", '<div class="bld"><div><b class="sub">القطع المطلوبة</b><div class="tbl-wrap"><table class="tbl"><thead><tr><th>القطعة</th><th>العدد</th></tr></thead><tbody>' + p.parts.map(function (x) { return "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td></tr>"; }).join("") + '</tbody></table></div></div>' +
         '<div class="safety"><b>السلامة</b><ul>' + p.safety.map(function (s) { return "<li>" + s + "</li>"; }).join("") + '</ul></div></div>' +
-        '<b class="sub">خطوات البناء <span class="muted">(رسم توضيحي؛ الجديد في كل خطوة مُبرز)</span></b><ol class="chk" id="bld-steps">' + p.build.map(function (s, i) { return '<li><label><input type="checkbox" data-i="' + i + '"' + (st.steps && st.steps[i] ? " checked" : "") + '><span><b class="bn">' + (i + 1) + '</b> ' + s.t + '</span></label><div class="bb-wrap">' + CV.breadboard.render(p.build, i, "الخطوة " + (i + 1) + ": " + plain(s.t)) + '</div></li>'; }).join("") + '</ol>') +
+        '<b class="sub">خطوات البناء <span class="muted">(بقيم تصميمك في المحاكاة؛ الجديد في كل خطوة مُبرز بالبرتقالي)</span></b><ol class="chk" id="bld-steps"></ol>') +
       sec("test", "5. الاختبار", "Test", '<p class="muted">' + p.test.intro + ' (اختياري إذا لم تبنِ الدائرة.)</p><form class="meas" id="meas" novalidate></form><div id="meas-out"></div>') +
       sec("doc", "6. التوثيق", "Documentation", '<label class="sub" for="pj-notes">ملاحظاتك (ما الذي تعلمته؟ ما الذي اختلف عن المتوقع؟)</label><textarea class="input notes" id="pj-notes" rows="4" placeholder="اكتب ملاحظاتك هنا…">' + esc(st.notes || "") + '</textarea><b class="sub">تقرير المشروع</b><pre class="report" id="report" dir="rtl"></pre><div class="pb-actions"><button type="button" class="btn btn-ghost btn-sm" id="copy-rep">نسخ التقرير</button><span class="muted" id="copy-st" aria-live="polite"></span></div>') +
       '<div class="finish card" id="finish"></div>' +
@@ -72,12 +79,11 @@
 
     F.renderProblem(document.getElementById("pj-design"), p.design, lid(p), { onChange: refresh, focus: false, title: p.ar });
     fixBidi(root);
-    buildSim(p); buildTest(p);
-    root.querySelectorAll("#bld-steps input").forEach(function (cb) {
-      cb.addEventListener("change", function () { var o = {}; o[cb.dataset.i] = cb.checked; S.saveProject(p.id, { steps: o }); refresh(); });
-    });
+    buildSim(p); buildTest(p); buildSteps(p);
+    document.getElementById("bld-steps").addEventListener("change", function (e) { var cb = e.target.closest("input[data-i]"); if (!cb) return; var o = {}; o[cb.dataset.i] = cb.checked; S.saveProject(p.id, { steps: o }); refresh(); });
     var notes = document.getElementById("pj-notes");
     notes.addEventListener("input", function () { S.saveProject(p.id, { notes: notes.value }); refresh(); });
+    document.getElementById("to-lab").addEventListener("click", function () { try { sessionStorage.setItem("cv.projlab", JSON.stringify({ name: "مشروع: " + p.ar, lab: p.labFor(simValues(p)) })); } catch (x) {} });
     document.getElementById("copy-rep").addEventListener("click", function () {
       var txt = document.getElementById("report").textContent, stEl = document.getElementById("copy-st");
       function fallback() { var r = document.createRange(); r.selectNodeContents(document.getElementById("report")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); stEl.textContent = "حدّدت النص؛ انسخه يدويًا."; }
@@ -101,6 +107,11 @@
     root.querySelector("#req").addEventListener("click", function (e) { var a = e.target.closest("[data-go]"); if (!a) return; e.preventDefault(); var t = document.getElementById("s-" + a.dataset.go); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
   }
 
+  var bsT = 0;
+  function buildSteps(p) {
+    var st = S.project(p.id), steps = p.buildFor(simValues(p)), box = document.getElementById("bld-steps");
+    box.innerHTML = steps.map(function (s, i) { return '<li><label><input type="checkbox" data-i="' + i + '"' + (st.steps && st.steps[i] ? " checked" : "") + '><span><b class="bn">' + (i + 1) + '</b> ' + s.t + '</span></label><div class="bb-wrap">' + p.picture(steps, i, "الخطوة " + (i + 1) + ": " + plain(s.t)) + '</div></li>'; }).join("");
+  }
   function sec(id, title, en, body) { return '<section class="l-sec card" id="s-' + id + '"><div class="sec-h"><h2>' + title + '</h2><span class="en ltr">' + en + '</span></div>' + body + '</section>'; }
 
   /* ---------- simulation ---------- */
@@ -117,9 +128,9 @@
       var k = e.target.dataset.k; if (!k) return;
       var o = {}; o[k] = e.target.value; S.saveProject(p.id, { design: o });
       if (e.target.type === "range") e.target.parentNode.querySelector("output").textContent = e.target.value;
-      drawSim(p); if (root._refresh) root._refresh(); refreshTest(p);
+      drawSim(p); if (root._refresh) root._refresh(); refreshTest(p); clearTimeout(bsT); bsT = setTimeout(function () { buildSteps(p); }, 250);
     });
-    document.getElementById("sim-reset").addEventListener("click", function () { S.saveProject(p.id, { design: defaults(p) }); buildSim(p); drawSim(p); if (root._refresh) root._refresh(); refreshTest(p); });
+    document.getElementById("sim-reset").addEventListener("click", function () { S.saveProject(p.id, { design: defaults(p) }); buildSim(p); drawSim(p); if (root._refresh) root._refresh(); refreshTest(p); buildSteps(p); });
     drawSim(p);
   }
   function drawSim(p) {

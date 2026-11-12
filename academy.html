@@ -128,7 +128,9 @@
   .stages li { display: grid; gap: 2px; justify-items: center; text-align: center; font-size: 13.5px; }
   .stages .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-soft); color: var(--glow); font-family: var(--font-mono); font-size: 13px; }
   .stages span.ltr { font-size: 11.5px; color: var(--fg-3); }
-  .pj-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .pj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+  .pj-ch { display: grid; gap: 10px; }
+  .pj-chh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; } .pj-chh h2 { font-size: 19px; }
   .pj { padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; color: inherit; border: 1px solid var(--line-soft); transition: border-color .15s; }
   .pj:hover { border-color: var(--blue); }
   .pj-top { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -214,8 +216,11 @@
 <script src="c1-techniques.js"></script>
 <script src="c1-sinusoidal.js"></script>
 <script src="c1-power.js"></script>
-<script src="breadboard.js"></script>
-<script src="c1-projects.js"></script>
+<script src="labsim.js"></script>
+<script src="bench.js"></script>
+<script src="benchview.js"></script>
+<script src="framework.js"></script>
+<script src="c1-lesson-projects.js"></script>
 <script src="progress.js"></script>
 <script>CV.store.applyTheme && CV.store.applyTheme(); CV.shell.init({ active: "academy" });</script>
 <script src="academy.js"></script>

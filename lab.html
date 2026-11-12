@@ -130,7 +130,7 @@
   .tl.on { background: var(--blue-soft); border-color: var(--blue); color: var(--glow); font-weight: 600; }
   .ard-btn[aria-pressed="true"] { background: var(--orange-soft); border-color: var(--orange); color: var(--orange); }
   .lab-hint { font-size: 13.5px; color: var(--fg-2); min-height: 1.4em; }
-  .lab-main { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 14px; align-items: start; }
+  .lab-main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
   .lab-cv { padding: 8px; overflow-x: auto; direction: ltr; }
   .lab-svg { display: block; width: 100%; min-width: 620px; height: auto; direction: ltr; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
   .lab-dot { fill: var(--line); }
@@ -223,6 +223,78 @@
   .exp-done { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--ok-soft); }
   .exp-done b { color: var(--ok); }
   #exp-pick { max-width: 100%; }
+
+  /* ---------- breadboard bench ---------- */
+  .tools { display: grid; gap: 8px; padding: 10px; }
+  .tool-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tool-opt { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13.5px; color: var(--fg-2); }
+  .tool-opt label { display: flex; gap: 6px; align-items: center; }
+  .tool-opt .select { padding: 4px 8px; font-size: 13px; }
+  .zoom { display: inline-flex; gap: 4px; align-items: center; } .zoom .tl { padding: 4px 10px; } .zoom .mono { min-width: 3.4em; text-align: center; font-size: 12.5px; }
+  .bench { padding: 8px; display: grid; gap: 4px; }
+  .bb-scroll { overflow: auto; direction: ltr; touch-action: pan-x pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; max-height: 80vh; }
+  .bb-svg { display: block; height: auto; max-width: none; direction: ltr; }
+  .bb-tip { margin: 0; min-height: 1.4em; font-size: 13px; color: var(--fg-2); padding-inline: 6px; }
+  .insp-pos { margin: 0; font-size: 12.5px; }
+  .bands i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 3px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.25); }
+
+  /* ---------- instruments ---------- */
+  .inst { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px; min-width: 0; align-items: start; }
+  .ins { background: linear-gradient(#2b3039, #22262e); color: #e8edf5; border: 1px solid #3a414d; border-radius: 14px; padding: 12px; display: grid; gap: 10px; min-width: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+  .ins-h { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .ins-h b { font-family: var(--font-display); font-size: 15px; }
+  .ins-h .ltr { font: 500 11.5px var(--font-mono); color: #9aa6b8; }
+  .ins-h .sp, .ps-top .sp { flex: 1; }
+  .ins-btn { font: 600 12px var(--font-mono); padding: 5px 12px; border-radius: 7px; border: 1px solid #4b5361; background: #353b46; color: #e8edf5; cursor: pointer; }
+  .ins-btn.on { background: #1f7a46; border-color: #2fd08a; }
+  .ins-btn.pwr.on { background: #2fd08a; color: #06210f; }
+  .ins-f { display: grid; gap: 3px; font-size: 12px; color: #aeb8c8; min-width: 0; }
+  .ins-f select, .ins-f input[type=range] { width: 100%; }
+  .ins-f select { background: #15181d; color: #e8edf5; border: 1px solid #4b5361; border-radius: 7px; padding: 5px 6px; font: 13px var(--font-mono); }
+  .ins-in { display: flex; align-items: center; gap: 4px; background: #15181d; border: 1px solid #4b5361; border-radius: 7px; padding: 0 6px 0 0; }
+  .ins-in { min-width: 0; overflow: hidden; }
+  .ins-in input { flex: 1; min-width: 0; width: 100%; background: transparent; border: 0; color: #e8edf5; font: 14px var(--font-mono); padding: 6px 8px; }
+  .ins-in input.bad { color: #ff8a99; }
+  .ins-in b { font: 600 12px var(--font-mono); color: #9aa6b8; padding-inline-end: 8px; }
+  .ins-note { margin: 0; font-size: 12.5px; color: #aeb8c8; }
+  .ins-note .lk-btn { background: none; border: 0; color: #7cc7ff; text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
+  .ins-col { display: grid; gap: 12px; min-width: 0; }
+  .ins-sc { grid-row: span 2; }
+  .sc-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sc-body canvas { width: 100%; height: auto; border-radius: 8px; border: 4px solid #15181d; display: block; }
+  .sc-ctl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .sc-ctl fieldset { margin: 0; border: 1px solid #4b5361; border-radius: 10px; padding: 6px 8px 8px; display: grid; gap: 6px; min-width: 0; }
+  .sc-ctl legend { font: 600 12px var(--font-mono); padding: 0 4px; }
+  .sc-ch.ch1 legend { color: #ffd400; } .sc-ch.ch2 legend { color: #25d7e6; }
+  .sc-meas { display: grid; gap: 6px; font-size: 12.5px; }
+  .sc-meas .m { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 8px; border-radius: 8px; background: #15181d; }
+  .sc-meas .m b { font-family: var(--font-mono); } .sc-meas .ch1 b { color: #ffd400; } .sc-meas .ch2 b { color: #25d7e6; }
+  .sc-meas i { font: normal 12.5px var(--font-mono); color: #e8edf5; }
+  .sc-meas span { color: #aeb8c8; }
+  .dmm-lcd { background: #a9c49a; color: #10240c; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; box-shadow: inset 0 2px 6px rgba(0,0,0,.35); }
+  .dmm-v { font: 600 26px var(--font-mono); letter-spacing: .02em; }
+  .dmm-m { font: 600 12px var(--font-mono); }
+  .dmm-dial { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .dmm-k { font: 600 14px var(--font-mono); padding: 7px 0; border-radius: 8px; border: 1px solid #4b5361; background: #353b46; color: #e8edf5; cursor: pointer; }
+  .dmm-k.on { background: #ff8a2b; border-color: #ffb36b; color: #2a1405; }
+  .ins-ps, .ins-fg { grid-column: 1 / -1; }
+  .ps-chs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .fg-chs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ps-ch, .fg-ch { background: #1b1f26; border: 1px solid #3a414d; border-radius: 10px; padding: 8px; display: grid; gap: 8px; min-width: 0; }
+  .fg-ch.ch1 > .ps-top b { color: #ffd400; } .fg-ch.ch2 > .ps-top b { color: #25d7e6; }
+  .ps-top { display: flex; align-items: center; gap: 8px; } .ps-top b { font: 700 13px var(--font-mono); }
+  .ps-cv { font: 700 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; background: #2a2f38; color: #6f7a8c; margin-inline-start: auto; }
+  .ps-cv.lit { background: #0f5132; color: #7dffb4; } .ps-cv.lit.cc { background: #5c1f1f; color: #ff9b9b; }
+  .ps-lcd { display: grid; gap: 2px; background: #071a10; border-radius: 7px; padding: 6px 10px; font: 600 18px var(--font-mono); color: #4dff9a; box-shadow: inset 0 2px 6px rgba(0,0,0,.5); }
+  .ps-lcd span:last-child { color: #ffcf4d; font-size: 15px; }
+  .fg-w { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .fg-wb { display: grid; justify-items: center; gap: 2px; padding: 5px 0; border-radius: 8px; border: 1px solid #4b5361; background: #353b46; color: #e8edf5; cursor: pointer; font-size: 11.5px; }
+  .fg-wb svg { width: 28px; height: 20px; } .fg-wb path { fill: none; stroke: currentColor; stroke-width: 2; }
+  .fg-wb.on { background: #ffd400; color: #2a2200; border-color: #ffe366; }
+  .fg-ch.ch2 .fg-wb.on { background: #25d7e6; border-color: #8beef6; color: #02282c; }
+  .fg-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  @media (max-width: 1180px) { .inst { grid-template-columns: 1fr; } .ins-sc { grid-row: auto; } }
+  @media (max-width: 640px) { .sc-ctl, .ps-chs, .fg-chs { grid-template-columns: 1fr; } }
   @media (max-width: 980px) { .lab-main, .lab-low { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -248,7 +320,7 @@
     </div>
     <div class="lab">
   <header class="lab-head"><span class="eyebrow ltr" style="justify-self:start">Smart Virtual Lab</span><h1>المعمل الذكي</h1>
-    <p>ابنِ أي دائرة بأدوات المشاريع، وقس بالفولتميتر والأميتر والأوسيلوسكوب، وبرمج Arduino Uno. الحل من نفس محركات الدروس.</p></header>
+    <p>ركّب القطع على لوحة تجارب حقيقية، ووصّلها بمزود الجهد ومولد الإشارة، وقس بالملتيميتر والأوسيلوسكوب كما في معمل الجامعة. الحل من نفس محركات الدروس.</p></header>
   <div class="lab-bar">
     <select class="select" id="lab-ex" aria-label="أمثلة جاهزة"></select>
     <select class="select" id="exp-pick" aria-label="تجارب الدروس الموجّهة"></select>
@@ -258,25 +330,27 @@
     <button type="button" class="btn btn-ghost btn-sm" id="lab-undo" hidden>تراجع</button>
   </div>
   <section class="card exp" id="exp-card" hidden aria-label="التجربة الموجّهة"></section>
-  <div class="tools card" id="lab-tools" role="toolbar" aria-label="الأدوات"></div>
+  <div class="tools card"><div class="tool-row" id="lab-tools" role="toolbar" aria-label="القطع والأدوات"></div>
+    <div class="tool-opt"><label>لون السلك <select class="select" id="wire-c"><option value="auto">تلقائي</option><option value="red">أحمر</option><option value="black">أسود</option><option value="blue">أزرق</option><option value="green">أخضر</option><option value="yellow">أصفر</option><option value="orange">برتقالي</option><option value="white">أبيض</option></select></label>
+      <span class="zoom"><button type="button" class="tl" id="zoom-out" aria-label="تصغير">−</button><span id="zoom-v" class="mono">100%</span><button type="button" class="tl" id="zoom-in" aria-label="تكبير">+</button></span>
+      <button type="button" class="tl" id="labels-t" aria-pressed="true">الأسماء والقيم</button></div></div>
   <p class="lab-hint" id="lab-hint" aria-live="polite"></p>
+  <div class="card bench"><div class="bb-scroll" id="lab-canvas"></div><p class="bb-tip" id="bb-tip" aria-live="polite"></p></div>
   <div class="lab-main">
-    <div class="card lab-cv" id="lab-canvas"></div>
+    <div class="inst" id="lab-inst"></div>
     <aside class="side">
-      <div class="card"><h2>العنصر المحدد</h2><div id="lab-insp"></div></div>
-      <div class="card"><h2>الفولتميتر</h2><div id="lab-vm"></div></div>
+      <div class="card"><h2>القطعة المحددة</h2><div id="lab-insp"></div></div>
+      <div class="card"><h2>حالة الدائرة</h2><div id="lab-status" aria-live="polite"></div></div>
       <div class="card env"><h2>البيئة</h2>
         <label for="env-light"><span>الإضاءة (للـ LDR)</span><output id="env-light-o" class="mono"></output></label><input type="range" id="env-light" min="0" max="100" step="1">
         <label for="env-temp"><span>الحرارة (للـ NTC)</span><output id="env-temp-o" class="mono"></output></label><input type="range" id="env-temp" min="0" max="80" step="1">
       </div>
-      <div class="card"><h2>حالة الدائرة</h2><div id="lab-status" aria-live="polite"></div></div>
     </aside>
   </div>
   <div class="card scene-card" id="scene-card" hidden><div class="ard-row"><h2>المشهد: حساس الحركة</h2><span style="flex:1"></span><button type="button" class="tl ard-btn" id="scene-auto" aria-pressed="false">مشي تلقائي</button></div>
     <canvas class="scene-c" id="lab-scene" width="640" height="170" aria-label="مشهد فيه شخص يتحرك أمام حساس الحركة"></canvas>
     <p class="muted" id="scene-st" style="margin:0;font-size:13.5px" aria-live="polite"></p></div>
   <div class="lab-low">
-    <div class="card"><h2>الأوسيلوسكوب</h2><canvas class="scope-c" id="lab-scope" width="640" height="260" aria-label="شاشة الأوسيلوسكوب"></canvas><p class="muted" id="scope-info" style="margin:0;font-size:13px"></p></div>
     <div class="card" id="ard-panel" hidden><div class="ard-row"><h2>Arduino Uno</h2><span class="chip chip-plan" id="ard-state">متوقف</span><span style="flex:1"></span><button type="button" class="btn btn-primary btn-sm" id="ard-run">تشغيل ▶</button><button type="button" class="btn btn-ghost btn-sm" id="ard-stop" hidden>إيقاف ■</button></div>
       <textarea class="ard-code" id="ard-code" dir="ltr" spellcheck="false" aria-label="كود Arduino"></textarea>
       <p class="ard-err" id="ard-err" hidden></p>
@@ -292,14 +366,14 @@
       </ul></details>
     </div>
   </div>
-  <details class="lab-notes card" style="padding:12px 14px"><summary>نماذج العناصر في المحاكاة</summary><ul>
-    <li>LED: مطفأ (دائرة مفتوحة) أو مضيء (جهد ثابت V<sub>f</sub> مع 10 Ω). اللمعان على الرسم يتناسب مع التيار.</li>
-    <li>LDR: مقاومته بين قيمتي الضوء والظلام حسب شريط الإضاءة (تدرج لوغاريتمي).</li>
-    <li>NTC: R = R<sub>25</sub>·exp[B(1/T − 1/298.15)] حسب شريط الحرارة.</li>
-    <li>مولد الإشارة: مصدر جيبي مثالي مع مقاومته الداخلية. المكثف مفتوح والملف قصر في التيار المستمر.</li>
-    <li>الأميتر مثالي (بدون هبوط جهد)، والفولتميتر مثالي (مقاومة لا نهائية).</li>
-    <li>اللمبة: مقاومة ثابتة V²/P، ولمعانها يتناسب مع قدرتها. حساس PIR: 3.3 V خلف 100 Ω عند الحركة.</li>
-    <li>حركة التيار: النقاط تتحرك باتجاه التيار الاصطلاحي (من + إلى −)، وسرعتها تزيد مع شدة التيار (مقياس لوغاريتمي). في الإشارة المترددة تُبطّأ الحركة إلى 0.5 Hz لتراها العين.</li>
+  <details class="lab-notes card" style="padding:12px 14px"><summary>كيف تعمل اللوحة والأجهزة في المحاكاة</summary><ul>
+    <li>لوحة التجارب: الثقوب الخمسة في كل عمود (a–e) موصولة ببعض، وكذلك (f–j). الخطوط الحمراء والزرقاء موصولة على طول اللوحة. الخط الأزرق العلوي هو الأرضي المرجعي (0 V) إذا استخدمته.</li>
+    <li>مزود الجهد: 3 قنوات معزولة. جهد ثابت (CV) حتى يصل التيار للحد، ثم تيار ثابت (CC).</li>
+    <li>مولد الإشارة: مقاومة خرج 50 Ω (أو مثالي). المربعة والمثلثية تُحسب بجمع توافقياتها الفردية (32 للمربعة مع تنعيم يمنع التجاوز الوهمي عند الحواف، و8 للمثلثية). إذا شغّلت القناتين بترددين مختلفين تستخدم المحاكاة تردد CH1.</li>
+    <li>الأوسيلوسكوب: مدخل 1 MΩ، وكل قناة تقيس طرف المجس ناقص مشبك أرضيه. في الأجهزة الحقيقية مشابك الأرضي موصولة ببعض وبأرضي المولد، فضعها على نفس النقطة.</li>
+    <li>الملتيميتر: V بمقاومة دخل 10 MΩ، A بمقاومة 0.05 Ω وفيوز 10 A، Ω بتيار اختبار 1 mA ويحتاج الدائرة مفصولة عن المصدر.</li>
+    <li>LED: مطفأ (مفتوح) أو مضيء (V<sub>f</sub> مع 10 Ω). LDR وNTC حسب شريطي الإضاءة والحرارة. اللمبة مقاومة ثابتة V²/P. وحدة المصدر التابع نموذج مثالي من الكتاب.</li>
+    <li>حركة التيار: النقاط تتحرك باتجاه التيار الاصطلاحي، وسرعتها تزيد مع شدته (مقياس لوغاريتمي). في الإشارة المترددة تُبطّأ إلى 0.5 Hz لتراها العين.</li>
   </ul></details>
 </div>
 <p class="lab-flash" id="lab-flash" hidden role="status"></p>
@@ -317,6 +391,9 @@
 <script src="ac.js"></script>
 <script src="labsim.js"></script>
 <script src="arduino.js"></script>
+<script src="bench.js"></script>
+<script src="benchview.js"></script>
+<script src="instruments.js"></script>
 <script>CV.shell.init({ active: "lab" });</script>
 <script src="lab.js"></script>
 <script src="experiments.js"></script>

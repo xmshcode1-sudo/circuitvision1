@@ -48,8 +48,12 @@
   /* ---------- academy tracks ---------- */
   function tracks(counts) {
     var signed = !!(C.configured() && C.user());
-    return '<section class="bt-tracks" id="bt-tracks"><div class="bt-sh"><h2>مشاريع الأكاديمية</h2><a class="lk" href="academy.html">أكاديمية المشاريع ←</a></div><div class="bt-tgrid">' +
-      order.map(function (id) {
+    var mine = order.filter(function (id) { var g = K.progress(P[id]); return g.done || g.count || g.started || (counts && counts[id]); });
+    var doneN = order.filter(function (id) { return K.progress(P[id]).done; }).length;
+    var head = '<div class="bt-sh"><h2>مشاريعك في الأكاديمية</h2><span class="muted">أنجزت ' + doneN + ' من ' + order.length + ' · <a class="lk" href="academy.html">كل المشاريع ←</a></span></div>';
+    if (!mine.length) return '<section class="bt-tracks" id="bt-tracks">' + head + '<div class="card bt-empty"><p>لكل درس في Circuits 1 مشروع في الأكاديمية. ابدأ أي مشروع، وحين تنهيه يظهر هنا لتعرضه في النادي.</p><a class="btn btn-ghost btn-sm" href="academy.html">افتح أكاديمية المشاريع</a></div></section>';
+    return '<section class="bt-tracks" id="bt-tracks">' + head + '<div class="bt-tgrid">' +
+      mine.map(function (id) {
         var p = P[id], g = K.progress(p), n = counts ? counts[id] || 0 : null;
         var segs = [g.design, g.sim, g.build, g.test, g.doc].map(function (x, i) { return '<i class="' + (x ? "on" : "") + '" title="' + ["التصميم", "المحاكاة", "التنفيذ", "الاختبار", "التوثيق"][i] + '"></i>'; }).join("");
         var state = g.done ? '<span class="chip chip-ok">منجز</span>' : g.count ? '<span class="chip chip-build">' + g.count + ' من 5</span>' : '<span class="chip">لم تبدأ</span>';
@@ -117,7 +121,7 @@
   /* ---------- gallery ---------- */
   function feed() {
     var body = $("cl-body");
-    var opts = '<option value="all">كل المشاريع</option>' + order.map(function (id) { return '<option value="' + id + '"' + (filter === id ? " selected" : "") + '>' + P[id].ar + '</option>'; }).join("") + '<option value="free"' + (filter === "free" ? " selected" : "") + '>مشاريع حرة (خارج الأكاديمية)</option>';
+    var opts = '<option value="all">كل المشاريع</option>' + CV.courses[0].chapters.map(function (ch) { var ids = ch.lessons.map(function (l) { return l.id; }).filter(function (id) { return P[id]; }); return ids.length ? '<optgroup label="' + ch.ar + '">' + ids.map(function (id) { return '<option value="' + id + '"' + (filter === id ? " selected" : "") + '>' + P[id].ar + '</option>'; }).join("") + '</optgroup>' : ""; }).join("") + '<option value="free"' + (filter === "free" ? " selected" : "") + '>مشاريع حرة (خارج الأكاديمية)</option>';
     body.innerHTML = '<div class="bt-tools"><div class="field"><label for="f-filter">عرض</label><select class="select" id="f-filter">' + opts + '</select></div>' +
       '<div class="field"><label for="f-sort">الترتيب</label><select class="select" id="f-sort"><option value="new">الأحدث</option><option value="top"' + (sort === "top" ? " selected" : "") + '>الأكثر إعجابًا</option></select></div>' +
       '<span style="flex:1"></span><button type="button" class="btn btn-primary btn-sm" id="np-open" aria-expanded="false" aria-controls="np-box">شارك مشروعًا</button></div>' +

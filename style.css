@@ -452,3 +452,61 @@ p { margin: 0; }
 .bt-band-t b { color: var(--fg); font-family: var(--font-display); font-size: 15.5px; }
 .bt-band-go { color: var(--orange); font-weight: 600; white-space: nowrap; }
 @media (max-width: 640px) { .bt-band { grid-template-columns: 1fr; } }
+
+/* breadboard bench drawing (lab + Project Academy build pictures) */
+.bb-board { fill: #f3efe4; stroke: #d6cfbd; stroke-width: 1.5; }
+.bb-gap { fill: #e2dccb; }
+.bb-h { fill: #4a4a46; }
+.bb-h.lit { fill: #22c55e; filter: drop-shadow(0 0 2px #22c55e); }
+.bb-rail { stroke-width: 1.6; } .bb-rail.p { stroke: #d33a2c; } .bb-rail.m { stroke: #2d6cdf; }
+.bb-rl { font: 700 11px var(--font-mono); text-anchor: end; } .bb-rl.p { fill: #d33a2c; } .bb-rl.m { fill: #2d6cdf; }
+.bb-rowl, .bb-coll { font: 500 8.5px var(--font-mono); fill: #8f8875; text-anchor: middle; }
+.jb-bg { fill: #2a2f38; stroke: #3b424e; }
+.jb-t { font: 600 11.5px var(--font-body); fill: #e6ebf3; text-anchor: middle; }
+.jb-dev { fill: #333944; stroke: #454d5a; }
+.jb-s { font: 600 10px var(--font-mono); fill: #9aa6b8; text-anchor: middle; }
+.jk { cursor: pointer; }
+.jk-o { fill: #15181d; stroke: #4b5361; stroke-width: 1.2; }
+.jk-i.red { fill: #c62828; } .jk-i.black { fill: #2b2b2b; stroke: #777; stroke-width: .8; } .jk-i.yellow { fill: #e8b400; } .jk-i.cyan { fill: #14b8c4; } .jk-i.orange { fill: #f07c1a; }
+.jk-c { fill: #0a0a0a; }
+.jk.lit .jk-o { stroke: #22c55e; stroke-width: 2.4; }
+.jk-l { font: 600 9.5px var(--font-mono); fill: #cfd6e2; text-anchor: middle; }
+.pt { cursor: pointer; }
+.pt-hit, .w-hit { fill: transparent; stroke: transparent; }
+.w-hit { stroke-width: 12; fill: none; }
+.pt.sel .pt-hit { fill: rgba(255,138,43,.14); stroke: #ff8a2b; stroke-dasharray: 4 3; }
+.pt.bad .pt-hit { stroke: #e5484d; stroke-dasharray: 2 2; }
+.pt.wire.sel .w-sh { stroke: #ff8a2b; stroke-width: 7; opacity: .55; }
+.w { fill: none; stroke-width: 3.4; stroke-linecap: round; }
+.w-sh { fill: none; stroke: rgba(0,0,0,.25); stroke-width: 4.6; stroke-linecap: round; transform: translate(1px, 1.5px); }
+.w-end { stroke: rgba(0,0,0,.35); stroke-width: .8; }
+.pt-leg { stroke: #a9adb5; stroke-width: 1.8; stroke-linecap: round; }
+.pt-r { fill: #e6cfa0; stroke: #b89a62; stroke-width: .8; }
+.pt-led { stroke: rgba(0,0,0,.3); stroke-width: 1; opacity: .78; } .pt-led.on { opacity: 1; }
+.pt-flat { fill: none; stroke: rgba(0,0,0,.35); stroke-width: 1.2; }
+.pt-pol { font: 700 9px var(--font-mono); fill: #c62828; }
+.pt-glow { filter: blur(3px); pointer-events: none; }
+.pt-cc { fill: #f0a24a; stroke: #b56a1c; }
+.pt-ce { fill: #1f4fa8; stroke: #102c66; } .pt-ces { fill: #cfd8ea; }
+.pt-l { fill: #2f6b45; stroke: #1c4029; } .pt-lw { stroke: #c08a3a; stroke-width: 1.6; }
+.pt-ldr { fill: #d8a35d; stroke: #8b5a22; } .pt-ldrz { fill: none; stroke: #6b3d12; stroke-width: 1; }
+.pt-ntc { fill: #23364f; stroke: #0e1a2a; }
+.pt-bat { fill: #222; stroke: #000; } .pt-batc { fill: #c9a227; } .pt-batl { font: 700 11px var(--font-mono); fill: #f0c94a; }
+.pt-sw { fill: #2b2b2b; stroke: #000; } .pt-swb { fill: #8b8f97; } .pt-swb.on { fill: #ff8a2b; }
+.pt-lamp { fill: rgba(255,240,200,.65); stroke: #c9b37a; } .pt-fil { fill: none; stroke: #6b5a2a; stroke-width: 1.2; }
+.pt-pcb { fill: #1f7a46; } .pt-dome { fill: #f3f5f8; stroke: #c9ced6; }
+.pt-am { fill: #2a2f38; stroke: #111; } .pt-aml { fill: #a9c7a0; }
+.pt-ic { fill: #1b1b1b; stroke: #000; } .pt-icd { fill: #555; }
+.pt-name { font: 600 9.5px var(--font-mono); fill: #2b3a55; paint-order: stroke; stroke: #f3efe4; stroke-width: 3px; pointer-events: none; }
+.pt-name.am { fill: #0f5132; }
+.pt-burn { font-size: 14px; fill: #e5484d; }
+.leg-h { fill: rgba(255,138,43,.35); stroke: #ff8a2b; stroke-width: 2; cursor: grab; touch-action: none; }
+.pt.sel { touch-action: none; }
+.rubber { fill: none; stroke: #ff8a2b; stroke-width: 2.4; stroke-dasharray: 5 4; pointer-events: none; }
+.focus { fill: none; stroke: #ff8a2b; stroke-width: 2; pointer-events: none; }
+.drop { fill: rgba(34,197,94,.35); stroke: #22c55e; stroke-width: 2; pointer-events: none; }
+.pt.new .pt-hit { fill: rgba(255,138,43,.18); stroke: #ff8a2b; stroke-width: 1.6; }
+.pt.wire.new .w-sh { stroke: #ff8a2b; stroke-width: 8; opacity: .5; }
+.pt.old { opacity: .55; }
+.bb-pic { overflow-x: auto; direction: ltr; border-radius: 10px; }
+.bb-pic svg { display: block; width: 100%; min-width: 340px; max-width: 760px; height: auto; margin-inline: auto; }
