@@ -91,7 +91,7 @@
     { id: "tutor",      ar: "المعلم الذكي",           en: "AI Tutor",                step: 5, status: "build", href: "tutor.html" },
     { id: "challenges", ar: "التحديات الهندسية",      en: "Engineering Challenges",  step: 5, status: "build", href: "challenges.html" },
     { id: "academy",    ar: "أكاديمية المشاريع",      en: "Project Academy",         step: 6, status: "build", href: "academy.html" },
-    { id: "club",       ar: "النادي الطلابي",     en: "Beyond Theory",           step: 6, status: "build", href: "club.html" },
+    { id: "club",       ar: "نادي Beyond Theory",     en: "Beyond Theory",           step: 6, status: "build", href: "club.html" },
     { id: "realworld",  ar: "الهندسة في الواقع",      en: "Real-World Engineering",  step: 6, status: "build", href: "realworld.html" },
     { id: "portfolio",  ar: "ملف الإنجاز",            en: "My Portfolio",            step: 6, status: "build", href: "portfolio.html" },
     { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" }

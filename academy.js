@@ -27,21 +27,8 @@
     });
   }
 
-  /* ---------- progress ---------- */
-  function simValues(p) {
-    var st = S.project(p.id), v = {};
-    p.sim.controls.forEach(function (c) { v[c.id] = st.design && st.design[c.id] !== undefined ? st.design[c.id] : c.def; });
-    return v;
-  }
-  function progress(p) {
-    var st = S.project(p.id), pr = (S.get().practice[lid(p)] || { steps: {} }).steps;
-    var design = p.design.steps.every(function (s) { return pr[s.id] && pr[s.id].solved; });
-    var r = p.sim.compute(simValues(p)), sim = design && !r.error && r.checks.every(function (c) { return c.ok; });
-    var built = p.build.every(function (_, i) { return st.steps && st.steps[i]; });
-    var tested = !!(st.measured && Object.keys(st.measured).some(function (k) { return st.measured[k] != null; }));
-    var doc = !!(st.notes && st.notes.trim());
-    return { design: design, sim: sim, build: built, test: tested, doc: doc, done: !!st.completedAt, count: [design, sim, built, tested, doc].filter(Boolean).length };
-  }
+  /* ---------- progress (shared with the Beyond Theory club) ---------- */
+  var K = CV.projectKit, simValues = K.simValues, progress = K.progress;
 
   /* ---------- catalogue ---------- */
   function catalogue() {
@@ -58,10 +45,11 @@
       '<p>مشاريع حقيقية تبنيها بيدك، مبنية على دروس Circuits 1. كل مشروع يمر بست مراحل، وكل رقم في التصميم والمحاكاة يحسبه محرك الحل نفسه المستخدم في الدروس.</p></header>' +
       '<ol class="stages card">' + STAGES.map(function (s, i) { return '<li><span class="n">' + (i + 1) + '</span><b>' + s[1] + '</b><span class="ltr">' + s[2] + '</span></li>'; }).join("") + '</ol>' +
       '<div class="pj-grid">' + cards + '</div>' +
-      '<div class="pending card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><p><b>لم يُبنَ بعد</b>مشاريع Circuits 2، والنادي الطلابي (مشاريع جماعية وعرضها) يحتاج حسابات حقيقية للطلاب، فيأتي بعد ربط قاعدة البيانات.</p></div>';
+      '<a class="bt-band card" href="club.html"><span class="bt-band-mk ltr">Beyond Theory</span><span class="bt-band-t"><b>أنجزت مشروعًا؟ اعرضه في النادي</b>انشر صورة الدائرة التي بنيتها مع تقرير المشروع، وشاهد ما بناه زملاؤك في كل مشروع.</span><span class="bt-band-go">افتح النادي ←</span></a>' +
+      '<p class="muted" style="margin:0;font-size:13px">مشاريع Circuits 2 لم تُبنَ بعد.</p>';
     fixBidi(root);
   }
-  function defaults(p) { var v = {}; p.sim.controls.forEach(function (c) { v[c.id] = c.def; }); return v; }
+  var defaults = K.defaults;
 
   /* ---------- project ---------- */
   function project(p) {
@@ -101,8 +89,9 @@
       var items = [["design", "التصميم: كل الخطوات صحيحة", g.design], ["sim", "المحاكاة: كل الشروط محققة (بعد التصميم)", g.sim], ["build", "التنفيذ: خطوات البناء", g.build], ["test", "الاختبار: قراءات حقيقية", g.test], ["doc", "التوثيق: ملاحظاتك", g.doc]];
       document.getElementById("req").innerHTML = items.map(function (x) { return '<li class="' + (x[2] ? "ok" : "") + '"><a href="#' + p.id + '" data-go="' + x[0] + '">' + x[1] + '</a></li>'; }).join("");
       var canFinish = g.design && g.sim, fin = document.getElementById("finish");
-      fin.innerHTML = g.done ? '<p>✓ أنجزت هذا المشروع. يمكنك تعديل المحاكاة والقياسات والملاحظات في أي وقت.</p><a class="btn btn-ghost btn-sm" href="#">كل المشاريع</a>'
-        : '<p>' + (canFinish ? "التصميم والمحاكاة مكتملان. " + (g.test ? "" : "لم تُدخل قياسات حقيقية؛ سيظهر ذلك في التقرير. ") : "يُحتسب المشروع منجزًا بعد إكمال التصميم وتحقيق كل شروط المحاكاة.") + '</p><button type="button" class="btn btn-primary btn-sm" id="fin-btn"' + (canFinish ? "" : " disabled") + '>أنهيت المشروع</button>';
+      var peers = '<a class="btn btn-ghost btn-sm" href="club.html#p-' + p.id + '">عروض الزملاء لهذا المشروع</a>';
+      fin.innerHTML = g.done ? '<p>✓ أنجزت هذا المشروع. اعرضه في نادي Beyond Theory مع صورة دائرتك، وسيُرفق تقرير المشروع تلقائيًا.</p><div class="pb-actions"><a class="btn btn-primary btn-sm" href="club.html#share-' + p.id + '">اعرض مشروعك في Beyond Theory</a>' + peers + '</div>'
+        : '<p>' + (canFinish ? "التصميم والمحاكاة مكتملان. " + (g.test ? "" : "لم تُدخل قياسات حقيقية؛ سيظهر ذلك في التقرير. ") : "يُحتسب المشروع منجزًا بعد إكمال التصميم وتحقيق كل شروط المحاكاة.") + '</p><div class="pb-actions"><button type="button" class="btn btn-primary btn-sm" id="fin-btn"' + (canFinish ? "" : " disabled") + '>أنهيت المشروع</button>' + peers + '</div>';
       var fb = document.getElementById("fin-btn");
       if (fb) fb.addEventListener("click", function () { S.completeProject(p.id, "أنجزت مشروع: " + p.ar); refresh(); });
       document.getElementById("report").textContent = report(p, g);
@@ -183,34 +172,7 @@
     fixBidi(out);
   }
 
-  /* ---------- report (plain text) ---------- */
-  function report(p, g) {
-    var st = S.project(p.id), v = simValues(p), r = p.sim.compute(v), m = st.measured || {}, prof = S.get().profile, L = [];
-    L.push("تقرير مشروع: " + p.ar + " (" + p.en + ")");
-    if (prof && prof.name) L.push("الطالب: " + prof.name);
-    L.push("التاريخ: " + new Date().toLocaleDateString("ar-SA-u-nu-latn"));
-    L.push("");
-    L.push("المواصفات:"); p.idea.specs.forEach(function (s) { L.push("- " + plain(s)); });
-    L.push("");
-    L.push("التصميم المختار:"); (r.design || []).forEach(function (s) { L.push("- " + plain(s)); });
-    L.push("خطوات التصميم: " + (g.design ? "مكتملة وصحيحة" : "غير مكتملة"));
-    L.push("");
-    if (!r.error) {
-      L.push("نتائج المحاكاة:"); r.readings.forEach(function (x) { L.push("- " + plain(x[0]) + ": " + plain(x[1])); });
-      L.push("الشروط:"); r.checks.forEach(function (c) { L.push((c.ok ? "  ✓ " : "  ✗ ") + plain(c.t)); });
-      L.push("");
-    }
-    var have = p.test.quantities.filter(function (q) { return m[q.id] != null; });
-    if (have.length) {
-      L.push("القياسات على الدائرة الحقيقية:");
-      have.forEach(function (q) { var unit = q.units[q.units.length > 1 ? 1 : 0].l, f = unit === "°" ? function (x) { return CV.num(x) + "°"; } : function (x) { return CV.ac.si(x, unit); }; L.push("- " + plain(q.label) + ": المتوقع " + f(r.expected[q.id]) + "، المقاس " + f(m[q.id])); });
-    } else L.push("القياسات على الدائرة الحقيقية: لم تُقس.");
-    L.push("");
-    L.push("الملاحظات:"); L.push(st.notes && st.notes.trim() ? st.notes.trim() : "—");
-    L.push("");
-    L.push("الحالة: " + (g.done ? "منجز" : "قيد العمل") + " · CircuitVision");
-    return L.join("\n");
-  }
+  var report = K.report;
 
   /* ---------- routing ---------- */
   function route() {

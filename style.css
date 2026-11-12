@@ -443,3 +443,12 @@ p { margin: 0; }
   .calc-panel { left: 8px; right: 8px; width: auto; bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 }
 @media print { .calc-fab, .calc-panel { display: none !important; } }
+
+/* Beyond Theory band (Project Academy → club) */
+.bt-band { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px 18px; align-items: center; padding: 16px 18px; border-color: color-mix(in srgb, var(--orange) 45%, var(--line-soft)); background: linear-gradient(100deg, var(--orange-soft), transparent 60%), var(--surface); color: var(--fg); }
+.bt-band:hover { border-color: var(--orange); }
+.bt-band-mk { font-family: var(--font-display); font-weight: 700; font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--orange); }
+.bt-band-t { display: grid; gap: 2px; color: var(--fg-2); font-size: 14px; min-width: 0; }
+.bt-band-t b { color: var(--fg); font-family: var(--font-display); font-size: 15.5px; }
+.bt-band-go { color: var(--orange); font-weight: 600; white-space: nowrap; }
+@media (max-width: 640px) { .bt-band { grid-template-columns: 1fr; } }

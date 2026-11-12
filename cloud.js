@@ -66,10 +66,28 @@
 
     /* club */
     posts: function () {
-      return ready().then(function (c) { return c.from("club_posts").select("id,user_id,project_id,title,body,created_at,author:profiles(display_name)").order("created_at", { ascending: false }).limit(50); }).then(err).then(function (r) { return r.data || []; });
+      return ready().then(function (c) { return c.from("club_posts").select("id,user_id,project_id,title,body,report,image_path,created_at,author:profiles(display_name)").order("created_at", { ascending: false }).limit(200); }).then(err).then(function (r) { return r.data || []; });
     },
-    addPost: function (p) { return ready().then(function (c) { return c.from("club_posts").insert({ user_id: user.id, project_id: p.project_id || null, title: p.title, body: p.body }); }).then(err); },
-    deletePost: function (id) { return ready().then(function (c) { return c.from("club_posts").delete().eq("id", id).eq("user_id", user.id); }).then(err); },
+    addPost: function (p) { return ready().then(function (c) { return c.from("club_posts").insert({ user_id: user.id, project_id: p.project_id || null, title: p.title, body: p.body, report: p.report || null, image_path: p.image_path || null }); }).then(err); },
+    deletePost: function (id, imagePath) {
+      return ready().then(function (c) {
+        return c.from("club_posts").delete().eq("id", id).eq("user_id", user.id).then(err).then(function () { if (imagePath) return c.storage.from("club").remove([imagePath]).then(function () {}, function () {}); });
+      });
+    },
+    /* photos of the real build: private bucket "club", each student writes only to their own folder */
+    uploadPhoto: function (blob) {
+      var path = user.id + "/" + Date.now() + ".jpg";
+      return ready().then(function (c) { return c.storage.from("club").upload(path, blob, { contentType: "image/jpeg", upsert: false }); }).then(function (r) {
+        if (r && r.error) throw new Error(/size|large/i.test(r.error.message || "") ? "الصورة كبيرة جدًا (الحد 2 MB)." : "تعذّر رفع الصورة. حاول مرة أخرى.");
+        return path;
+      });
+    },
+    photoUrls: function (paths) {
+      if (!paths.length) return Promise.resolve({});
+      return ready().then(function (c) { return c.storage.from("club").createSignedUrls(paths, 3600); }).then(function (r) {
+        var out = {}; ((r && r.data) || []).forEach(function (x) { if (x.signedUrl) out[x.path] = x.signedUrl; }); return out;
+      }, function () { return {}; });
+    },
     comments: function (ids) {
       if (!ids.length) return Promise.resolve([]);
       return ready().then(function (c) { return c.from("club_comments").select("id,post_id,user_id,body,created_at,author:profiles(display_name)").in("post_id", ids).order("created_at", { ascending: true }); }).then(err).then(function (r) { return r.data || []; });
