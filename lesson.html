@@ -111,6 +111,16 @@
 
   .finish { padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
   .finish p { color: var(--fg-2); font-size: 14.5px; }
+  .sum { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--blue-soft); border-inline-start: 3px solid var(--glow); font-size: 15.5px; line-height: 1.75; }
+  .sum-l li { font-size: 15px; }
+  .more { border-top: 1px dashed var(--line-soft); padding-top: 8px; }
+  .more > summary { cursor: pointer; color: var(--glow); font-size: 14px; font-weight: 600; list-style: none; display: inline-flex; gap: 6px; align-items: center; padding: 4px 0; }
+  .more > summary::-webkit-details-marker { display: none; }
+  .more > summary::before { content: "▸"; transition: transform .15s; }
+  .more[open] > summary::before { transform: rotate(-90deg); }
+  .more[open] > summary { margin-bottom: 8px; }
+  .prev-warn { display: flex; gap: 10px 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); font-size: 14.5px; }
+  .prev-warn a { color: var(--glow); text-decoration: underline; }
   .pager { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
   .empty-l { padding: 28px; text-align: center; color: var(--fg-2); }
@@ -165,6 +175,7 @@
 <script src="c1-techniques.js"></script>
 <script src="c1-sinusoidal.js"></script>
 <script src="c1-power.js"></script>
+<script src="summaries.js"></script>
 <script src="labsim.js"></script>
 <script src="experiments.js"></script>
 <script>
@@ -198,6 +209,18 @@
   var pendingSec = null, problemCtl = null;
   var icoVideo = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>';
 
+  var KEEP = "div.flow, table, svg, .eq, .lfig, figure, .cases, .ex-split, .prefixes, dl";
+  function short(s, SUM) {
+    var key = { concept: "c", when: "w", realworld: "r" }[s.id], top = "";
+    if (!SUM || !key || !SUM[key]) return '<div class="prose">' + s.html + '</div>';
+    var x = SUM[key];
+    top = Array.isArray(x) ? '<ul class="ticks sum-l">' + x.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul>' : '<p class="sum">' + x + '</p>';
+    var box = document.createElement("div"); box.innerHTML = s.html;
+    var vis = "";
+    if (s.id === "concept") Array.prototype.slice.call(box.children).forEach(function (el) { if (el.matches(KEEP)) { vis += el.outerHTML; el.remove(); } });
+    var rest = box.innerHTML.trim();
+    return '<div class="prose">' + top + vis + (rest ? '<details class="more"><summary>اشرح أكثر</summary><div class="prose">' + rest + '</div></details>' : "") + '</div>';
+  }
   function sec(id, title, en, inner, extra) {
     return '<section class="l-sec card" id="sec-' + id + '"><div class="sec-h"><h2>' + title + '</h2>' + (en ? '<span class="en">' + en + '</span>' : '') + (extra || '') + '</div>' + inner + '</section>';
   }
@@ -227,7 +250,8 @@
     var byId = {}; L.sections.forEach(function (s) { byId[s.id] = s; });
     var body = "";
     var toc = [];
-    order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, '<div class="prose">' + s.html + '</div>'); toc.push([s.id, s.title]); });
+    var SUM = (CV.lessonSum || {})[L.id];
+    order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM)); toc.push([s.id, s.title]); });
 
     body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
       '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>الفيديو قيد التسجيل</b>فيديو قصير (3 إلى 7 دقائق) بالعربية لهذا الدرس. سيظهر هنا عند رفعه.</p></div>');
@@ -249,13 +273,15 @@
       body += sec("generated", L.generator.title, "Generated Practice", '<p class="muted">كل دائرة هنا يولّدها المحرك بشكل مختلف ويحلها قبل عرضها. هذه التمارين إضافية ولا تؤثر على إكمال الدرس.</p><div id="gen-practice"></div>');
       toc.push(["generated", "تمارين مولّدة"]);
     }
-    if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, '<div class="prose">' + byId.realworld.html + '</div>'); toc.push(["realworld", "في الواقع"]); }
+    if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, short(byId.realworld, SUM)); toc.push(["realworld", "في الواقع"]); }
 
     body += sec("connected", "مرتبط بهذا الدرس", "Connected",
       '<div class="connected">' + labCard(L) + '<div class="pending"><span class="ic">' + CV.shell.icon("academy") + '</span><p><b>مشروع الدرس</b>مشروع يطبّق فكرة هذا الدرس بالضبط: تصمم، تحاكي، تبني على لوحة التجارب، وتقيس. <a href="academy.html#' + L.id + '" style="color:var(--glow);text-decoration:underline">افتح المشروع</a></p></div>' +
       '<div class="pending"><span class="ic">' + CV.shell.icon("bank") + '</span><p><b>بنك الأسئلة</b>كل أسئلة هذا الدرس وتمارينه في مكان واحد. <a href="bank.html" style="color:var(--glow);text-decoration:underline">افتح بنك الأسئلة</a>. أسئلة الكتب (Nilsson و Sadiku) تُضاف فقط من نصوص يوفّرها المؤسس.</p></div></div>');
 
     var prev = list[idx - 1], next = list[idx + 1];
+    var warnKey = "cv.prevwarn." + it.id, warned = false; try { warned = sessionStorage.getItem(warnKey) === "1"; } catch (x) {}
+    if (prev && !d.lessons[prev.id] && !warned) body = '<div class="prev-warn" id="prev-warn" role="status"><span>⚠ لم تُتمّ الدرس السابق <b>' + prev.data.ar + '</b>. تقدر تكمل هنا عادي، أو <a href="#' + prev.id + '">ارجع له</a>.</span><button type="button" class="btn btn-ghost btn-sm" id="prev-warn-x">إخفاء</button></div>' + body;
     body += '<section class="finish card" id="finish"><div><b style="font-family:var(--font-display)" id="finish-title"></b><p id="finish-text"></p></div><button class="btn btn-primary" id="complete-btn" type="button"></button></section>';
     body += '<div class="pager">' + (prev ? '<a class="btn btn-ghost btn-sm" href="#' + prev.id + '"><span>→</span> ' + prev.data.ar + '</a>' : '<span></span>') + (next ? '<a class="btn btn-ghost btn-sm" href="#' + next.id + '">' + next.data.ar + ' <span>←</span></a>' : '<a class="btn btn-ghost btn-sm" href="dashboard.html">العودة للوحة الطالب</a>') + '</div>';
 
@@ -312,6 +338,7 @@
       });
     });
 
+    var pwx = document.getElementById("prev-warn-x"); if (pwx) pwx.addEventListener("click", function () { try { sessionStorage.setItem(warnKey, "1"); } catch (x) {} document.getElementById("prev-warn").remove(); });
     document.getElementById("complete-btn").addEventListener("click", function () {
       if (this.disabled) return;
       S.completeLesson(it.id, "أكملت درس: " + L.ar);
