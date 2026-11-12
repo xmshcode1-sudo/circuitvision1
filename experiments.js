@@ -535,6 +535,7 @@
         h += '</div></li>';
       });
       h += '</ol>' + (x.diagram ? '<div class="exp-dia"></div>' : "");
+      h += '<p class="exp-vid"><span aria-hidden="true">▶</span> فيديو التجربة العملية · قيد التسجيل. يظهر هنا عند رفعه.</p>';
       if (done) h += '<div class="exp-done"><b>اكتملت التجربة ✓</b><span>سُجّلت في تقدمك.</span>' + (lt ? '<a class="btn btn-ghost btn-sm" href="lesson.html#' + cur + '">ارجع إلى الدرس</a>' : "") + '</div>';
       card.innerHTML = h; fixBidi(card); liveBits();
       var inp = card.querySelector(".exp-in input"); if (inp) inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); check(i); } });

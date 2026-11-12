@@ -663,6 +663,51 @@
   Q.forEach(function (q) { bi.pattern(q[0], q[1]); });
   bi.add({ "(الفيزورات بالقيمة العظمى)": "(phasors as peak values)", "اتجاه مرجع التيار في كل عنصر من اليسار لليمين أو من الأعلى للأسفل، والطرف + للجهد عند بداية هذا الاتجاه.": "Each element’s current reference runs left to right or top to bottom, with the voltage’s + terminal at the start of that direction.", "p ممتصة (W)": "p absorbed (W)", "المصدر التابع": "the dependent source" });
 
+
+  /* new: course groups, planned courses, videos, MATLAB, shortcuts */
+  bi.add({
+    "مقررات الدوائر": "Circuits courses",
+    "مقررات قادمة": "Upcoming courses",
+    "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر.": "Their place on the platform is reserved; content is built after the circuits courses are complete.",
+    "مستويات أعلى ومتطلبات إضافية": "Higher levels and more requirements",
+    "قسم محجوز لمقررات المستويات الأعلى. تُضاف حسب الخطة الدراسية التي تعتمدها.": "A reserved section for higher-level courses. They are added according to the study plan you approve.",
+    "قسم محجوز": "Reserved section",
+    "لم تُحدَّد مقررات هذا القسم بعد.": "This section’s courses have not been chosen yet.",
+    "التصميم المنطقي": "Logic Design",
+    "تحليل الإشارات والنظم": "Signals and Systems",
+    "قيد الإعداد": "In preparation",
+    "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم": "In preparation · chapters are added from the department’s course description",
+    "الفيديوهات": "Videos",
+    "الشرح النظري · قيد التسجيل": "Theory explanation · being recorded",
+    "فيديو قصير (# إلى # دقائق) بالعربية يشرح فكرة الدرس. سيظهر هنا عند رفعه.": "A short video (# to # minutes) in Arabic explaining the lesson’s idea. It will appear here once uploaded.",
+    "الجزء العملي · قيد التسجيل": "Practical part · being recorded",
+    "فيديو يبني تجربة هذا الدرس على لوحة التجارب ويقيسها بالأجهزة. سيظهر هنا عند رفعه.": "A video that builds this lesson’s experiment on the breadboard and measures it with the instruments. It will appear here once uploaded.",
+    "المشروع الهندسي · قيد التسجيل": "Engineering project · being recorded",
+    "فيديو يمشي معك في مشروع الدرس من التصميم إلى القياس. سيظهر هنا عند رفعه.": "A video that walks you through the lesson’s project from design to measurement. It will appear here once uploaded.",
+    "الدرس في MATLAB": "The lesson in MATLAB",
+    "لكل درس سكربت MATLAB يحل مثال الدرس ويرسم نتائجه، تشغّله وتعدّل قيمه بنفسك. يُضاف هنا عند إعداده.": "Each lesson gets a MATLAB script that solves the lesson’s example and plots the results; you run it and change its values yourself. It will be added here when ready.",
+    "فيديو المشروع · قيد التسجيل": "Project video · being recorded",
+    "فيديو يبني هذا المشروع خطوة بخطوة ويقيسه. يظهر هنا عند رفعه.": "A video that builds this project step by step and measures it. It appears here once uploaded.",
+    "فيديو التجربة العملية · قيد التسجيل. يظهر هنا عند رفعه.": "Practical experiment video · being recorded. It appears here once uploaded.",
+    "▶ فيديو التجربة العملية · قيد التسجيل. يظهر هنا عند رفعه.": "▶ Practical experiment video · being recorded. It appears here once uploaded.",
+    "اختصارات لوحة المفاتيح": "Keyboard shortcuts",
+    "? اختصارات لوحة المفاتيح": "? Keyboard shortcuts",
+    "تعمل مع كيبورد الآيباد أو الكمبيوتر، ولا تعمل وأنت تكتب داخل خانة.": "They work with an iPad or computer keyboard, and not while you are typing in a field.",
+    "عام": "General",
+    "إظهار هذه القائمة": "Show this list",
+    "إغلاق القوائم": "Close menus",
+    "التنقل: اضغط G ثم الحرف": "Navigation: press G, then the letter",
+    "المعمل": "Lab",
+    "احذف القطعة المحددة": "Delete the selected part",
+    "اقلب القطعة المحددة": "Flip the selected part",
+    "اضغط المفتاح المحدد أو اتركه": "Press or release the selected switch",
+    "تكبير وتصغير اللوحة": "Zoom the board in and out",
+    "إظهار الأسماء والقيم": "Show names and values",
+    "ارجع لأداة التحديد": "Back to the select tool",
+    "تراجع عن تحميل مثال": "Undo loading an example",
+    "الهندسة في الواقع": "Engineering in Real Life"
+  });
+
   /* strings with a variable part */
   P(/^الدرس: (.+)$/, function (m, x) { return "Lesson: " + tr(x); });
   P(/^الدرس (\d+) من (\d+) · (.+)$/, function (m, a, b, x) { return "Lesson " + a + " of " + b + " · " + tr(x); });

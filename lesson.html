@@ -89,6 +89,7 @@
 
   /* Video & connected */
   .pending { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 10px; border: 1px dashed var(--line); }
+  .vids { display: grid; gap: 10px; }
   .pending .ic { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: var(--muted-soft); color: var(--fg-3); flex: none; }
   .pending .ic svg { width: 22px; height: 22px; }
   .pending p { font-size: 14px; color: var(--fg-2); }
@@ -256,8 +257,11 @@
     order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM)); toc.push([s.id, s.title]); });
 
     body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
-      '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>الفيديو قيد التسجيل</b>فيديو قصير (3 إلى 7 دقائق) بالعربية لهذا الدرس. سيظهر هنا عند رفعه.</p></div>');
-    toc.push(["video", "الفيديو"]);
+      '<div class="vids">' +
+      '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>الشرح النظري · قيد التسجيل</b>فيديو قصير (3 إلى 7 دقائق) بالعربية يشرح فكرة الدرس. سيظهر هنا عند رفعه.</p></div>' +
+      '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>الجزء العملي · قيد التسجيل</b>فيديو يبني تجربة هذا الدرس على لوحة التجارب ويقيسها بالأجهزة. سيظهر هنا عند رفعه.</p></div>' +
+      '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>المشروع الهندسي · قيد التسجيل</b>فيديو يمشي معك في مشروع الدرس من التصميم إلى القياس. سيظهر هنا عند رفعه.</p></div></div>');
+    toc.push(["video", "الفيديوهات"]);
 
     body += sec("practice", "تمرين مع Smart Feedback", "Guided Practice",
       '<div id="problem"></div><div class="pb-allok">✓ حللت التمرين كاملًا.</div><div id="workspace"></div>', '<span class="sf-badge">يشرح لك أين أخطأت ولماذا</span>');
@@ -276,6 +280,10 @@
       toc.push(["generated", "تمارين مولّدة"]);
     }
     if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, short(byId.realworld, SUM)); toc.push(["realworld", "في الواقع"]); }
+
+    body += sec("matlab", "الدرس في MATLAB", "MATLAB",
+      '<div class="pending"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></span><p><b>قيد الإعداد</b>لكل درس سكربت MATLAB يحل مثال الدرس ويرسم نتائجه، تشغّله وتعدّل قيمه بنفسك. يُضاف هنا عند إعداده.</p></div>');
+    toc.push(["matlab", "MATLAB"]);
 
     body += sec("connected", "مرتبط بهذا الدرس", "Connected",
       '<div class="connected">' + labCard(L) + '<div class="pending"><span class="ic">' + CV.shell.icon("academy") + '</span><p><b>مشروع الدرس</b>مشروع يطبّق فكرة هذا الدرس بالضبط: تصمم، تحاكي، تبني على لوحة التجارب، وتقيس. <a href="academy.html#' + L.id + '" style="color:var(--glow);text-decoration:underline">افتح المشروع</a></p></div>' +

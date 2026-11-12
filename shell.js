@@ -36,7 +36,9 @@
     else html += '<a class="nv" href="dashboard.html#prefs">' + svg("settings") + '<span class="lbl">الإعدادات</span></a>';
     var lang = CV.bi ? CV.bi.mode() : "ar";
     html += '<div class="lang-sw no-bi" role="group" aria-label="اللغة الأولى · First language"><button type="button" data-lang="ar" aria-pressed="' + (lang === "ar") + '">العربية أولًا</button><button type="button" data-lang="en" aria-pressed="' + (lang === "en") + '" lang="en">English first</button></div>';
+    html += '<button type="button" class="kb-open" id="kb-open"><kbd>?</kbd> اختصارات لوحة المفاتيح</button>';
     document.getElementById("nav").innerHTML = html;
+    document.getElementById("kb-open").addEventListener("click", function () { help(byId); });
     document.querySelectorAll("#nav [data-lang]").forEach(function (b) { b.addEventListener("click", function () { if (CV.bi && b.dataset.lang !== CV.bi.mode()) CV.bi.set(b.dataset.lang); }); });
     if (opts.onSettings) document.getElementById("open-settings").addEventListener("click", opts.onSettings);
 
@@ -48,7 +50,41 @@
     btn.addEventListener("click", function () { setMenu(!side.classList.contains("open")); });
     scrim.addEventListener("click", function () { setMenu(false); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") setMenu(false); });
+    keys(byId);
     return { setMenu: setMenu };
+  }
+
+  /* ---------- keyboard shortcuts: "?" shows them, G then a letter moves between sections ---------- */
+  var NAV = { H: "home", D: "dashboard", C: "courses", P: "generator", L: "lab", T: "tutor", E: "challenges", B: "bank", A: "academy", R: "realworld", K: "club", F: "portfolio", N: "notebook" };
+  var LAB_KEYS = [["V", "تحديد"], ["W", "سلك"], ["R", "مقاومة"], ["E", "LED"], ["C", "مكثف"], ["L", "ملف"], ["B", "بطارية"], ["S", "مفتاح ضغط"], ["A", "لمبة"], ["P", "حساس حركة"], ["M", "أميتر لوحة"], ["D", "مصدر تابع"], ["X", "ممحاة"],
+    ["Delete", "احذف القطعة المحددة"], ["F", "اقلب القطعة المحددة"], ["T", "اضغط المفتاح المحدد أو اتركه"], ["+ / −", "تكبير وتصغير اللوحة"], ["N", "إظهار الأسماء والقيم"], ["Esc", "ارجع لأداة التحديد"], ["⌘Z / Ctrl+Z", "تراجع عن تحميل مثال"]];
+  function typing(t) { var g = t && t.tagName; return g === "INPUT" || g === "TEXTAREA" || g === "SELECT" || (t && t.isContentEditable); }
+  function help(byId) {
+    var box = document.getElementById("kb-help");
+    if (box) { box.hidden = !box.hidden; if (!box.hidden) box.querySelector("button").focus(); return; }
+    var row = function (k, v) { return '<li><kbd>' + k + '</kbd><span>' + v + '</span></li>'; };
+    var nav = Object.keys(NAV).filter(function (k) { return byId[NAV[k]] && byId[NAV[k]].href; }).map(function (k) { return row("G " + k, byId[NAV[k]].ar); }).join("");
+    var lab = /lab\.html/.test(location.pathname) ? '<h3>المعمل</h3><ul>' + LAB_KEYS.map(function (x) { return row(x[0], x[1]); }).join("") + '</ul>' : "";
+    box = document.createElement("div"); box.id = "kb-help"; box.className = "kb-help"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "اختصارات لوحة المفاتيح");
+    box.innerHTML = '<div class="kb-card card"><div class="kb-top"><h2>اختصارات لوحة المفاتيح</h2><button type="button" class="btn btn-ghost btn-sm">أغلق</button></div>' +
+      '<p class="kb-note">تعمل مع كيبورد الآيباد أو الكمبيوتر، ولا تعمل وأنت تكتب داخل خانة.</p>' +
+      '<h3>عام</h3><ul>' + row("?", "إظهار هذه القائمة") + row("Esc", "إغلاق القوائم") + '</ul><h3>التنقل: اضغط G ثم الحرف</h3><ul>' + nav + '</ul>' + lab + '</div>';
+    document.body.appendChild(box);
+    box.addEventListener("click", function (e) { if (e.target === box || e.target.closest(".kb-top button")) box.hidden = true; });
+    box.querySelector("button").focus();
+  }
+  function keys(byId) {
+    var g = 0;
+    document.addEventListener("keydown", function (e) {
+      if (typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+      var box = document.getElementById("kb-help");
+      if (e.key === "Escape" && box && !box.hidden) { box.hidden = true; return; }
+      if (e.key === "?") { e.preventDefault(); help(byId); return; }
+      var k = e.key.length === 1 ? e.key.toUpperCase() : "";
+      if (k === "G") { g = Date.now(); e.stopImmediatePropagation(); return; }
+      if (g && Date.now() - g < 1500 && NAV[k]) { var m = byId[NAV[k]]; g = 0; if (m && m.href) { e.preventDefault(); e.stopImmediatePropagation(); location.href = m.href; } return; }
+      g = 0;
+    }, true);
   }
 
   window.CV = window.CV || {};

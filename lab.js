@@ -267,16 +267,44 @@
     W: "اضغط الثقب الأول ثم الثاني. لتوصيل جهاز ابدأ من مقبسه على شريط الأجهزة. أول ما تضغط ثقبًا تضيء كل الثقوب الموصولة به.",
     DEL: "اضغط قطعة أو سلكًا لحذفه."
   };
+  var KEYOF = { select: "V", W: "W", R: "R", LED: "E", C: "C", L: "L", BAT: "B", SW: "S", LAMP: "A", PIR: "P", AM: "M", DEP: "D", DEL: "X" }, TOOLKEY = {};
+  Object.keys(KEYOF).forEach(function (k) { TOOLKEY[KEYOF[k]] = k; });
   function hintFor(t) { return HINT[t] || "اضغط ثقب الرجل الأولى ثم ثقب الرجل الثانية لتركيب " + B.KIND[t].ar + ". الثقوب الخمسة في نفس العمود (a–e أو f–j) موصولة ببعض داخل اللوحة."; }
   function init() {
     load();
     V.init($("lab-canvas"), { changed: function () { changed(); }, select: function () { renderInspector(); }, flash: flash, newId: function () { return "e" + (nextId++); } });
     I.init($("lab-inst"), { changed: function () { changed(); }, save: save });
-    $("lab-tools").innerHTML = TOOLS.map(function (t) { return '<button type="button" class="tl' + (t[0] === tool ? " on" : "") + '" data-tool="' + t[0] + '" aria-pressed="' + (t[0] === tool) + '">' + t[1] + '</button>'; }).join("");
-    $("lab-tools").addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-tool]"); if (!b) return; tool = b.dataset.tool;
+    $("lab-tools").innerHTML = TOOLS.map(function (t) {
+      var k = KEYOF[t[0]];
+      return '<button type="button" class="tl tl-part' + (t[0] === tool ? " on" : "") + '" data-tool="' + t[0] + '" aria-pressed="' + (t[0] === tool) + '"' + (k ? ' aria-keyshortcuts="' + k + '" title="' + t[1] + ' (' + k + ')"' : '') + '>' +
+        (CV.partIcon ? CV.partIcon(t[0]) : "") + '<span class="tl-n">' + t[1] + '</span>' + (k ? '<kbd class="tl-k">' + k + '</kbd>' : '') + '</button>';
+    }).join("");
+    function pick(t) {
+      var b = $("lab-tools").querySelector('[data-tool="' + t + '"]'); if (!b) return; tool = t;
       $("lab-tools").querySelectorAll(".tl").forEach(function (x) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
       $("lab-hint").textContent = hintFor(tool); V.tool(tool); renderInspector();
+    }
+    $("lab-tools").addEventListener("click", function (ev) { var b = ev.target.closest("[data-tool]"); if (b) pick(b.dataset.tool); });
+    /* keyboard shortcuts (iPad keyboard or computer); ignored while typing in a field */
+    document.addEventListener("keydown", function (e) {
+      var t = e.target, tag = t && t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "z" || e.key === "Z")) { var u = $("lab-undo"); if (u && !u.hidden) { e.preventDefault(); u.click(); } return; }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var key = e.key.length === 1 ? e.key.toUpperCase() : e.key, act = null;
+      if (TOOLKEY[key]) { pick(TOOLKEY[key]); act = 1; }
+      else if (key === "Delete" || key === "Backspace") {
+        var d = document.querySelector('[data-act="del"]'), sid = V.selected();
+        if (d) { d.click(); act = 1; }
+        else if (sid) { bench.parts = bench.parts.filter(function (x) { return x.id !== sid; }); V.select(null); inspFor = null; changed(); act = 1; }
+      }
+      else if (key === "F") { var fl = document.querySelector('[data-act="flip"]'); if (fl) { fl.click(); act = 1; } }
+      else if (key === "T") { var sw = document.querySelector('[data-act="toggle"]'); if (sw) { sw.click(); act = 1; } }
+      else if (key === "+" || key === "=") { zoom(0.2); act = 1; }
+      else if (key === "-" || key === "_") { zoom(-0.2); act = 1; }
+      else if (key === "N") { $("labels-t").click(); act = 1; }
+      else if (key === "Escape") { pick("select"); act = 1; }
+      if (act) e.preventDefault();
     });
     $("wire-c").addEventListener("change", function () { V.color(this.value); });
     var z = 1; function zoom(d) { z = Math.max(0.8, Math.min(2.4, Math.round((z + d) * 10) / 10)); $("zoom-v").textContent = Math.round(z * 100) + "%"; V.zoom(z); }

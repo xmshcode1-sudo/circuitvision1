@@ -37,6 +37,8 @@
 
   .courses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .course { overflow: hidden; }
+  .c-group { display: grid; gap: 12px; }
+  .c-group-h { display: grid; gap: 2px; } .c-group-h h3 { font-size: 15px; color: var(--fg-2); } .c-group-h .note { font-size: 13px; color: var(--fg-3); }
   .thumb { height: 128px; background: linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 18px 18px, linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 18px 18px, #071029; display: grid; place-items: center; border-bottom: 1px solid var(--line-soft); }
   .thumb svg { width: 72%; max-width: 300px; height: auto; }
   .course-body { padding: 16px 18px 18px; display: grid; gap: 10px; }
@@ -137,8 +139,8 @@
     </section>
 
     <section style="display:grid; gap:14px">
-      <div class="sec-title"><h2>مقرراتي</h2><span class="note">الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه.</span></div>
-      <div class="courses" id="courses"></div>
+      <div class="sec-title"><h2>مقرراتي</h2></div>
+      <div id="courses" style="display:grid; gap:22px"></div>
     </section>
 
   </main>
@@ -207,6 +209,16 @@
 
   /* ---------- Course thumbnails ---------- */
   function thumb(kind) {
+    if (kind === "logic") return '<svg viewBox="0 0 300 110" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M30 35 H95 M30 75 H95 M175 55 H215 M245 55 H280" stroke="#a9b8da" stroke-width="2"/>' +
+      '<path d="M95 20 H130 A35 35 0 0 1 130 90 H95 Z" stroke="#3fb6ff" stroke-width="2.2" fill="#071029"/>' +
+      '<path d="M215 35 L245 55 L215 75 Z" stroke="#ff8a2b" stroke-width="2.2" fill="#071029"/><circle cx="249" cy="55" r="4" stroke="#ff8a2b" stroke-width="2" fill="#071029"/>' +
+      '<text x="18" y="39" fill="#a9b8da" font-size="11" font-family="monospace">A</text><text x="18" y="79" fill="#a9b8da" font-size="11" font-family="monospace">B</text></svg>';
+    if (kind === "signals") {
+      var sq = "M12 75", k; for (k = 0; k < 4; k++) sq += " V35 H" + (12 + k * 32 + 16) + " V75 H" + (12 + (k + 1) * 32);
+      var bars = ""; [1, 3, 5, 7, 9].forEach(function (h, i) { var x = 170 + i * 24, ht = 60 / h; bars += '<path d="M' + x + ' 85 V' + (85 - ht).toFixed(1) + '" stroke="#ff8a2b" stroke-width="5"/>'; });
+      return '<svg viewBox="0 0 300 110" fill="none" stroke-linecap="round" aria-hidden="true"><path d="' + sq + '" stroke="#3fb6ff" stroke-width="2.2"/><path d="M160 85 H290" stroke="#2a3d6e"/>' + bars + '</svg>';
+    }
     if (kind === "dc") return '<svg viewBox="0 0 300 110" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M40 25 H105 M165 25 H240 V45 M240 85 V95 H40 V68 M40 52 V25" stroke="#a9b8da" stroke-width="2"/>' +
       '<path d="M105 25 l5 -7 l10 14 l10 -14 l10 14 l10 -14 l10 14 l5 -7" stroke="#ff8a2b" stroke-width="2.2"/>' +
@@ -247,8 +259,21 @@
     $("t-projects").textContent = Object.keys(d.projects).filter(function (k) { return d.projects[k].completedAt; }).length;
 
     // Courses
-    var wrap = $("courses"); wrap.innerHTML = "";
-    CV.courses.forEach(function (c) {
+    var host = $("courses"); host.innerHTML = "";
+    var wraps = {};
+    CV.courseGroups.forEach(function (g) {
+      var sec = document.createElement("div"); sec.className = "c-group";
+      sec.innerHTML = '<div class="c-group-h"><h3>' + g.ar + '</h3><span class="note">' + g.note + '</span></div><div class="courses"></div>';
+      host.appendChild(sec); wraps[g.id] = sec.querySelector(".courses");
+      if (g.id === "higher") wraps[g.id].innerHTML = '<article class="course card planned-empty"><div class="course-body"><span class="chip chip-plan" style="justify-self:start">قسم محجوز</span><p class="meta">لم تُحدَّد مقررات هذا القسم بعد.</p></div></article>';
+    });
+    CV.allCourses.forEach(function (c) {
+      var wrap = wraps[c.group || "core"];
+      if (c.planned) {
+        var pl = document.createElement("article"); pl.className = "course card";
+        pl.innerHTML = '<div class="thumb">' + thumb(c.thumb) + '</div><div class="course-body"><div class="course-head"><div><span class="code">' + c.code + '</span><h3>' + c.ar + '</h3></div><span class="chip chip-plan">قيد الإعداد</span></div><p class="meta">' + c.level + '</p></div>';
+        wrap.appendChild(pl); return;
+      }
       var p = S.courseProgress(c, d);
       var el = document.createElement("article");
       el.className = "course card";

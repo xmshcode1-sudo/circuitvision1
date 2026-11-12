@@ -76,7 +76,19 @@
           "The Terminal Equations", "The Two-Port Parameters", "Analysis of the Terminated Two-Port Circuit",
           "Interconnected Two-Port Circuits"])
       ]
-    }
+    },
+    /* Courses with a place reserved on the platform. Their chapters are added only from the department's course
+       description when the founder provides it, so nothing here is guessed. */
+    { id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "next", planned: true, thumb: "logic",
+      level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] },
+    { id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "next", planned: true, thumb: "signals",
+      level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] }
+  ];
+  /* Groups on the dashboard. "higher" is a reserved section for higher levels and more course requirements. */
+  var groups = [
+    { id: "core", ar: "مقررات الدوائر", note: "الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه." },
+    { id: "next", ar: "مقررات قادمة", note: "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر." },
+    { id: "higher", ar: "مستويات أعلى ومتطلبات إضافية", note: "قسم محجوز لمقررات المستويات الأعلى. تُضاف حسب الخطة الدراسية التي تعتمدها." }
   ];
 
   /* status: ok = built and tested · build = being built now · plan = later step */
@@ -100,7 +112,9 @@
   var statusLabel = { ok: "متاح", build: "متاح جزئيًا", plan: "مخطط" };
 
   window.CV = window.CV || {};
-  window.CV.courses = courses;
+  window.CV.courses = courses.filter(function (c) { return !c.planned; });
+  window.CV.allCourses = courses;
+  window.CV.courseGroups = groups;
   window.CV.modules = modules;
   window.CV.statusLabel = statusLabel;
   window.CV.currentStep = 2;
