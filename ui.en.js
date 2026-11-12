@@ -708,6 +708,40 @@
     "الهندسة في الواقع": "Engineering in Real Life"
   });
 
+
+  /* advanced level: compound problems */
+  [[/^أوجد التيار المتحكِّم iₓ في (\S+) باتجاه السهم\.$/, "Find the controlling current iₓ in $1 in the direction of the arrow."],
+   [/^أوجد القدرة التي يمتصها المصدر (\S+) \(سالبة إذا كان يولّد القدرة\)\.$/, "Find the power absorbed by source $1 (negative if it delivers power)."],
+   [/^مسألة مركّبة رقم (\d+) · (\d+) أجزاء على نفس الدائرة( · مصدر تابع)?$/, function (m, a, b, d) { return "Compound problem no. " + a + " · " + b + " parts on the same circuit" + (d ? " · dependent source" : ""); }]
+  ].forEach(function (q) { bi.pattern(q[0], q[1]); });
+  bi.add({
+    "المستوى المتقدم": "Advanced level",
+    "مسائل مركّبة: أكثر من متطلب على نفس الدائرة": "Compound problems: several prerequisites on one circuit",
+    "كل مسألة دائرة واحدة وعدة أجزاء، وكل جزء يحتاج درسًا مختلفًا: قانونا كيرشوف وطرق التحليل، قانون أوم، اصطلاح الإشارة، توازن القدرة، والمصادر التابعة. تحت كل جزء الدروس التي يعتمد عليها. كل القيم من محرك الحل.": "Each problem is one circuit with several parts, and each part needs a different lesson: Kirchhoff’s laws and analysis methods, Ohm’s law, the sign convention, power balance, and dependent sources. Under each part are the lessons it relies on. Every value comes from the solver.",
+    "مسألة جديدة ↻": "New problem ↻",
+    "يحتاج:": "Needs:",
+    "أوجد القدرة التي يمتصها المصدر التابع (سالبة إذا كان يولّد القدرة).": "Find the power absorbed by the dependent source (negative if it delivers power).",
+    "أوجد مجموع القدرة التي تمتصها كل المقاومات في الدائرة.": "Find the total power absorbed by all the resistors in the circuit.",
+    "طرق تحليل الدوائر": "Techniques of Circuit Analysis",
+    "✓ صحيح.": "✓ Correct.",
+    "اكتب رقمًا.": "Enter a number.",
+    "القيمة صحيحة لكن الإشارة معكوسة. راجع اتجاه المرجع المرسوم.": "The value is right but the sign is reversed. Check the drawn reference direction.",
+    "القيمة صحيحة لكن الإشارة معكوسة. راجع اتجاه المرجع المرسوم واصطلاح الإشارة: السالب يعني أن العنصر يولّد.": "The value is right but the sign is reversed. Check the drawn reference direction and the sign convention: negative means the element delivers power.",
+    "الرقم صحيح لكن البادئة خطأ (فرق ×1000). راجع الوحدة المختارة.": "The number is right but the prefix is wrong (off by ×1000). Check the chosen unit.",
+    "ابدأ بالكمية المتحكِّمة: اكتب معادلات العقد أو الحلقات، وعبّر عن المصدر التابع بدلالة هذه الكمية، ثم حلّ.": "Start with the controlling quantity: write the node or mesh equations, express the dependent source in terms of it, then solve.",
+    "حلّ الدائرة بطريقة جهود العقد أو تيارات الحلقات، ثم خذ تيار المقاومة باتجاه السهم المرسوم.": "Solve the circuit with node voltages or mesh currents, then take the resistor current in the direction of the drawn arrow.",
+    "بعد أن تعرف تيار المقاومة، جهدها v = iR بالقطبية المرسومة. انتبه: السهم يدخل الطرف +.": "Once you know the resistor current, its voltage is v = iR with the drawn polarity. Note: the arrow enters the + terminal.",
+    "قدرة المصدر الممتصة: إذا دخل مرجع التيار طرفه الموجب فـ p = vi، وإلا p = −vi. السالب يعني أنه يولّد.": "The source’s absorbed power: if the current reference enters its + terminal, p = vi; otherwise p = −vi. Negative means it delivers.",
+    "مجموع ما تمتصه كل المقاومات = مجموع ما تولّده المصادر. اجمع i²R لكل مقاومة، أو استخدم توازن القدرة.": "What all the resistors absorb = what the sources deliver. Add i²R for each resistor, or use power balance.",
+    "إجابات الأجزاء": "Answers to the parts",
+    "كل قيم الدائرة (من محرك الحل)": "All circuit values (from the solver)",
+    "✓ أكملت المسألة المركّبة كاملة وسُجّلت في تقدمك.": "✓ You completed the whole compound problem; it is recorded in your progress.",
+    "✓ أكملت كل الأجزاء (بعد عرض الحل، فلا تُحتسب).": "✓ You completed every part (after showing the solution, so it doesn’t count).",
+    "تعذّر توليد مسألة بهذه الإعدادات. اضغط «مسألة جديدة».": "Couldn’t generate a problem with these settings. Press “New problem”.",
+    "المسائل المركّبة (المستوى المتقدم)": "Compound problems (advanced level)",
+    "دائرة واحدة وعدة أجزاء، كل جزء يحتاج درسًا مختلفًا.": "One circuit, several parts, each needing a different lesson."
+  });
+
   /* strings with a variable part */
   P(/^الدرس: (.+)$/, function (m, x) { return "Lesson: " + tr(x); });
   P(/^الدرس (\d+) من (\d+) · (.+)$/, function (m, a, b, x) { return "Lesson " + a + " of " + b + " · " + tr(x); });

@@ -265,7 +265,6 @@
       var sec = document.createElement("div"); sec.className = "c-group";
       sec.innerHTML = '<div class="c-group-h"><h3>' + g.ar + '</h3><span class="note">' + g.note + '</span></div><div class="courses"></div>';
       host.appendChild(sec); wraps[g.id] = sec.querySelector(".courses");
-      if (g.id === "higher") wraps[g.id].innerHTML = '<article class="course card planned-empty"><div class="course-body"><span class="chip chip-plan" style="justify-self:start">قسم محجوز</span><p class="meta">لم تُحدَّد مقررات هذا القسم بعد.</p></div></article>';
     });
     CV.allCourses.forEach(function (c) {
       var wrap = wraps[c.group || "core"];

@@ -31,6 +31,20 @@
   .how h2 { font-size: 17px; }
   .how ol { margin: 0; padding-inline-start: 20px; color: var(--fg-2); display: grid; gap: 6px; }
   @media (max-width: 900px) { .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } .fams { grid-template-columns: repeat(2, minmax(0, 1fr)); } .work { padding: 16px; } }
+  .adv { display: grid; gap: 14px; } .adv-h { display: grid; gap: 6px; } .adv-h h2 { font-size: 19px; }
+  .cp-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .cp-dep { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+  .cp-fig { overflow-x: auto; } .cp-fig svg { max-width: 560px; width: 100%; height: auto; display: block; margin-inline: auto; }
+  .cp-parts { display: grid; gap: 12px; margin: 0; padding-inline-start: 22px; }
+  .cp-part { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); }
+  .cp-part.done { border-color: var(--ok, #22c55e); }
+  .cp-q { margin: 0; }
+  .cp-reqs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+  .cp-req { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line-soft); color: var(--glow); text-decoration: none; }
+  .cp-req:hover { border-color: var(--blue); }
+  .cp-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .cp-form .input { width: 9em; } .cp-form .select { width: auto; }
+  .cp-fb { margin: 0; font-size: 13.5px; } .cp-fb.ok { color: var(--ok, #22c55e); } .cp-fb.bad { color: var(--orange); } .cp-fb.hint { color: var(--fg-2); }
+  .cp-end { display: grid; gap: 10px; justify-items: start; } .cp-solution { display: grid; gap: 8px; width: 100%; }
 </style>
 </head>
 <body>
@@ -69,6 +83,12 @@
       <div id="gen"></div>
     </section>
 
+    <section class="work card adv" id="advanced" aria-labelledby="adv-h">
+      <div class="adv-h"><span class="eyebrow">المستوى المتقدم</span><h2 id="adv-h">مسائل مركّبة: أكثر من متطلب على نفس الدائرة</h2>
+      <p class="muted">كل مسألة دائرة واحدة وعدة أجزاء، وكل جزء يحتاج درسًا مختلفًا: قانونا كيرشوف وطرق التحليل، قانون أوم، اصطلاح الإشارة، توازن القدرة، والمصادر التابعة. تحت كل جزء الدروس التي يعتمد عليها. كل القيم من محرك الحل.</p></div>
+      <div id="compound"></div>
+    </section>
+
     <section class="how card">
       <h2>كيف يعمل المولّد؟</h2>
       <ol>
@@ -97,7 +117,7 @@
 <script src="ac.js"></script>
 <script src="mathcheck.js"></script>
 <script src="workspace.js"></script>
-<script src="practice.js"></script>
+<script src="practice.js"></script><script src="compound.js"></script>
 <script>
 (function () {
   "use strict";
@@ -134,6 +154,7 @@
   });
   famSel.addEventListener("change", function () { fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
   counts();
+  CV.compound.mount(document.getElementById("compound"));
 })();
 </script>
 <script src="calc.js"></script>

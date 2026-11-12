@@ -69,6 +69,7 @@
       '<header class="b-head"><span class="eyebrow ltr" style="justify-self:start">Question Bank</span><h1>بنك الأسئلة</h1>' +
       '<p>كل أسئلة Circuits 1 في مكان واحد، مع Smart Feedback في كل سؤال. تقدمك هنا هو نفسه في الدروس والمشاريع.</p></header>' +
       '<div class="b-stats">' + [["كل الأسئلة", Q.filter(function (q) { return q.src !== "gen"; }).length], ["محلولة", solvedN], ["مسائل الدروس", counts.lesson || 0], ["اختيار من متعدد", counts.quiz || 0], ["مسائل تصميم", counts.project || 0], ["مولّدات (لا نهائية)", counts.gen || 0]].map(function (x) { return '<div class="card"><b class="mono">' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join("") + '</div>' +
+      '<a class="card b-adv" href="practice.html#advanced"><b>المسائل المركّبة (المستوى المتقدم)</b><span class="muted">دائرة واحدة وعدة أجزاء، كل جزء يحتاج درسًا مختلفًا.</span></a>' +
       '<form class="b-flt card" id="flt" role="search" onsubmit="return false">' +
       sel("ch", "الفصل", [["", "كل الفصول"]].concat(course.chapters.map(function (c, i) { return [c.id, (i + 1) + ". " + c.ar]; }))) +
       sel("src", "المصدر", [["", "كل المصادر"]].concat(Object.keys(SRC).map(function (k) { return [k, SRC[k]]; }))) +

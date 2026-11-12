@@ -84,11 +84,10 @@
     { id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "next", planned: true, thumb: "signals",
       level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] }
   ];
-  /* Groups on the dashboard. "higher" is a reserved section for higher levels and more course requirements. */
+  /* Groups on the dashboard. */
   var groups = [
     { id: "core", ar: "مقررات الدوائر", note: "الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه." },
-    { id: "next", ar: "مقررات قادمة", note: "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر." },
-    { id: "higher", ar: "مستويات أعلى ومتطلبات إضافية", note: "قسم محجوز لمقررات المستويات الأعلى. تُضاف حسب الخطة الدراسية التي تعتمدها." }
+    { id: "next", ar: "مقررات قادمة", note: "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر." }
   ];
 
   /* status: ok = built and tested · build = being built now · plan = later step */
