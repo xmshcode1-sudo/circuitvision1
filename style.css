@@ -510,3 +510,25 @@ p { margin: 0; }
 .pt.old { opacity: .55; }
 .bb-pic { overflow-x: auto; direction: ltr; border-radius: 10px; }
 .bb-pic svg { display: block; width: 100%; min-width: 340px; max-width: 760px; height: auto; margin-inline: auto; }
+
+/* two languages at once (js/bi.js): the second language sits under the first, smaller and lighter */
+.bi-s { display: block !important; font-size: .8em !important; line-height: 1.45; color: var(--fg-3) !important; font-weight: 400 !important; letter-spacing: 0 !important; text-transform: none !important; margin-top: 1px; }
+.bi-w { display: inline-flex; flex-direction: column; align-items: inherit; max-width: 100%; vertical-align: middle; }
+.bi-w > .bi-p { display: block; }
+[dir="ltr"] .bi-s[lang="ar"], .bi-s[lang="ar"] { font-family: var(--font-body); }
+.bi-s[lang="en"] { font-family: "IBM Plex Sans", "Inter", system-ui, sans-serif; }
+h1 > .bi-s, h1 .bi-w > .bi-s { font-size: .42em !important; margin-top: 6px; line-height: 1.5; }
+h2 > .bi-s, h2 .bi-w > .bi-s, h3 > .bi-s { font-size: .62em !important; }
+.btn .bi-s, .tl .bi-s, .chip .bi-s, .nv .bi-s, button .bi-s, .pill .bi-s, .tag .bi-s { font-size: .74em !important; color: inherit !important; opacity: .62; }
+.lang-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; padding: 4px; border-radius: 10px; border: 1px solid var(--line-soft); }
+.lang-sw button { font: inherit; font-size: 12.5px; padding: 6px 4px; border-radius: 7px; border: 0; background: transparent; color: var(--fg-2); cursor: pointer; }
+.lang-sw button[aria-pressed="true"] { background: var(--blue-soft); color: var(--glow); font-weight: 600; }
+/* English-first is left-to-right: the floating calculator moves to the other corner, away from the sidebar */
+html[dir="ltr"] .calc-fab, html[dir="ltr"] .calc-panel { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
+/* the small English labels the pages had are now covered by the second-language line */
+html.bi-ar .en, html.bi-en .en { display: none; }
+/* the second language lines up with the first: left in English-first, right in Arabic-first */
+html.bi-en body { text-align: left; } html.bi-ar body { text-align: right; }
+/* options carry both languages, so a list must not grow wider than its place */
+select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+.lab-bar > * { min-width: 0; }

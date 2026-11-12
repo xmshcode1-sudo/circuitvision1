@@ -34,7 +34,10 @@
     });
     if (opts.onSettings) html += '<button class="nv" type="button" id="open-settings">' + svg("settings") + '<span class="lbl">الإعدادات</span></button>';
     else html += '<a class="nv" href="dashboard.html#prefs">' + svg("settings") + '<span class="lbl">الإعدادات</span></a>';
+    var lang = CV.bi ? CV.bi.mode() : "ar";
+    html += '<div class="lang-sw no-bi" role="group" aria-label="اللغة الأولى · First language"><button type="button" data-lang="ar" aria-pressed="' + (lang === "ar") + '">العربية أولًا</button><button type="button" data-lang="en" aria-pressed="' + (lang === "en") + '" lang="en">English first</button></div>';
     document.getElementById("nav").innerHTML = html;
+    document.querySelectorAll("#nav [data-lang]").forEach(function (b) { b.addEventListener("click", function () { if (CV.bi && b.dataset.lang !== CV.bi.mode()) CV.bi.set(b.dataset.lang); }); });
     if (opts.onSettings) document.getElementById("open-settings").addEventListener("click", opts.onSettings);
 
     var foot = document.getElementById("side-foot");

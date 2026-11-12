@@ -161,9 +161,9 @@
   .bt-hero p { margin: 0; color: var(--fg-2); max-width: 60ch; }
   .bt-flow { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; }
   .bt-flow li { display: flex; gap: 6px; align-items: center; padding: 5px 10px 5px 8px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line-soft); color: var(--fg-2); }
-  .bt-flow li span { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--font-mono); background: var(--line-soft); color: var(--fg); }
+  .bt-flow li > span:not(.bi-w) { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--font-mono); background: var(--line-soft); color: var(--fg); }
   .bt-flow li.on { border-color: var(--orange); color: var(--fg); background: var(--orange-soft); }
-  .bt-flow li.on span { background: var(--orange); color: #fff; }
+  .bt-flow li.on > span:not(.bi-w) { background: var(--orange); color: #fff; }
   .bt-motif { width: 100%; max-width: 420px; height: auto; direction: ltr; justify-self: center; }
   .bt-th { fill: none; stroke: var(--fg-3); stroke-width: 3; stroke-dasharray: 6 5; stroke-linejoin: round; }
   .bt-pr { fill: none; stroke: var(--fg-2); stroke-width: 3; stroke-linecap: round; }
@@ -247,6 +247,8 @@
 </div>
 
 <script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script><script src="c1-variables.en.js"></script>
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="curriculum.js"></script>

@@ -123,7 +123,7 @@
   .lab-head h1 { font-size: clamp(24px, 3vw, 32px); }
   .lab-head p { color: var(--fg-2); max-width: 70ch; margin: 0; }
   .lab-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .lab-bar .select { width: auto; min-width: 200px; }
+  .lab-bar .select { flex: 1 1 240px; width: 0; min-width: 0; max-width: 420px; }
   .tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
   .tl { font: inherit; font-size: 13.5px; padding: 7px 11px; border-radius: 9px; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--fg); cursor: pointer; }
   .tl:hover { border-color: var(--blue); }
@@ -382,6 +382,8 @@
 </div>
 
 <script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script><script src="c1-variables.en.js"></script>
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="curriculum.js"></script>

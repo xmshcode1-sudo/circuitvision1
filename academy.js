@@ -51,7 +51,7 @@
       '<header class="a-head"><span class="eyebrow ltr" style="justify-self:start">Project Academy</span><h1>أكاديمية المشاريع</h1>' +
       '<p>لكل درس في Circuits 1 مشروع يطبّق فكرته بالضبط: تصمم بالحساب، تحاكي، تبني على لوحة تجارب بأجهزة المعمل، تقيس، وتوثق. كل رقم يحسبه محرك الحل نفسه المستخدم في الدروس والمعمل.</p>' +
       '<p class="muted" style="margin:0">أنجزت ' + done + ' من ' + total + ' مشروعًا.</p></header>' +
-      '<ol class="stages card">' + STAGES.map(function (s, i) { return '<li><span class="n">' + (i + 1) + '</span><b>' + s[1] + '</b><span class="ltr">' + s[2] + '</span></li>'; }).join("") + '</ol>' +
+      '<ol class="stages card">' + STAGES.map(function (s, i) { return '<li><span class="n">' + (i + 1) + '</span><b>' + s[1] + '</b><span class="en ltr">' + s[2] + '</span></li>'; }).join("") + '</ol>' +
       '<a class="bt-band card" href="club.html"><span class="bt-band-mk ltr">Beyond Theory</span><span class="bt-band-t"><b>أنجزت مشروعًا؟ اعرضه في النادي</b>انشر صورة الدائرة التي بنيتها مع تقرير المشروع، وشاهد ما بناه زملاؤك في كل مشروع.</span><span class="bt-band-go">افتح النادي ←</span></a>' +
       chapters + '<p class="muted" style="margin:0;font-size:13px">مشاريع Circuits 2 لم تُبنَ بعد.</p>';
     fixBidi(root);
