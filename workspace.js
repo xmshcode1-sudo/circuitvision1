@@ -184,7 +184,7 @@
         return "<li class='" + cls[l.status] + "'><span class='ln'>" + l.n + "</span><span class='ltr lt'>" + esc(l.text) + "</span><span class='why'>" + esc(l.msg) + "</span></li>";
       }).join("") + "</ul>" +
         r.summary.notes.map(function (x) { return "<p class='ws-note ws-method'>" + esc(x.t) + "</p>"; }).join("") +
-        "<p class='ws-note'>" + (r.summary.err ? (r.summary.err === 1 ? "وجدت سطرًا واحدًا فيه خطأ." : "وجدت " + r.summary.err + " أسطر فيها أخطاء.") : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
+        "<p class='ws-note'>" + (r.summary.err ? (r.summary.err === 1 ? "وجدت سطرًا واحدًا فيه خطأ." : r.summary.err === 2 ? "وجدت سطرين فيهما أخطاء." : "وجدت " + r.summary.err + (r.summary.err <= 10 ? " أسطر" : " سطرًا") + " فيها أخطاء.") : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
         " أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.</p>" +
         (r.summary.err && CV.tutor && opts.tutor ? "<button type='button' class='btn btn-ghost btn-sm ws-explain'>اشرح لي الخطأ (المعلم الذكي)</button>" : "");
       var ex = box.querySelector(".ws-explain");
@@ -232,14 +232,14 @@
     /* ---------- recognition ---------- */
     function exportDrawing() {
       if (!data.strokes.length) return null;
-      var w = canvas.clientWidth, h = height, c = document.createElement("canvas"); c.width = w * 2; c.height = h * 2;
-      var x = c.getContext("2d"); x.setTransform(2, 0, 0, 2, 0, 0);
+      var w = canvas.clientWidth, h = height, k = Math.min(2, 1600 / w, 2400 / h), c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k); // small enough to send fast, sharp enough to read
+      var x = c.getContext("2d"); x.setTransform(k, 0, 0, k, 0, 0);
       x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
-      var layer = document.createElement("canvas"); layer.width = w * 2; layer.height = h * 2; var lx = layer.getContext("2d"); lx.setTransform(2, 0, 0, 2, 0, 0);
+      var layer = document.createElement("canvas"); layer.width = c.width; layer.height = c.height; var lx = layer.getContext("2d"); lx.setTransform(k, 0, 0, k, 0, 0);
       var map = { ink: "#111", blue: "#1f63e6", orange: "#d9600f" };
       data.strokes.forEach(function (s) { strokePath(lx, s, function (k) { return map[k] || "#111"; }); });
       x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(layer, 0, 0);
-      return c.toDataURL("image/jpeg", 0.9);
+      return c.toDataURL("image/jpeg", 0.85);
     }
     root.querySelector('[data-act="recog-draw"]').addEventListener("click", function () { var d = exportDrawing(); if (!d) { status("اكتب حلّك على اللوحة أولًا.", "warn"); return; } recognize(d); });
     root.querySelector('[data-act="recog-photo"]').addEventListener("click", function () { if (photoData) recognize(photoData); });
@@ -247,7 +247,7 @@
     function recognize(dataUrl) {
       var m = /^data:(image\/[a-z]+);base64,(.*)$/.exec(dataUrl);
       status("جارٍ التعرف على المكتوب…", "busy");
-      var ctrl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 40000);
+      var ctrl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 70000);
       fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime: m[1], image: m[2], context: opts.context || "" }), signal: ctrl && ctrl.signal })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
         .then(function (o) {

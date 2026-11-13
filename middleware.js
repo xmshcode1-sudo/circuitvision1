@@ -71,7 +71,7 @@ module.exports = async function handler(req, res) {
 async function callGemini(model, key, body) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   async function once(b) {
-    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25000);
     try { return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(b), signal: ctl.signal }); }
     finally { clearTimeout(t); }
   }
@@ -145,7 +145,14 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const r = await callGemini(model, key, payload);
+    let r;
+    try { r = await callGemini(model, key, payload); }
+    catch (e) { console.error("recognize", model, e && e.name, e && e.message); r = null; }
+    if (!r || r.status >= 500 || r.status === 404) { // slow, overloaded or missing model: one retry on the lighter model
+      const alt = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-lite-latest";
+      if (alt !== model) { try { r = await callGemini(alt, key, payload); } catch (e) { console.error("recognize", alt, e && e.name, e && e.message); r = r || null; } }
+    }
+    if (!r) return res.status(504).json({ error: "تأخرت خدمة التعرف في الرد. حاول مرة أخرى، أو اكتب حلّك في تبويب الكيبورد." });
     if (r.status === 429) return res.status(429).json({ error: "وصلت خدمة التعرف لحدها المجاني مؤقتًا. حاول بعد دقيقة." });
     if (!r.ok) return res.status(502).json({ error: "تعذّر التعرف على الكتابة الآن. حاول مرة أخرى." });
     const j = await r.json();
@@ -154,16 +161,17 @@ module.exports = async function handler(req, res) {
     const lines = Array.isArray(out.lines) ? out.lines.map((l) => String(l).slice(0, 300)).slice(0, 60) : [];
     return res.status(200).json({ lines, unreadable: !!out.unreadable || !lines.length });
   } catch (e) {
+    console.error("recognize", e && e.name, e && e.message);
     return res.status(502).json({ error: "تعذّر الاتصال بخدمة التعرف. حاول مرة أخرى." });
   }
 };
 
-/* Calls Gemini with a 20 s limit (the platform cuts the request at ~25 s). If the model rejects thinkingConfig,
+/* Calls Gemini with a 25 s limit per try (vercel.json allows the function 60 s, enough for one retry). If the model rejects thinkingConfig,
    retries once without it. Logs Google's status and message for debugging; the key is never logged. */
 async function callGemini(model, key, body) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   async function once(b) {
-    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25000);
     try { return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(b), signal: ctl.signal }); }
     finally { clearTimeout(t); }
   }
