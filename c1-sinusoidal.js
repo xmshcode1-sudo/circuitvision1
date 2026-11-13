@@ -166,7 +166,7 @@
     quiz: [{ q: "ممانعتان <span class='ltr'>3 + j4</span> و <span class='ltr'>3 − j4</span> على التوالي:", options: [{ t: "<span class='ltr'>6 Ω</span>", correct: true, why: "الجزءان التخيليان يلغي أحدهما الآخر." }, { t: "<span class='ltr'>10 Ω</span>", type: "conceptual", why: "جمعت المقادير 5 + 5." }] }],
     practice: {
       prompt: "احسب الممانعة المكافئة بين a و b.",
-      figure: fig(z5, "مقاومة على التوالي مع ملف ومكثف على التوازي"),
+      circuit: z5, figure: fig(z5, "مقاومة على التوالي مع ملف ومكثف على التوازي"),
       steps: [
         { id: "s1", kind: "phasor", form: "rect", label: "احسب ممانعتي L1 و C1، ثم ممانعتهما على التوازي.", answer: Cx.div(Cx.mul(Z(0, 4), Z(0, -8)), Cx.add(Z(0, 4), Z(0, -8))), units: OHM,
           diagnose: [{ value: Z(0, -4), type: "conceptual", why: "جمعت الممانعتين (j4 − j8) كأنهما على التوالي. هما على التوازي." }, { value: Z(0, -8 / 3), type: "sign", why: "استخدمت +j8 للمكثف في المقام. ممانعة المكثف −j8." }],
@@ -196,7 +196,7 @@
     quiz: [{ q: "V<sub>Th</sub> = 10∠0° و Z<sub>Th</sub> = 2∠−30°. تيار نورتن:", options: [{ t: "<span class='ltr'>5∠30° A</span>", correct: true, why: "قسمة المقادير وطرح الزوايا." }, { t: "<span class='ltr'>5∠−30° A</span>", type: "sign", why: "عند القسمة نطرح زاوية المقام: 0 − (−30) = +30." }] }],
     practice: {
       prompt: "أوجد مكافئ ثيفنن ونورتن بين a و b.",
-      figure: fig(t6, "مصدر جهد ومقاومة ومكثف بين الطرفين a و b"),
+      circuit: t6, figure: fig(t6, "مصدر جهد ومقاومة ومكثف بين الطرفين a و b"),
       steps: [
         { id: "s1", kind: "phasor", form: "rect", label: "احسب ممانعة المكثف.", answer: Z(0, -4), units: OHM, diagnose: [], hints: [eqi("−j/(ωC)") + " مع " + eqi("C = 250 µF")], solution: eqi("Z<sub>C</sub> = −j4 Ω") },
         { id: "s2", kind: "phasor", form: "polar", label: "احسب <span class='ltr'>V<sub>Th</sub></span> (الطرف a موجب).", answer: pr6.voc, units: V,
@@ -230,7 +230,7 @@
     quiz: [{ q: "موصلية ملف ممانعته j4 Ω:", options: [{ t: "<span class='ltr'>−j0.25 S</span>", correct: true, why: "1/(j4) = −j/4." }, { t: "<span class='ltr'>j0.25 S</span>", type: "sign", why: "1/j = −j." }] }],
     practice: {
       prompt: "Vs = 10∠0° V، R1 = 2 Ω، L1 بممانعة j2 Ω، C1 بممانعة −j3 Ω، R2 = 3 Ω (عند ω = 1000 rad/s).",
-      figure: fig(n7, "دائرة تيار متردد بعقدتين V1 و V2"),
+      circuit: n7, figure: fig(n7, "دائرة تيار متردد بعقدتين V1 و V2"),
       steps: [
         { id: "s1", kind: "phasor", form: "rect", label: "احسب <span class='ltr'>V₁</span>.", answer: s7.volt([0, 1]), units: V,
           diagnose: [{ value: AC.solve(n7, { capSign: true }).volt([0, 1]), type: "sign", why: "استخدمت +j3 لممانعة المكثف. الصحيح −j3." }],
@@ -260,7 +260,7 @@
     quiz: [{ q: "الفرع المشترك بين حلقتين فيه ملف j5. حدّه في معادلة الحلقة الأولى:", options: [{ t: "<span class='ltr'>j5(I₁ − I₂)</span>", correct: true, why: "تيار الفرع المشترك في اتجاه I₁ هو I₁ − I₂." }, { t: "<span class='ltr'>j5 I₁</span>", type: "conceptual", why: "الفرع مشترك." }] }],
     practice: {
       prompt: "Vs = 10∠0° V، R1 = 2 Ω، L1 بممانعة j2 Ω (مشتركة)، R2 = 3 Ω، C1 بممانعة −j3 Ω.",
-      figure: fig(m8, "دائرة تيار متردد بحلقتين I1 و I2"),
+      circuit: m8, figure: fig(m8, "دائرة تيار متردد بحلقتين I1 و I2"),
       steps: [
         { id: "s1", kind: "phasor", form: "rect", label: "احسب <span class='ltr'>I₁</span>.", answer: mm8[0].value, units: A,
           diagnose: [{ value: AC.meshes(m8, AC.solve(m8, { capSign: true }))[0].value, type: "sign", why: "استخدمت +j3 لممانعة المكثف. الصحيح −j3." }],

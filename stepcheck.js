@@ -113,88 +113,192 @@
   }
   function close(a, b, scale) { var s = Math.max(Math.abs(a), Math.abs(b), scale || 0); return Math.abs(a - b) <= Math.max(0.012 * s, 1e-12); }
 
-  /* ---------- correct rows: KCL per essential node (in node voltages), KVL per mesh (in mesh currents) ---------- */
-  function nodeRows(K) {
-    var c = K.c, nodes = K.nodes, ess = {}, rows = {};
+  /* ---------- the correct equations of this circuit ----------
+     Every row is a linear form (coef over unknown names + constant k) that is zero for the true solution:
+       node side: KCL at a node (currents leaving), KCL for a supernode, the voltage constraint of a source between nodes;
+       mesh side: KVL around a mesh, KVL around a supermesh, the current constraint of a current source.
+     Each row is made of terms (one per branch or element), and each term knows the typical slips a student makes with it,
+     so a wrong equation can be matched against "the right row with one slip". Dependent sources are written through
+     their controlling quantity, expressed in the same unknowns. */
+  function lf(k) { return { coef: {}, k: k || 0 }; }
+  function add(a, b, s) { s = s === undefined ? 1 : s; var o = { coef: Object.assign({}, a.coef), k: a.k + s * b.k }; for (var q in b.coef) o.coef[q] = (o.coef[q] || 0) + s * b.coef[q]; return o; }
+  function scale(a, s) { return add(lf(), a, s); }
+  function isZero(a) { if (Math.abs(a.k) > 1e-12) return false; for (var q in a.coef) if (Math.abs(a.coef[q]) > 1e-12) return false; return true; }
+  function sum(terms) { var o = lf(); terms.forEach(function (x) { if (x) o = add(o, x); }); return o; }
+  var T = { // wording shared by the rows
+    kcl: function (n) { return ["KCL عند " + sub(n), "KCL at " + sub(n)]; },
+    kcls: function (g) { return ["KCL للعقدة العظمى (" + g.map(sub).join(" و ") + ")", "KCL for the supernode (" + g.map(sub).join(", ") + ")"]; },
+    vcons: function (a, b, nm) { return ["قيد المصدر " + nm + " بين " + a + " و " + b, "the constraint of source " + nm + " between " + a + " and " + b]; },
+    kvl: function (m) { return ["KVL في الحلقة " + sub(m), "KVL around mesh " + sub(m)]; },
+    kvls: function (g) { return ["KVL للحلقة العظمى (" + g.map(sub).join(" و ") + ")", "KVL around the supermesh (" + g.map(sub).join(", ") + ")"]; },
+    icons: function (nm, dep) { return dep ? ["قيد المصدر التابع", "the dependent source’s constraint"] : ["قيد مصدر التيار " + nm, "the constraint of current source " + nm]; }
+  };
+  function buildRows(K) {
+    var c = K.c, nodes = K.nodes, ess = {}, out = { node: [], mesh: [], notes: {} }, byName = {};
+    c.edges.forEach(function (e) { if (e.name) byName[e.name] = e; });
     K.labels.forEach(function (nl) { ess[nl.id] = nl.name; });
     ess[-1] = "gnd";
-    var els = c.edges.filter(function (e) { return e.type !== "W"; }), at = {};
-    els.forEach(function (e, i) { [nodes.of(e.a), nodes.of(e.b)].forEach(function (n) { (at[n] = at[n] || []).push(i); }); });
+    var V = function (n) { return ess[n] && ess[n] !== "gnd" ? ess[n] : null; };
+    var at = function (n, en) { return V(n) ? sub(V(n)) : en ? "ground" : "الأرضي"; };
+    var nm = function (e, en) { return e.name === "D" ? (en ? "the dependent source" : "المصدر التابع") : e.name; };
+    /* the controlling quantity of the dependent source, in node voltages and in mesh currents */
+    var D = c.edges.filter(function (e) { return /^(VC|CC)(VS|CS)$/.test(e.type); })[0], ce = D && byName[D.ctrl];
+    var vcNode = null, vcMesh = null;
+    function nodeLf(n) { // a node's voltage in the unknowns: a labelled node, ground, or reached from one through voltage sources
+      var seenN = {}, q = [[n, lf()]];
+      while (q.length) {
+        var it = q.shift(), m = it[0]; if (seenN[m]) continue; seenN[m] = 1;
+        if (ess[m] !== undefined) { var o = lf(it[1].k); if (V(m)) o.coef[V(m)] = 1; return o; } // v(n) = v(m) + offset
+        c.edges.forEach(function (e) {
+          if (e.type !== "V") return;
+          var a2 = nodes.of(e.a), b2 = nodes.of(e.b), vab = e.plus === "a" ? e.value : -e.value; // v(a) − v(b)
+          if (a2 === m) q.push([b2, lf(it[1].k + vab)]); else if (b2 === m) q.push([a2, lf(it[1].k - vab)]);
+        });
+      }
+      return null;
+    }
+    if (ce) {
+      var la = nodeLf(nodes.of(ce.a)), lb = nodeLf(nodes.of(ce.b));
+      if (la && lb) vcNode = add(la, lb, -1);
+      var ef = (K.meshes.edgeFaces || []).filter(function (x) { return x.e === ce; })[0];
+      if (ef) { vcMesh = lf(); if (ef.p) vcMesh.coef[ef.p] = ce.value; if (ef.m) vcMesh.coef[ef.m] = (vcMesh.coef[ef.m] || 0) - ce.value; }
+    }
+    out.ctrl = { node: vcNode, mesh: vcMesh, R: ce ? ce.value : 1, on: ce ? ce.name : "", isI: D ? /^CC/.test(D.type) : false, name: D ? (/^CC/.test(D.type) ? "iₓ" : "vₓ") : "" };
+    function depGain(e) { return /^VC/.test(e.type) ? e.value : e.value / ce.value; } // per volt of v_ctrl
+    /* ----- node side: branches between labelled nodes ----- */
+    var els = c.edges.filter(function (e) { return e.type !== "W" && e.type !== "T"; }), inc = {};
+    els.forEach(function (e, i) { [nodes.of(e.a), nodes.of(e.b)].forEach(function (n) { (inc[n] = inc[n] || []).push(i); }); });
     var seen = {}, chains = [];
+    function walk(from, idx) {
+      var path = [], cur = from, i = idx;
+      for (var g = 0; g < 60; g++) {
+        var e = els[i], na = nodes.of(e.a), nb = nodes.of(e.b), next = na === cur ? nb : na;
+        path.push({ i: i, u: cur, w: next }); seen[i] = 1;
+        if (ess[next] !== undefined) return { path: path, end: next };
+        var nx = (inc[next] || []).filter(function (j) { return j !== i; });
+        if (nx.length !== 1) return { path: path, end: next, open: true };
+        cur = next; i = nx[0];
+      }
+      return { path: path, end: cur, open: true };
+    }
     els.forEach(function (e0, i0) {
       if (seen[i0]) return;
-      // walk both ways from this element through non-essential nodes
-      function walk(from, idx) { // returns [list of {i, u, w}] going outward from node `from` starting with element idx
-        var path = [], cur = from, i = idx;
-        for (var g = 0; g < 50; g++) {
-          var e = els[i], na = nodes.of(e.a), nb = nodes.of(e.b), next = na === cur ? nb : na;
-          path.push({ i: i, u: cur, w: next }); seen[i] = 1;
-          if (ess[next] !== undefined) return { path: path, end: next };
-          var nx = (at[next] || []).filter(function (j) { return j !== i; });
-          if (nx.length !== 1) return { path: path, end: next, open: true };
-          cur = next; i = nx[0];
-        }
-        return { path: path, end: cur, open: true };
-      }
-      var na0 = nodes.of(e0.a), nb0 = nodes.of(e0.b);
-      // find one essential end: go from b-side backwards first
-      var left = ess[na0] !== undefined ? { path: [], end: na0 } : (function () { var nx = (at[na0] || []).filter(function (j) { return j !== i0; }); if (nx.length !== 1) return { path: [], end: na0, open: true }; var r = walk(na0, nx[0]); return r; })();
+      var na0 = nodes.of(e0.a), left;
+      if (ess[na0] !== undefined) left = { path: [], end: na0 };
+      else { var nx = (inc[na0] || []).filter(function (j) { return j !== i0; }); left = nx.length === 1 ? walk(na0, nx[0]) : { open: true }; }
       var right = walk(na0, i0);
       if (left.open || right.open) return;
-      // chain from A = left.end to B = right.end: reverse the left part
-      var lp = left.path.slice().reverse().map(function (x) { return { i: x.i, u: x.w, w: x.u }; });
-      var path = lp.concat(right.path), A = left.end, B = right.end;
+      var path = left.path.slice().reverse().map(function (x) { return { i: x.i, u: x.w, w: x.u }; }).concat(right.path), A = left.end, B = right.end;
       if (A === B) return;
-      var R = 0, E = 0, I = null, dep = false, names = [];
+      var ch = { A: A, B: B, R: 0, E: lf(), I: null, ok: true, els: [], rs: [] };
       path.forEach(function (x) {
-        var e = els[x.i], fwd = nodes.of(e.a) === x.u; names.push(e.name === "D" ? "المصدر التابع" : e.name);
-        if (e.type === "R") R += e.value;
-        else if (e.type === "V") E += (e.plus === "a") === fwd ? e.value : -e.value;
-        else if (e.type === "I") { var iab = e.dir === "ab" ? e.value : -e.value; I = fwd ? iab : -iab; }
-        else dep = true;
+        var e = els[x.i], fwd = nodes.of(e.a) === x.u; ch.els.push(e);
+        if (e.type === "R") { ch.R += e.value; ch.rs.push(e); }
+        else if (e.type === "V") ch.E.k += (e.plus === "a") === fwd ? e.value : -e.value;
+        else if (e.type === "I") { var iab = e.dir === "ab" ? e.value : -e.value; ch.I = lf(fwd ? iab : -iab); }
+        else if (e.type === "VCCS" || e.type === "CCCS") { if (!vcNode) { ch.ok = false; return; } var g = depGain(e) * (e.dir === "ab" ? 1 : -1); ch.I = scale(vcNode, fwd ? g : -g); }
+        else { if (!vcNode) { ch.ok = false; return; } var k = depGain(e) * ((e.plus === "a") === fwd ? 1 : -1); ch.E = add(ch.E, vcNode, k); }
       });
-      chains.push({ A: A, B: B, R: R, E: E, I: I, dep: dep, names: names, rs: path.filter(function (x) { return els[x.i].type === "R"; }).map(function (x) { return els[x.i]; }) });
+      ch.name = ch.els.map(function (e) { return nm(e); }).join(" + "); ch.nameEn = ch.els.map(function (e) { return nm(e, true); }).join(" + ");
+      chains.push(ch);
     });
-    var V = function (n) { return ess[n] && ess[n] !== "gnd" ? ess[n] : null; };
-    function term(ch, from, R, E, sgn) { // current leaving `from` along chain, as {coef:{}, k}
-      var to = from === ch.A ? ch.B : ch.A, s = from === ch.A ? 1 : -1, o = { coef: {}, k: 0 };
-      if (ch.I !== null) { o.k = s * ch.I * (sgn || 1); return o; }
-      var r = R === undefined ? ch.R : R, e = E === undefined ? ch.E : E;
-      if (V(from)) o.coef[V(from)] = (o.coef[V(from)] || 0) + 1 / r;
-      if (V(to)) o.coef[V(to)] = (o.coef[V(to)] || 0) - 1 / r;
-      o.k = -s * e / r;
-      if (sgn) { for (var q in o.coef) o.coef[q] *= sgn; o.k *= sgn; }
-      return o;
+    function cur(ch, from, R, E) { // current leaving `from` along the branch
+      var s = from === ch.A ? 1 : -1, to = from === ch.A ? ch.B : ch.A;
+      if (ch.I) return scale(ch.I, s);
+      var r = R || ch.R, o = lf(); if (V(from)) o.coef[V(from)] = 1 / r; if (V(to)) o.coef[V(to)] = (o.coef[V(to)] || 0) - 1 / r;
+      return add(o, E || ch.E, -s / r);
     }
-    K.labels.forEach(function (nl) {
-      var mine = chains.filter(function (ch) { return ch.A === nl.id || ch.B === nl.id; });
-      var bad = mine.some(function (ch) { return ch.dep || (ch.I === null && ch.R === 0); });
-      rows[nl.name] = { name: nl.name, bad: bad, super: mine.some(function (ch) { return ch.I === null && ch.R === 0 && !ch.dep; }), dep: mine.some(function (ch) { return ch.dep; }),
-        terms: mine.map(function (ch) { return { ch: ch, t: bad ? null : term(ch, nl.id) }; }), node: nl.id };
-    });
-    return { rows: rows, chains: chains, term: term, V: V };
-  }
-  function meshRows(K) {
-    var rows = {};
-    if (!K.meshes.length || !K.meshes.edgeFaces) return rows;
-    K.meshes.forEach(function (m) { rows[m.name] = { name: m.name, bad: false, terms: [] }; });
-    K.meshes.edgeFaces.forEach(function (x) {
-      var e = x.e; if (e.type === "W") return;
-      [["p", 1], ["m", -1]].forEach(function (side) {
-        var F = x[side[0]]; if (!F || !rows[F]) return;
-        var s = side[1], o = { coef: {}, k: 0 };
-        if (e.type === "R") { if (x.p) o.coef[x.p] = (o.coef[x.p] || 0) + s * e.value; if (x.m) o.coef[x.m] = (o.coef[x.m] || 0) - s * e.value; }
-        else if (e.type === "V") o.k = s * (e.plus === "a" ? e.value : -e.value);
-        else { rows[F].bad = true; rows[F][e.type === "I" ? "super" : "dep"] = true; return; }
-        rows[F].terms.push({ e: e, t: o, other: side[0] === "p" ? x.m : x.p, s: s });
+    function branch(ch, from) {
+      var d = ["تيار الفرع " + ch.name + " بين " + at(ch.A) + " و " + at(ch.B), "the current in the branch " + ch.nameEn + " between " + at(ch.A, true) + " and " + at(ch.B, true)];
+      var slips = [];
+      if (!ch.I && !isZero(ch.E)) slips.push({ t: cur(ch, from, null, scale(ch.E, -1)), ar: "إشارة جهد المصدر في الفرع " + ch.name + " معكوسة. انتبه أي طرف من المصدر هو +.", en: "the source voltage in the branch " + ch.nameEn + " has the wrong sign. Check which end of the source is +." });
+      if (!ch.I && ch.rs.length === 1) c.edges.forEach(function (re) {
+        if (re.type !== "R" || re === ch.rs[0] || re.value === ch.rs[0].value) return;
+        slips.push({ t: cur(ch, from, re.value), ar: "قسمت تيار الفرع " + ch.name + " على " + re.name + " بدل " + ch.rs[0].name + ".", en: "you divided the current in the branch " + ch.nameEn + " by " + re.name + " instead of " + ch.rs[0].name + "." });
       });
+      if (!ch.I && ch.rs.length > 1) slips.push({ t: cur(ch, from, ch.rs[0].value), ar: "مقاومة الفرع " + ch.name + " هي مجموع مقاوماته المتتالية، لا " + ch.rs[0].name + " وحدها.", en: "the resistance of the branch " + ch.nameEn + " is the sum of its series resistors, not " + ch.rs[0].name + " alone." });
+      return { ar: d[0], en: d[1], t: cur(ch, from), slips: slips };
+    }
+    var vOnly = chains.filter(function (ch) { return ch.ok && !ch.I && ch.R === 0; });
+    // supernodes: labelled nodes joined by a branch of voltage sources only
+    var grp = {}; function gf(n) { while (grp[n] !== undefined && grp[n] !== n) n = grp[n]; return n; }
+    K.labels.forEach(function (nl) { grp[nl.id] = nl.id; }); grp[-1] = -1;
+    vOnly.forEach(function (ch) { var a = gf(ch.A), b = gf(ch.B); if (a !== b) { if (a === -1) grp[b] = a; else grp[a] = b; } });
+    var groups = {};
+    K.labels.forEach(function (nl) { var g = gf(nl.id); (groups[g] = groups[g] || []).push(nl.id); });
+    Object.keys(groups).forEach(function (g) {
+      var mem = groups[g], set = {}; mem.forEach(function (n) { set[n] = 1; });
+      var withGround = +g === -1, names = mem.map(V);
+      if (withGround) { out.notes.known = (out.notes.known || []).concat(names); return; } // these voltages are set by sources from ground
+      var terms = [], bad = false;
+      chains.forEach(function (ch) {
+        var inA = set[ch.A], inB = set[ch.B];
+        if (!!inA === !!inB) return; // inside the group, or not touching it
+        if (!ch.ok) { bad = true; return; }
+        terms.push(branch(ch, inA ? ch.A : ch.B));
+      });
+      if (bad || !terms.length) return;
+      var lab = mem.length > 1 ? T.kcls(names) : T.kcl(names[0]);
+      out.node.push({ id: "n:" + names.join("+"), kind: mem.length > 1 ? "kcls" : "kcl", ar: lab[0], en: lab[1], terms: terms, covers: names, flipHint: ["كل التيارات الخارجة من العقدة بنفس الإشارة.", "all currents leaving the node take the same sign."] });
+      if (mem.length > 1) out.notes.super = (out.notes.super || []).concat([names]);
     });
-    return rows;
+    vOnly.forEach(function (ch) { // vA − vB − E = 0
+      var o = lf(); if (V(ch.A)) o.coef[V(ch.A)] = 1; if (V(ch.B)) o.coef[V(ch.B)] = (o.coef[V(ch.B)] || 0) - 1;
+      var lab = T.vcons(at(ch.A), at(ch.B), ch.name), labEn = T.vcons(at(ch.A, true), at(ch.B, true), ch.nameEn);
+      out.node.push({ id: "c:" + ch.name, kind: "vcons", ar: lab[0], en: labEn[1], whole: add(o, ch.E, -1),
+        wholeSlips: [{ t: add(o, ch.E, 1), ar: "في " + lab[0] + " الإشارة معكوسة: فرق الجهد = جهد الطرف + ناقص جهد الطرف −.", en: "in " + labEn[1] + " the sign is reversed: the voltage difference is the + end minus the − end." }] });
+    });
+    /* ----- mesh side ----- */
+    if (K.meshes.length && K.meshes.edgeFaces) {
+      var terms = {}, mg = {}, bad = {}, icons = [];
+      K.meshes.forEach(function (m) { terms[m.name] = []; mg[m.name] = m.name; });
+      function mf(m) { while (mg[m] !== m) m = mg[m]; return m; }
+      K.meshes.edgeFaces.forEach(function (x) {
+        var e = x.e; if (e.type === "W" || e.type === "T") return;
+        if (e.type === "I" || e.type === "CCCS" || e.type === "VCCS") {
+          var iab = e.type === "I" ? lf(e.dir === "ab" ? e.value : -e.value) : (vcMesh ? scale(vcMesh, depGain(e) * (e.dir === "ab" ? 1 : -1)) : null);
+          if (!iab) { if (x.p) bad[x.p] = 1; if (x.m) bad[x.m] = 1; return; }
+          var o = lf(); if (x.p) o.coef[x.p] = 1; if (x.m) o.coef[x.m] = (o.coef[x.m] || 0) - 1; // I(p) − I(m) = i_ab
+          var lab = T.icons(nm(e), e.name === "D"), labEn = T.icons(nm(e, true), e.name === "D");
+          icons.push({ id: "c:" + e.name, kind: "icons", ar: lab[0], en: labEn[1], whole: add(o, iab, -1),
+            wholeSlips: [{ t: add(o, iab, 1), ar: "في " + lab[0] + " الإشارة معكوسة: قارن اتجاه سهم المصدر باتجاه تيار كل حلقة.", en: "in " + labEn[1] + " the sign is reversed: compare the source arrow with each mesh current’s direction." }] });
+          if (x.p && x.m) { var a = mf(x.p), b = mf(x.m); if (a !== b) mg[a] = b; }
+          else out.notes.knownMesh = (out.notes.knownMesh || []).concat([x.p || x.m]);
+          return;
+        }
+        [["p", 1], ["m", -1]].forEach(function (side) {
+          var F = x[side[0]]; if (!F || !terms[F]) return;
+          var s = side[1], other = side[0] === "p" ? x.m : x.p, o = lf(), d, slips = [];
+          if (e.type === "R") {
+            if (x.p) o.coef[x.p] = s * e.value; if (x.m) o.coef[x.m] = (o.coef[x.m] || 0) - s * e.value;
+            d = ["هبوط الجهد على " + e.name, "the voltage drop across " + e.name];
+            if (other) { var own = lf(); own.coef[F] = o.coef[F]; slips.push({ t: own, ar: e.name + " مشتركة مع الحلقة " + sub(other) + "، فتيارها " + sub(F) + " − " + sub(other) + " وليس " + sub(F) + " وحده.", en: e.name + " is shared with mesh " + sub(other) + ", so its current is " + sub(F) + " − " + sub(other) + ", not " + sub(F) + " alone." }); }
+          } else if (e.type === "V") { o.k = s * (e.plus === "a" ? e.value : -e.value); d = ["جهد المصدر " + e.name, "the source voltage " + e.name]; }
+          else { if (!vcMesh) { bad[F] = 1; return; } o = scale(vcMesh, s * depGain(e) * (e.plus === "a" ? 1 : -1)); d = ["جهد المصدر التابع", "the dependent source’s voltage"]; }
+          terms[F].push({ ar: d[0], en: d[1], t: o, slips: slips });
+        });
+      });
+      var mgroups = {};
+      K.meshes.forEach(function (m) { var g = mf(m.name); (mgroups[g] = mgroups[g] || []).push(m.name); });
+      Object.keys(mgroups).forEach(function (g) {
+        var mem = mgroups[g];
+        if (mem.some(function (m) { return bad[m] || (out.notes.knownMesh || []).indexOf(m) > -1; })) return;
+        var all = []; mem.forEach(function (m) { all = all.concat(terms[m]); });
+        // a branch shared inside the supermesh cancels out; drop pairs that add to zero
+        var lab = mem.length > 1 ? T.kvls(mem) : T.kvl(mem[0]);
+        out.mesh.push({ id: "m:" + mem.join("+"), kind: mem.length > 1 ? "kvls" : "kvl", ar: lab[0], en: lab[1], terms: all.filter(function (x) { return !isZero(x.t); }), covers: mem, flipHint: ["امشِ مع اتجاه الحلقة وطبّق الإشارة عند كل عنصر.", "walk with the mesh direction and apply the sign at each element."] });
+        if (mem.length > 1) out.notes.superMesh = (out.notes.superMesh || []).concat([mem]);
+      });
+      out.mesh = out.mesh.concat(icons);
+    }
+    return out;
   }
-  function sum(terms) { var o = { coef: {}, k: 0 }; terms.forEach(function (x) { if (!x) return; for (var q in x.coef) o.coef[q] = (o.coef[q] || 0) + x.coef[q]; o.k += x.k; }); return o; }
+  function rowForm(r) { return r.whole || sum(r.terms.map(function (x) { return x.t; })); }
   var W = 1; // typical size of the unknowns, so coefficients and constants weigh alike when forms are compared
-  function vecMatch(s, r, vars) { // s ≈ λ r ?
-    var keys = vars.concat(["__k"]), sv = keys.map(function (q) { return q === "__k" ? s.k : (s.coef[q] || 0) * W; }), rv = keys.map(function (q) { return q === "__k" ? r.k : (r.coef[q] || 0) * W; });
+  function vecMatch(s, r) { // s ≈ λ r ?
+    var keys = {}; Object.keys(s.coef).concat(Object.keys(r.coef)).forEach(function (q) { keys[q] = 1; });
+    keys = Object.keys(keys);
+    var sv = keys.map(function (q) { return (s.coef[q] || 0) * W; }).concat([s.k]), rv = keys.map(function (q) { return (r.coef[q] || 0) * W; }).concat([r.k]);
     var rr = rv.reduce(function (a, x) { return a + x * x; }, 0), ss = sv.reduce(function (a, x) { return a + x * x; }, 0);
     if (rr < 1e-20 || ss < 1e-20) return false;
     var lam = sv.reduce(function (a, x, i) { return a + x * rv[i]; }, 0) / rr;
@@ -218,17 +322,12 @@
     if (act === null || Math.abs(pred - act) > 1e-6 * (1 + Math.abs(act))) return null;
     return o;
   }
-  function chainName(ch, NR, en) {
-    var a = NR.V(ch.A), b = NR.V(ch.B), at = function (n) { return n ? sub(n) : en ? "ground" : "الأرضي"; };
-    return (en ? "the branch " : "الفرع ") + ch.names.join(" + ") + (en ? " between " : " بين ") + at(a) + (en ? " and " : " و ") + at(b);
-  }
 
   /* ---------- the check ---------- */
   function check(text, ctx) {
-    var K = context(ctx), NR = nodeRows(K), MR = meshRows(K), mine = {}, lines = [], usedRows = {};
+    var K = context(ctx), RW = buildRows(K), mine = {}, lines = [], usedRows = {};
     W = Math.max(1, Math.max.apply(null, Object.keys(K.S).map(function (k) { var o = K.S[k]; return o.kind === "node" || o.kind === "mesh" ? Math.abs(o.val) : 0; }).concat([0])));
     var nodeVars = K.labels.map(function (n) { return n.name; }), meshVars = K.meshes.map(function (m) { return m.name; });
-    var Rvals = K.c.edges.filter(function (e) { return e.type === "R"; });
     function trueEnv(sym) { return sym.val; }
     function mineEnv(sym) { return mine[sym.key] !== undefined ? mine[sym.key].v : sym.val; }
     String(text || "").split(/\n|⇒|=>/).forEach(function (raw, idx) {
@@ -303,94 +402,85 @@
       if (kind && kind.row) usedRows[kind.row] = 1;
       lines.push(res);
     });
-    function formOf(L, R, vars) {
-      return linear(function (env) { var e = function (sym) { return env[sym.name] !== undefined ? env[sym.name] : sym.val; }; var a = L.ev(e), b = R.ev(e); return a === null || b === null ? null : a - b; }, vars);
-    }
-    function onlyOf(L, R, kind) { var all = Object.assign({}, L.syms, R.syms); return Object.keys(all).every(function (k) { var s = all[k]; return s.kind === kind || s.kind === "value"; }) && Object.keys(all).some(function (k) { return all[k].kind === kind; }); }
-    function identify(L, R) {
-      if (onlyOf(L, R, "node")) {
-        var s = formOf(L, R, nodeVars); if (!s) return null;
-        for (var n in NR.rows) { var r = NR.rows[n]; if (!r.bad && vecMatch(s, sum(r.terms.map(function (x) { return x.t; })), nodeVars)) return { kind: "kcl", row: "n:" + n, ar: "KCL عند " + sub(n), en: "KCL at " + sub(n) }; }
-        return { kind: "eq", ar: "تجمع أكثر من قانون أو فيها قيد", en: "it combines laws or a constraint" };
+    function formOf(L, R, mode) { // the equation L − R as a linear form in this mode's unknowns (the controlling quantity written out)
+      var all = Object.assign({}, L.syms, R.syms), keys = [], usesCtrl = false;
+      for (var k in all) {
+        var sy = all[k];
+        if (sy.kind === "value") continue;
+        if (sy.kind === mode) keys.push(k);
+        else if (sy.kind === "ctrl") { keys.push(k); usesCtrl = true; }
+        else return null;
       }
-      if (onlyOf(L, R, "mesh")) {
-        var sm = formOf(L, R, meshVars); if (!sm) return null;
-        for (var m in MR) { var rm = MR[m]; if (!rm.bad && vecMatch(sm, sum(rm.terms.map(function (x) { return x.t; })), meshVars)) return { kind: "kvl", row: "m:" + m, ar: "KVL في الحلقة " + sub(m), en: "KVL around mesh " + sub(m) }; }
+      if (!keys.some(function (k) { return all[k].kind === mode; }) && !usesCtrl) return null;
+      var f = function (env) { var e = function (sym) { return env[sym.key] !== undefined ? env[sym.key] : sym.val; }; var a = L.ev(e), b = R.ev(e); return a === null || b === null ? null : a - b; };
+      var raw = linear(f, keys); if (!raw) return null;
+      var o = lf(raw.k);
+      for (var q in raw.coef) {
+        var s2 = all[q], c2 = raw.coef[q];
+        if (s2.kind === mode) o.coef[s2.name] = (o.coef[s2.name] || 0) + c2;
+        else { var ex = RW.ctrl[mode]; if (!ex) return null; o = add(o, ex, q === "x:i" ? c2 / RW.ctrl.R : c2); }
+      }
+      return { form: o, raw: raw, usesCtrl: usesCtrl };
+    }
+    function small(f) { var m = Math.abs(f.raw.k); for (var q in f.raw.coef) m = Math.max(m, Math.abs(f.raw.coef[q]) * W); return Math.abs(f.form.k) <= 1e-6 * (1 + m) && Object.keys(f.form.coef).every(function (q) { return Math.abs(f.form.coef[q]) * W <= 1e-6 * (1 + m); }); }
+    function identify(L, R) {
+      var modes = ["node", "mesh"];
+      for (var i = 0; i < modes.length; i++) {
+        var f = formOf(L, R, modes[i]); if (!f) continue;
+        if (f.usesCtrl && small(f)) return { kind: "ctrl", ar: "قيد الكمية المتحكِّمة", en: "the controlling quantity’s constraint" };
+        var rows = RW[modes[i]];
+        for (var j = 0; j < rows.length; j++) if (vecMatch(f.form, rowForm(rows[j]))) return { kind: rows[j].kind, row: rows[j].id, ar: rows[j].ar, en: rows[j].en };
         return { kind: "eq", ar: "تجمع أكثر من قانون أو فيها قيد", en: "it combines laws or a constraint" };
       }
       return null;
     }
     function diagnose(res, L, R) {
       res.kind = "law";
-      if (onlyOf(L, R, "node")) {
-        var s = formOf(L, R, nodeVars);
-        if (s) {
-          var best = null, cands = [];
-          function add(m, o) { if (m) cands.push({ o: o, d: Math.abs(Math.log(Math.abs(m.lam))) + (m.lam < 0 ? 0.01 : 0) }); }
-          Object.keys(NR.rows).forEach(function (n) {
-            var r = NR.rows[n]; if (r.bad) return;
-            var all = r.terms.map(function (x) { return x.t; });
-            r.terms.forEach(function (x, i) {
-              var others = all.filter(function (_, j) { return j !== i; }), ch = x.ch;
-              add(vecMatch(s, sum(others), nodeVars), { ar: "معادلة KCL عند " + sub(n) + " ناقصة: نسيت تيار " + chainName(ch, NR) + ".", en: "Your KCL at " + sub(n) + " is missing a term: the current in " + chainName(ch, NR, true) + "." });
-              add(vecMatch(s, sum(others.concat([NR.term(ch, r.node, undefined, undefined, -1)])), nodeVars), { ar: "في KCL عند " + sub(n) + " إشارة تيار " + chainName(ch, NR) + " معكوسة: كل التيارات الخارجة من العقدة بنفس الإشارة.", en: "In KCL at " + sub(n) + " the current in " + chainName(ch, NR, true) + " has the wrong sign: all currents leaving the node take the same sign." });
-              if (ch.I === null && ch.E) add(vecMatch(s, sum(others.concat([NR.term(ch, r.node, undefined, -ch.E)])), nodeVars), { ar: "في KCL عند " + sub(n) + " إشارة جهد المصدر في " + chainName(ch, NR) + " معكوسة. انتبه أي طرف من المصدر هو +.", en: "In KCL at " + sub(n) + " the source voltage in " + chainName(ch, NR, true) + " has the wrong sign. Check which end of the source is +." });
-              if (ch.I === null) Rvals.forEach(function (re) {
-                if (ch.rs.length !== 1 || re === ch.rs[0] || re.value === ch.rs[0].value) return;
-                add(vecMatch(s, sum(others.concat([NR.term(ch, r.node, re.value)])), nodeVars), { ar: "في KCL عند " + sub(n) + " قسمت تيار " + chainName(ch, NR) + " على " + re.name + " بدل " + ch.rs[0].name + ".", en: "In KCL at " + sub(n) + " you divided the current in " + chainName(ch, NR, true) + " by " + re.name + " instead of " + ch.rs[0].name + "." });
-              });
-            });
-          });
-          cands.sort(function (a, b) { return a.d - b.d; }); best = cands.length ? cands[0].o : null;
-          if (best) { res.msg = best.ar; res.en = best.en; return; }
-          var sup = Object.keys(NR.rows).filter(function (n) { return NR.rows[n].super; });
-          res.msg = "المعادلة لا تتحقق في هذه الدائرة: ليست KCL صحيحة عند أي عقدة." + (sup.length ? " تنبيه: " + sup.map(sub).join(" و ") + " متصلة بمصدر جهد مباشرة، فاستخدم العقدة العظمى (KCL للعقدتين معًا + معادلة فرق الجهد)." : " اكتب لكل فرع تياره الخارج من العقدة: (جهد العقدة − جهد الطرف الآخر − جهد المصادر) ÷ المقاومة.");
-          res.en = "The equation doesn’t hold in this circuit: it isn’t a correct KCL at any node." + (sup.length ? " Note: " + sup.map(sub).join(" and ") + " connects straight to a voltage source, so use a supernode (KCL for both nodes together + the voltage-difference equation)." : " For each branch write the current leaving the node: (node voltage − other end − source voltages) ÷ resistance.");
+      var modes = ["node", "mesh"];
+      for (var i = 0; i < modes.length; i++) {
+        var mode = modes[i], f = formOf(L, R, mode); if (!f) continue;
+        var cands = [], s = f.form;
+        if (f.usesCtrl && RW.ctrl[mode] && vecMatch(s, RW.ctrl[mode])) { // ix = −(…) : the constraint written against the drawn arrow
+          res.msg = "قيد الكمية المتحكِّمة إشارته معكوسة: " + (RW.ctrl.name || "الكمية المتحكِّمة") + " تؤخذ باتجاه السهم (أو القطبية) المرسوم على " + RW.ctrl.on + "، أي (جهد بداية السهم − جهد نهايته)" + (RW.ctrl.isI ? " ÷ " + RW.ctrl.on : "") + ".";
+          res.en = "The controlling quantity’s constraint has the wrong sign: " + (RW.ctrl.name || "it") + " follows the arrow (or polarity) drawn on " + RW.ctrl.on + ", i.e. (voltage at the arrow’s start − at its end)" + (RW.ctrl.isI ? " ÷ " + RW.ctrl.on : "") + ".";
           return;
         }
-      }
-      if (onlyOf(L, R, "mesh")) {
-        var sm = formOf(L, R, meshVars);
-        if (sm) {
-          var bm = null, mc = [];
-          function addm(m, o) { if (m) mc.push({ o: o, d: Math.abs(Math.log(Math.abs(m.lam))) + (m.lam < 0 ? 0.01 : 0) }); }
-          Object.keys(MR).forEach(function (m) {
-            var r = MR[m]; if (r.bad) return;
-            var all = r.terms.map(function (x) { return x.t; });
-            r.terms.forEach(function (x, i) {
-              var others = all.filter(function (_, j) { return j !== i; }), e = x.e, nm = e.name;
-              var flip = { coef: {}, k: -x.t.k }; for (var q in x.t.coef) flip.coef[q] = -x.t.coef[q];
-              addm(vecMatch(sm, sum(others), meshVars), { ar: "معادلة KVL في الحلقة " + sub(m) + " ناقصة: نسيت " + (e.type === "R" ? "هبوط الجهد على " + nm : "جهد المصدر " + nm) + ".", en: "Your KVL around mesh " + sub(m) + " is missing " + (e.type === "R" ? "the voltage drop across " + nm : "the source voltage " + nm) + "." });
-              addm(vecMatch(sm, sum(others.concat([flip])), meshVars), { ar: "في KVL للحلقة " + sub(m) + " إشارة " + (e.type === "R" ? "هبوط الجهد على " + nm : "المصدر " + nm) + " معكوسة. امشِ مع اتجاه الحلقة وطبّق الإشارة عند كل عنصر.", en: "In KVL around mesh " + sub(m) + " the sign of " + (e.type === "R" ? "the drop across " + nm : "source " + nm) + " is wrong. Walk with the mesh direction and apply the sign at each element." });
-              if (e.type === "R" && x.other) {
-                var own = { coef: {}, k: 0 }; own.coef[m] = x.t.coef[m];
-                addm(vecMatch(sm, sum(others.concat([own])), meshVars), { ar: "في KVL للحلقة " + sub(m) + ": المقاومة " + nm + " مشتركة مع الحلقة " + sub(x.other) + "، فتيارها " + sub(m) + " − " + sub(x.other) + " وليس " + sub(m) + " وحده.", en: "In KVL around mesh " + sub(m) + ": " + nm + " is shared with mesh " + sub(x.other) + ", so its current is " + sub(m) + " − " + sub(x.other) + ", not " + sub(m) + " alone." });
-              }
-            });
+        var addC = function (m, ar, en) { if (m) cands.push({ ar: ar, en: en, d: Math.abs(Math.log(Math.abs(m.lam))) + (m.lam < 0 ? 0.01 : 0) }); };
+        RW[mode].forEach(function (r) {
+          if (r.whole) { r.wholeSlips.forEach(function (sl) { addC(vecMatch(s, sl.t), sl.ar[0].toUpperCase() === sl.ar[0] ? sl.ar : sl.ar, sl.en); }); return; }
+          var ts = r.terms.map(function (x) { return x.t; });
+          r.terms.forEach(function (x, j) {
+            var others = sum(ts.filter(function (_, q) { return q !== j; }));
+            if (r.terms.length > 1) addC(vecMatch(s, others), "معادلة " + r.ar + " ناقصة: نسيت " + x.ar + ".", "Your " + r.en + " is missing " + x.en + ".");
+            addC(vecMatch(s, add(others, x.t, -1)), "في " + r.ar + " إشارة " + x.ar + " معكوسة: " + r.flipHint[0], "In " + r.en + " " + x.en + " has the wrong sign: " + r.flipHint[1]);
+            x.slips.forEach(function (sl) { addC(vecMatch(s, add(others, sl.t)), "في " + r.ar + ": " + sl.ar, "In " + r.en + ": " + sl.en); });
           });
-          mc.sort(function (a, b) { return a.d - b.d; }); bm = mc.length ? mc[0].o : null;
-          if (bm) { res.msg = bm.ar; res.en = bm.en; return; }
-          var sp = Object.keys(MR).filter(function (m) { return MR[m].super; });
-          res.msg = "المعادلة لا تتحقق في هذه الدائرة: ليست KVL صحيحة لأي حلقة." + (sp.length ? " تنبيه: في الحلقة " + sp.map(sub).join(" و ") + " مصدر تيار، فاستخدم الحلقة العظمى أو معادلة القيد." : "");
-          res.en = "The equation doesn’t hold in this circuit: it isn’t a correct KVL for any mesh." + (sp.length ? " Note: mesh " + sp.map(sub).join(" and ") + " has a current source, so use a supermesh or the constraint equation." : "");
-          return;
+        });
+        cands.sort(function (a, b) { return a.d - b.d; });
+        if (cands.length) { res.msg = cands[0].ar; res.en = cands[0].en; return; }
+        var N = RW.notes, hintAr = "", hintEn = "";
+        if (mode === "node") {
+          if (N.super) { hintAr = " تنبيه: " + N.super.map(function (g) { return g.map(sub).join(" و "); }).join("، ") + " بينها مصدر جهد، وتياره مجهول؛ فاكتب KCL للعقدة العظمى (كل الفروع الخارجة منها معًا) ومعادلة قيد المصدر."; hintEn = " Note: " + N.super.map(function (g) { return g.map(sub).join(", "); }).join("; ") + " are joined by a voltage source whose current is unknown; write KCL for the supernode (all branches leaving it together) and the source’s constraint."; }
+          else if (N.known) { hintAr = " تنبيه: جهد " + N.known.map(sub).join(" و ") + " يحدده مصدر جهد من الأرضي مباشرة، فلا تكتب له KCL."; hintEn = " Note: the voltage of " + N.known.map(sub).join(", ") + " is set by a voltage source from ground, so it needs no KCL."; }
+          else { hintAr = " اكتب لكل فرع تياره الخارج من العقدة: (جهد العقدة − جهد الطرف الآخر − جهد المصادر) ÷ المقاومة."; hintEn = " For each branch write the current leaving the node: (node voltage − other end − source voltages) ÷ resistance."; }
+          res.msg = "المعادلة لا تتحقق في هذه الدائرة: ليست KCL صحيحة عند أي عقدة ولا قيدًا صحيحًا." + hintAr; res.en = "The equation doesn’t hold in this circuit: it isn’t a correct KCL at any node, nor a correct constraint." + hintEn; return;
         }
+        if (N.superMesh) { hintAr = " تنبيه: الحلقات " + N.superMesh.map(function (g) { return g.map(sub).join(" و "); }).join("، ") + " بينها مصدر تيار، فاكتب KVL للحلقة العظمى (حولها كلها) ومعادلة قيد المصدر."; hintEn = " Note: meshes " + N.superMesh.map(function (g) { return g.map(sub).join(", "); }).join("; ") + " share a current source, so write KVL around the supermesh (around all of them) and the source’s constraint."; }
+        else if (N.knownMesh) { hintAr = " تنبيه: تيار الحلقة " + N.knownMesh.map(sub).join(" و ") + " يحدده مصدر تيار على حافتها، فلا تكتب لها KVL."; hintEn = " Note: the current of mesh " + N.knownMesh.map(sub).join(", ") + " is set by a current source on its edge, so it needs no KVL."; }
+        res.msg = "المعادلة لا تتحقق في هذه الدائرة: ليست KVL صحيحة لأي حلقة ولا قيدًا صحيحًا." + hintAr; res.en = "The equation doesn’t hold in this circuit: it isn’t a correct KVL for any mesh, nor a correct constraint." + hintEn; return;
       }
       res.msg = "المعادلة لا تتحقق بالقيم الحقيقية لهذه الدائرة. راجع القانون الذي استخدمته والإشارات."; res.en = "The equation doesn’t hold with this circuit’s real values. Check the law you used and the signs.";
     }
-    /* the method as a whole */
+    /* the method as a whole: is a set of equations missing? */
     var summary = { ok: lines.filter(function (l) { return l.status === "ok"; }).length, err: lines.filter(function (l) { return l.status === "err"; }).length, notes: [] };
-    var kcl = Object.keys(usedRows).filter(function (k) { return k[0] === "n"; }), kvl = Object.keys(usedRows).filter(function (k) { return k[0] === "m"; });
     var hasVal = function (pfx) { return Object.keys(mine).some(function (k) { return k.indexOf(pfx) === 0; }); };
-    if (kcl.length && kcl.length < nodeVars.length && !hasVal("n:")) {
-      var miss = nodeVars.filter(function (n) { return !usedRows["n:" + n]; });
-      summary.notes.push({ t: "طريقة جهود العقد تحتاج معادلة لكل عقدة غير مرجعية (" + nodeVars.length + "). ينقصك معادلة عند " + miss.map(sub).join(" و ") + ".", en: "The node-voltage method needs one equation per non-reference node (" + nodeVars.length + "). You still need one at " + miss.map(sub).join(" and ") + "." });
-    }
-    if (kvl.length && kvl.length < meshVars.length && !hasVal("m:")) {
-      var mm = meshVars.filter(function (m) { return !usedRows["m:" + m]; });
-      summary.notes.push({ t: "طريقة تيارات الحلقات تحتاج معادلة لكل حلقة (" + meshVars.length + "). ينقصك معادلة للحلقة " + mm.map(sub).join(" و ") + ".", en: "The mesh-current method needs one equation per mesh (" + meshVars.length + "). You still need one for mesh " + mm.map(sub).join(" and ") + "." });
-    }
+    [["node", "n:", "طريقة جهود العقد تحتاج ", "The node-voltage method needs "], ["mesh", "m:", "طريقة تيارات الحلقات تحتاج ", "The mesh-current method needs "]].forEach(function (m) {
+      var rows = RW[m[0]], used = rows.filter(function (r) { return usedRows[r.id]; });
+      if (!used.length || used.length >= rows.length || hasVal(m[1])) return;
+      var miss = rows.filter(function (r) { return !usedRows[r.id]; });
+      summary.notes.push({ t: m[2] + rows.length + " معادلات مستقلة في هذه الدائرة. ينقصك: " + miss.map(function (r) { return r.ar; }).join("، ") + ".", en: m[3] + rows.length + " independent equations in this circuit. Still missing: " + miss.map(function (r) { return r.en; }).join("; ") + "." });
+    });
     return { lines: lines, summary: summary };
   }
-  CV.stepcheck = { check: check, context: context, _rows: function (ctx) { var K = context(ctx); return { K: K, NR: nodeRows(K), MR: meshRows(K) }; } };
+  CV.stepcheck = { check: check, context: context, _rows: function (ctx) { var K = context(ctx); return { K: K, RW: buildRows(K) }; } };
 })(typeof window !== "undefined" ? window : globalThis);

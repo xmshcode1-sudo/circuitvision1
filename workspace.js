@@ -184,7 +184,7 @@
         return "<li class='" + cls[l.status] + "'><span class='ln'>" + l.n + "</span><span class='ltr lt'>" + esc(l.text) + "</span><span class='why'>" + esc(l.msg) + "</span></li>";
       }).join("") + "</ul>" +
         r.summary.notes.map(function (x) { return "<p class='ws-note ws-method'>" + esc(x.t) + "</p>"; }).join("") +
-        "<p class='ws-note'>" + (r.summary.err ? "وجدت " + r.summary.err + " " + (r.summary.err === 1 ? "سطرًا فيه خطأ" : "أسطر فيها أخطاء") + "." : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
+        "<p class='ws-note'>" + (r.summary.err ? (r.summary.err === 1 ? "وجدت سطرًا واحدًا فيه خطأ." : "وجدت " + r.summary.err + " أسطر فيها أخطاء.") : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
         " أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.</p>" +
         (r.summary.err && CV.tutor && opts.tutor ? "<button type='button' class='btn btn-ghost btn-sm ws-explain'>اشرح لي الخطأ (المعلم الذكي)</button>" : "");
       var ex = box.querySelector(".ws-explain");

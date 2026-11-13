@@ -723,7 +723,7 @@
     "اكتب حلّك أولًا، كل معادلة في سطر فيها علامة =.": "Write your solution first, one equation with an = sign per line.",
     "اشرح لي الخطأ (المعلم الذكي)": "Explain the mistake (AI tutor)",
     "كل الأسطر التي فحصتها صحيحة لهذه الدائرة. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "Every line I checked is right for this circuit. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
-    "وجدت # سطرًا فيه خطأ. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "I found # line with a mistake. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
+    "وجدت سطرًا واحدًا فيه خطأ. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "I found one line with a mistake. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
     "وجدت # أسطر فيها أخطاء. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "I found # lines with mistakes. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
     "ابنِها بنفسك": "Build it yourself",
     "# من # قطع في مكانها": "# of # parts in place",

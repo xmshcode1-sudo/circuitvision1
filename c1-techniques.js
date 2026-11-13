@@ -51,7 +51,7 @@
     ],
     practice: {
       prompt: "أوجد جهدي العقدتين في الدائرة: <span class='ltr'>Vs = 30 V</span>، <span class='ltr'>R1 = 10 Ω</span>، <span class='ltr'>R2 = 8 Ω</span>، <span class='ltr'>R3 = 3 Ω</span>، <span class='ltr'>Is = 6 A</span>.",
-      figure: fig(n1, "دائرة بعقدتين v1 و v2 ومصدر جهد 30 فولت ومصدر تيار 6 أمبير"),
+      circuit: n1, figure: fig(n1, "دائرة بعقدتين v1 و v2 ومصدر جهد 30 فولت ومصدر تيار 6 أمبير"),
       steps: [
         { id: "s1", label: "كم معادلة KCL مستقلة نحتاج؟", symbol: "N =", answer: 2, units: CNT,
           diagnose: [{ value: 3, type: "conceptual", why: "العقدة العليا اليسرى جهدها معروف (30 V) لأن مصدر الجهد يصلها بالمرجع. المجاهيل v₁ و v₂ فقط." }, { value: 4, type: "conceptual", why: "لا نكتب معادلة للعقدة المرجعية، ولا للعقدة المعروف جهدها." }],
@@ -91,7 +91,7 @@
     ],
     practice: {
       prompt: "الدائرة: <span class='ltr'>Vs = 60 V</span>، <span class='ltr'>R1 = 12 Ω</span> (تيارها iₓ)، <span class='ltr'>R2 = 24 Ω</span>، <span class='ltr'>R3 = 8 Ω</span>، ومصدر تيار تابع <span class='ltr'>0.5 iₓ</span> للأسفل.",
-      figure: fig(n2, "دائرة عقد مع مصدر تيار تابع قيمته نصف iₓ"),
+      circuit: n2, figure: fig(n2, "دائرة عقد مع مصدر تيار تابع قيمته نصف iₓ"),
       steps: [
         { id: "s1", kind: "choice", label: "ما معادلة القيد؟", options: [
           { t: eqi("iₓ = (60 − v₁)/12"), correct: true },
@@ -134,7 +134,7 @@
     ],
     practice: {
       prompt: "الدائرة: <span class='ltr'>Vs = 60 V</span>، <span class='ltr'>R1 = 3 Ω</span>، <span class='ltr'>R2 = 6 Ω</span>، <span class='ltr'>R3 = 10 Ω</span>، ومصدر <span class='ltr'>V2 = 20 V</span> بين v₂ و v₃.",
-      figure: fig(n3, "دائرة فيها مصدر جهد 20 فولت بين عقدتين"),
+      circuit: n3, figure: fig(n3, "دائرة فيها مصدر جهد 20 فولت بين عقدتين"),
       steps: [
         { id: "s1", kind: "choice", label: "كيف نتعامل مع المصدر V2؟", options: [
           { t: "ندمج v₂ و v₃ في عقدة عظمى، ونضيف " + eqi("v₃ = v₂ + 20"), correct: true },
@@ -173,7 +173,7 @@
     ],
     practice: {
       prompt: "الدائرة: <span class='ltr'>Vs = 50 V</span>، <span class='ltr'>R1 = 2 Ω</span>، <span class='ltr'>R2 = 4 Ω</span>، <span class='ltr'>R3 = 12 Ω</span>، <span class='ltr'>V2 = 20 V</span>.",
-      figure: fig(m4, "دائرة بحلقتين ومصدري جهد"),
+      circuit: m4, figure: fig(m4, "دائرة بحلقتين ومصدري جهد"),
       steps: [
         { id: "s1", kind: "choice", label: "ما معادلة KVL الصحيحة للحلقة الثانية؟", options: [
           { t: eqi("4(i₂ − i₁) + 12i₂ + 20 = 0"), correct: true },
@@ -212,7 +212,7 @@
     ],
     practice: {
       prompt: "الدائرة: <span class='ltr'>Vs = 20 V</span>، <span class='ltr'>R1 = 6 Ω</span>، <span class='ltr'>R2 = 2 Ω</span> (تيارها iₓ)، <span class='ltr'>R3 = 5 Ω</span>، ومصدر جهد تابع <span class='ltr'>8iₓ</span> طرفه الموجب في الأسفل.",
-      figure: fig(m5, "دائرة حلقتين مع مصدر جهد تابع قيمته 8 iₓ"),
+      circuit: m5, figure: fig(m5, "دائرة حلقتين مع مصدر جهد تابع قيمته 8 iₓ"),
       steps: [
         { id: "s1", kind: "choice", label: "ما معادلة القيد؟", options: [
           { t: eqi("iₓ = i₁ − i₂"), correct: true }, { t: eqi("iₓ = i₂ − i₁"), type: "sign", why: "سهم iₓ للأسفل في R2، وهو اتجاه i₁ في الفرع المشترك." }, { t: eqi("iₓ = i₁"), type: "conceptual", why: "R2 مشتركة بين الحلقتين، فتيارها فرق التيارين." } ],
@@ -253,7 +253,7 @@
     ],
     practice: {
       prompt: "الدائرة: <span class='ltr'>Vs = 30 V</span>، <span class='ltr'>R1 = 4 Ω</span>، مصدر تيار <span class='ltr'>3 A</span> في الفرع الأوسط، <span class='ltr'>R2 = 12 Ω</span>، <span class='ltr'>R3 = 2 Ω</span>.",
-      figure: fig(m6, "دائرة حلقتين مع مصدر تيار 3 أمبير في الفرع المشترك"),
+      circuit: m6, figure: fig(m6, "دائرة حلقتين مع مصدر تيار 3 أمبير في الفرع المشترك"),
       steps: [
         { id: "s1", kind: "choice", label: "كيف نتعامل مع مصدر التيار في الفرع المشترك؟", options: [
           { t: "حلقة عظمى حول المسار الخارجي، مع " + eqi("i₁ − i₂ = 3"), correct: true },
@@ -291,7 +291,7 @@
     ],
     practice: {
       prompt: "دائرة سلم: <span class='ltr'>Vs = 24 V</span> مع ست مقاومات. قارن بين الطريقتين ثم احسب جهد <span class='ltr'>R5</span>.",
-      figure: fig(c7, "دائرة سلم بثلاث حلقات"),
+      circuit: c7, figure: fig(c7, "دائرة سلم بثلاث حلقات"),
       steps: [
         { id: "s1", label: "كم معادلة نحتاج بطريقة جهود العقد؟", symbol: "N =", answer: 2, units: CNT,
           diagnose: [{ value: 3, type: "conceptual", why: "العقدة العليا اليسرى جهدها معروف (24 V) من مصدر الجهد، والعقدة العليا اليمنى ليست أساسية (عنصران فقط: R3 و R6)." }, { value: 4, type: "conceptual", why: "لا نحسب العقدة المرجعية، ولا العقدة المعروف جهدها." }],
@@ -325,7 +325,7 @@
     ],
     practice: {
       prompt: "استخدم تحويل المصادر لحساب التيار في <span class='ltr'>R4</span>. القيم: <span class='ltr'>Vs = 36 V</span>، <span class='ltr'>R1 = 6 Ω</span>، <span class='ltr'>R2 = 3 Ω</span>، <span class='ltr'>R3 = 2 Ω</span>، <span class='ltr'>R4 = 8 Ω</span>.",
-      figure: fig(c8, "مصدر 36 فولت ومقاومات بعضها على التوالي وبعضها على التوازي"),
+      circuit: c8, figure: fig(c8, "مصدر 36 فولت ومقاومات بعضها على التوالي وبعضها على التوازي"),
       steps: [
         { id: "s1", label: "حوّل Vs مع R1 إلى مصدر تيار. ما قيمته؟", symbol: "iₛ =", answer: 6, units: A, unitDefault: 1,
           diagnose: [{ value: 216, type: "formula", why: "ضربت. " + eqi("iₛ = vₛ / R") + "." }, { value: 1 / 6, type: "formula", why: "قسمت R على vₛ. " + eqi("iₛ = vₛ / R") + "." }], hints: [eqi("36 / 6")], solution: eqi("iₛ = 36/6 = 6 A") + " مع 6 Ω على التوازي." },
@@ -362,7 +362,7 @@
     ],
     practice: {
       prompt: "أوجد مكافئ ثيفنن ونورتن بين a و b. القيم: <span class='ltr'>Vs = 60 V</span>، <span class='ltr'>R1 = 6 Ω</span>، <span class='ltr'>R2 = 12 Ω</span>، <span class='ltr'>R3 = 4 Ω</span>.",
-      figure: fig(t9, "شبكة بين الطرفين a و b بمصدر 60 فولت"),
+      circuit: t9, figure: fig(t9, "شبكة بين الطرفين a و b بمصدر 60 فولت"),
       steps: [
         { id: "s1", label: "احسب <span class='ltr'>V<sub>Th</sub></span>.", symbol: "VTh =", answer: th9.voc, units: V, unitDefault: 1,
           diagnose: [{ value: 60, type: "conceptual", why: "الجهد بين a و b ليس جهد المصدر؛ هو جهد R2 لأن R3 لا يمر فيها تيار." }, { value: 20, type: "substitution", why: "هذا جهد R1. الطرفان a و b على R2 (عبر R3)." }],
@@ -398,7 +398,7 @@
     ],
     practice: {
       prompt: "أوجد مكافئ ثيفنن. القيم: <span class='ltr'>Vs = 36 V</span>، <span class='ltr'>R1 = 30 Ω</span> (تيارها iₓ)، <span class='ltr'>R2 = 12 Ω</span>، مصدر تابع <span class='ltr'>0.5iₓ</span> للأسفل، <span class='ltr'>R3 = 2 Ω</span>.",
-      figure: fig(t10, "شبكة بمصدر تيار تابع قيمته نصف iₓ"),
+      circuit: t10, figure: fig(t10, "شبكة بمصدر تيار تابع قيمته نصف iₓ"),
       steps: [
         { id: "s1", kind: "choice", label: "كيف نحسب R<sub>Th</sub> هنا؟", options: [
           { t: "v<sub>oc</sub> / i<sub>sc</sub> (أو مصدر اختبار) مع إبقاء المصدر التابع", correct: true },
@@ -435,7 +435,7 @@
     ],
     practice: {
       prompt: "حمل R<sub>L</sub> يوصل بين a و b. القيم: <span class='ltr'>Vs = 60 V</span>، <span class='ltr'>R1 = 10 Ω</span>، <span class='ltr'>R2 = 40 Ω</span>، <span class='ltr'>R3 = 8 Ω</span>.",
-      figure: fig(t11, "شبكة بين الطرفين a و b يوصل بها حمل"),
+      circuit: t11, figure: fig(t11, "شبكة بين الطرفين a و b يوصل بها حمل"),
       steps: [
         { id: "s1", label: "ما قيمة R<sub>L</sub> التي تستقبل أقصى قدرة؟", symbol: "RL =", answer: th11.rth, units: OHM, unitDefault: 0,
           diagnose: [{ value: 58, type: "conceptual", why: "جمعت كل المقاومات. R<sub>L</sub> = R<sub>Th</sub>، و R<sub>Th</sub> = R3 + R1 ∥ R2." }, { value: 8, type: "conceptual", why: "أخذت R3 فقط. R<sub>Th</sub> = R3 + R1 ∥ R2." }],
@@ -472,7 +472,7 @@
     ],
     practice: {
       prompt: "استخدم التراكب لحساب التيار <span class='ltr'>i</span> في <span class='ltr'>R2</span>. القيم: <span class='ltr'>Vs = 40 V</span>، <span class='ltr'>R1 = 5 Ω</span>، <span class='ltr'>R2 = 3 Ω</span>، <span class='ltr'>R3 = 10 Ω</span>، <span class='ltr'>Is = 4 A</span> للأسفل.",
-      figure: fig(u12, "دائرة بمصدر جهد 40 فولت ومصدر تيار 4 أمبير"),
+      circuit: u12, figure: fig(u12, "دائرة بمصدر جهد 40 فولت ومصدر تيار 4 أمبير"),
       steps: [
         { id: "s1", label: "احسب مساهمة Vs وحده <span class='ltr'>i′</span>.", symbol: "i′ =", answer: p12[0].value, units: A, unitDefault: 1,
           diagnose: [{ value: 40 * (30 / 13) / (5 + 30 / 13) / 3, type: "conceptual", why: "استبدلت مصدر التيار بسلك. إطفاء مصدر التيار يعني دائرة مفتوحة، فلا يمر تيار في R3.", review: R("c1-techniques-12", "concept", "إطفاء المصادر") }],

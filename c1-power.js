@@ -260,7 +260,7 @@
     ],
     practice: {
       prompt: "للدائرة في المثال: <span class='ltr'>V<sub>Th</sub> = " + AC.polar(pr6.voc, "V") + "</span> (قيمة عظمى)، <span class='ltr'>Z<sub>Th</sub> = " + AC.rect(Zth6) + " Ω</span>.",
-      figure: fig(t6, "مصدر جهد ومقاومة ومكثف بين الطرفين a و b"),
+      circuit: t6, figure: fig(t6, "مصدر جهد ومقاومة ومكثف بين الطرفين a و b"),
       steps: [
         { id: "s1", kind: "phasor", form: "rect", label: "ما الحمل <span class='ltr'>Z<sub>L</sub></span> الذي يستقبل أقصى قدرة؟", answer: Cx.conj(Zth6), units: OHM,
           diagnose: [{ value: Zth6, type: "conceptual", why: "الحمل يساوي Z<sub>Th</sub> نفسها. المطلوب المرافق ليُلغي المفاعلة.", review: R("c1-power-6", "when", "المرافق وليس المساوي") }],

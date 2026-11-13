@@ -54,7 +54,7 @@
     ],
     practice: {
       prompt: "الشبكة بين الطرفين <span class='ltr'>a</span> و <span class='ltr'>b</span> فيها ثلاث مقاومات.",
-      figure: fig(n1, "ثلاث مقاومات بين الطرفين a و b"),
+      circuit: n1, figure: fig(n1, "ثلاث مقاومات بين الطرفين a و b"),
       steps: [
         { id: "s1", kind: "choice", label: "لماذا المقاومات الثلاث على التوالي؟",
           options: [
@@ -122,7 +122,7 @@
     ],
     practice: {
       prompt: "أوجد المقاومة المكافئة بين a و b، ثم التيارات عند توصيل مصدر <span class='ltr'>50 V</span> بين الطرفين.",
-      figure: fig(n2, "مقاومة على التوالي مع ثلاث مقاومات على التوازي بين a و b"),
+      circuit: n2, figure: fig(n2, "مقاومة على التوالي مع ثلاث مقاومات على التوازي بين a و b"),
       steps: [
         { id: "s1", label: "احسب المقاومة المكافئة لـ <span class='ltr'>R2 ∥ R3 ∥ R4</span>.", symbol: "R =", answer: par2, units: OHM, unitDefault: 0,
           diagnose: [{ value: 22, type: "formula", why: "جمعت المقاومات. هذه الثلاث على التوازي، فنجمع مقلوباتها.", review: R("c1-resistive-2", "laws", "قانون التوازي") },
@@ -190,7 +190,7 @@
     ],
     practice: {
       prompt: "مقسّم جهد من مصدر <span class='ltr'>30 V</span> و <span class='ltr'>R1 = 10 Ω</span> و <span class='ltr'>R2 = 40 Ω</span>، وعلى خرجه حمل <span class='ltr'>RL = 40 Ω</span>.",
-      figure: fig(c3, "مقسم جهد بمصدر 30 فولت ومقاومتين وحمل على الخرج"),
+      circuit: c3, figure: fig(c3, "مقسم جهد بمصدر 30 فولت ومقاومتين وحمل على الخرج"),
       steps: [
         { id: "s1", label: "احسب جهد الخرج <span class='ltr'>vₒ</span> <b>قبل</b> توصيل الحمل.", symbol: "vₒ =", answer: 30 * 40 / 50, units: V, unitDefault: 1,
           diagnose: [{ value: 6, type: "substitution", why: "وضعت R1 في البسط، فحسبت جهد R1. الخرج على R2، فهي في البسط.", review: R("c1-resistive-3", "laws", "قانون مقسّم الجهد") },
@@ -251,7 +251,7 @@
     ],
     practice: {
       prompt: "في الدائرة: <span class='ltr'>Vs = 36 V</span>، و <span class='ltr'>R1 = 4 Ω</span>، و <span class='ltr'>R2 = 6 Ω</span>، و <span class='ltr'>R3 = 12 Ω</span>. أوجد <span class='ltr'>i₃</span> باستخدام قسمة التيار.",
-      figure: fig(c4, "مصدر 36 فولت ومقاومة على التوالي مع مقاومتين على التوازي"),
+      circuit: c4, figure: fig(c4, "مصدر 36 فولت ومقاومة على التوالي مع مقاومتين على التوازي"),
       steps: [
         { id: "s1", label: "احسب المقاومة المكافئة التي يراها المصدر.", symbol: "R =", answer: 8, units: OHM, unitDefault: 0,
           diagnose: [{ value: 22, type: "conceptual", why: "جمعت كل المقاومات. R2 و R3 على التوازي (بين نفس العقدتين)." }, { value: 4, type: "conceptual", why: "حسبت <span class='ltr'>R2 ∥ R3</span> فقط ونسيت R1 على التوالي معها." }],
@@ -325,7 +325,7 @@
     ],
     practice: {
       prompt: "جسر بنفس الشكل بقيم <span class='ltr'>R1 = 40 Ω</span>، <span class='ltr'>R2 = 40 Ω</span>، <span class='ltr'>R5 = 20 Ω</span>، <span class='ltr'>R3 = 4 Ω</span>، <span class='ltr'>R4 = 16 Ω</span>.",
-      figure: fig(b2, "دائرة جسر بقيم جديدة بين الطرفين a و b"),
+      circuit: b2, figure: fig(b2, "دائرة جسر بقيم جديدة بين الطرفين a و b"),
       steps: [
         { id: "s1", kind: "choice", label: "لماذا لا نستطيع اختزال هذه الشبكة بالتوالي والتوازي مباشرة؟",
           options: [

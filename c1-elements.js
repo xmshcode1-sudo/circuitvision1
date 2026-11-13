@@ -69,7 +69,7 @@
     ],
     practice: {
       prompt: "في الدائرة، مصدر جهد <span class='ltr'>20 V</span> في حلقة واحدة مع مصدر تيار <span class='ltr'>4 A</span>.",
-      figure: fig(c1, "مصدر جهد 20 فولت ومصدر تيار 4 أمبير في حلقة واحدة"),
+      circuit: c1, figure: fig(c1, "مصدر جهد 20 فولت ومصدر تيار 4 أمبير في حلقة واحدة"),
       steps: [
         { id: "s1", kind: "choice", label: "ما الذي يحدد التيار في هذه الحلقة؟",
           options: [
@@ -218,7 +218,7 @@
     ],
     practice: {
       prompt: "في الدائرة: مصدر <span class='ltr'>30 V</span>، و <span class='ltr'>R1 = 5 Ω</span>، و <span class='ltr'>R2 = 10 Ω</span>، ومصدر تيار <span class='ltr'>1.5 A</span>. أوجد التيارات وقدرة مصدر التيار.",
-      figure: fig(c3, "مصدر 30 فولت ومقاومتان ومصدر تيار 1.5 أمبير"),
+      circuit: c3, figure: fig(c3, "مصدر 30 فولت ومقاومتان ومصدر تيار 1.5 أمبير"),
       steps: [
         { id: "s1", kind: "choice", label: "ما معادلة KCL الصحيحة عند العقدة العليا الوسطى؟",
           options: [
@@ -295,7 +295,7 @@
     ],
     practice: {
       prompt: "حلقة واحدة فيها مصدر <span class='ltr'>12 V</span>، و <span class='ltr'>R1 = 2 Ω</span>، و <span class='ltr'>R2 = 4 Ω</span>، ومصدر جهد تابع قيمته <span class='ltr'>0.5 vₓ</span> حيث <span class='ltr'>vₓ</span> جهد <span class='ltr'>R2</span> بالقطبية المرسومة.",
-      figure: fig(c4, "حلقة فيها مصدر 12 فولت ومقاومتان ومصدر جهد تابع قيمته نصف vₓ"),
+      circuit: c4, figure: fig(c4, "حلقة فيها مصدر 12 فولت ومقاومتان ومصدر جهد تابع قيمته نصف vₓ"),
       steps: [
         { id: "s1", kind: "choice", label: "ما معادلة القيد التي تربط <span class='ltr'>vₓ</span> بتيار الحلقة <span class='ltr'>i</span>؟",
           options: [

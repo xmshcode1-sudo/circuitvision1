@@ -323,8 +323,20 @@
     // Practice
     problemCtl = CV.feedback.renderProblem(document.getElementById("problem"), L.practice, it.id, { onChange: updateReq, focus: true, title: L.ar });
 
+    // the exercise's circuit, when it is a DC circuit the solver can solve: the workspace then checks every written step on it
+    var pc = L.practice.circuit, pctx = null;
+    if (pc && !pc.omega && CV.stepcheck) try {
+      var psol = CV.mna.solve(pc);
+      if (psol.ok) pctx = { c: pc, sol: psol, nodes: pc.nodeLabels && pc.nodeLabels.length ? pc.nodeLabels : CV.analysis.nodeLabels(pc), meshes: CV.analysis.meshes(pc, psol) || [] };
+    } catch (x) { pctx = null; }
     CV.workspace.mount(document.getElementById("workspace"), { key: it.id, lessonId: it.id,
       context: L.practice.prompt.replace(/<[^>]+>/g, ""),
+      circuit: pctx ? function () { return pctx; } : null,
+      onLabels: pctx ? function () {
+        pc.nodeLabels = pctx.nodes; pc.meshLabels = pctx.meshes;
+        var lf = document.querySelector("#problem .lfig"); if (lf) lf.innerHTML = CV.draw.render(pc, { aria: "دائرة التمرين مع أسماء العقد والحلقات" });
+      } : null,
+      tutor: pctx && CV.tutor ? function () { return CV.tutor.fromProblem(L.practice, it.id, L.ar); } : null,
       onAnswer: function (v) {
         var step = document.querySelector("#problem .pb-step[data-state='active']");
         return !!step && CV.workspace.fillAnswer(step.querySelector(".pb-input"), step.querySelector(".pb-unit"), v);
