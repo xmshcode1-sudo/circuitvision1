@@ -10,12 +10,13 @@
   /* ---------- state ---------- */
   var bench, code, pins = {}, runner = null, nextId = 1, undo = null, serialBuf = "", solved = null, dirty = true, showFlow = true, tool = "select";
   function load() {
-    try { var d = JSON.parse(localStorage.getItem(KEY)); if (d && d.bench) { bench = B.fixup(d.bench); code = d.code || ""; } } catch (e) {}
+    try { var d = JSON.parse(localStorage.getItem(KEY)); if (d && d.bench) { bench = B.fixup(d.bench); code = d.code || ""; goal = d.goal && d.goal.b ? { name: d.goal.name, b: B.fixup(d.goal.b) } : null; } } catch (e) {}
     if (!bench) { try { var o = JSON.parse(localStorage.getItem(OLD)); if (o && o.lab) { bench = B.convert(o.lab); code = o.code || ""; } } catch (e) {} }
     if (!bench) { bench = starter(); code = EX.blink.code; }
     bench.parts.forEach(function (p) { var n = +String(p.id).replace(/\D/g, ""); if (n >= nextId) nextId = n + 1; });
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify({ bench: bench, code: code })); } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ bench: bench, code: code, goal: goal })); } catch (e) {} }
+  var goal = null; // a project circuit the student builds on an empty board: { name, b }
   function starter() { // a first circuit: CH1 of the supply, a resistor and an LED
     var b = B.blank();
     b.parts.push({ id: "e1", k: "R", legs: ["b10", "b14"], value: 220 }, { id: "e2", k: "LED", legs: ["c14", "T-14"], color: "red" },
@@ -52,6 +53,8 @@
     // wiring check: its parts are drawn in red on the board, its messages lead the status card
     solved.check = CV.wireCheck ? CV.wireCheck.check(bench, solved, V.names(bench)) : [];
     solved.check.forEach(function (x) { x.parts.forEach(function (id) { solved.c.warn.push({ part: id, t: "wire" }); }); });
+    solved.cmp = goal && CV.benchCompare ? CV.benchCompare.compare(goal.b, bench, V.names(bench)) : null;
+    if (solved.cmp) solved.cmp.items.forEach(function (x) { if (x.sev === "err") x.parts.forEach(function (id) { solved.c.warn.push({ part: id, t: "goal" }); }); });
     return solved;
   }
   var hooks = [], rafId = 0, needInst = false;
@@ -144,7 +147,19 @@
   }
 
   /* ---------- status ---------- */
+  function renderGoal() {
+    var card = $("goal-card"); if (!card) return;
+    card.hidden = !goal; if (!goal) return;
+    var r = solved.cmp; if (!r) return;
+    if (CV.bi) r.items.forEach(function (x) { var o = {}; o[x.t] = x.en; CV.bi.add(o); });
+    $("goal-name").textContent = goal.name.replace(/^مشروع: /, "");
+    $("goal-prog").textContent = r.placed + " من " + r.total + " قطع في مكانها";
+    $("goal-bar").style.width = (r.total ? 100 * r.placed / r.total : 0) + "%";
+    $("goal-list").innerHTML = r.ok ? '<p class="goal-ok">✓ دائرتك تطابق الدائرة المطلوبة: كل القطع بقيمها وتوصيلاتها صحيحة.</p>' :
+      '<ul>' + r.items.map(function (x) { return '<li class="wc-' + x.sev + '">' + x.t + '</li>'; }).join("") + '</ul>';
+  }
   function renderStatus() {
+    renderGoal();
     var st = $("lab-status"), res = solved.res, w = [], nm = V.names(bench);
     if (CV.bi) (solved.check || []).forEach(function (x) { if (x.en) { var o = {}; o[x.t] = x.en; CV.bi.add(o); } });
     var nChk = (solved.check || []).length, badge = $("wc-badge");
@@ -254,7 +269,7 @@
   function reid(b) { var m = {}; b.parts.forEach(function (p) { var n = "e" + (nextId++); m[p.id] = n; p.id = n; }); b.parts.forEach(function (p) { if (p.ctrl) p.ctrl = m[p.ctrl] || null; }); b.inst.ps.concat(b.inst.fg).forEach(function (c) { if (c.src) c.src = m[c.src] || c.src; }); }
   function remember() { undo = { bench: JSON.parse(JSON.stringify(bench)), code: code }; $("lab-undo").hidden = false; }
   function setBench(b, name) { if (runner) stopSketch(); remember(); bench = B.fixup(b); reid(bench); V.select(null); syncUI(); changed(true); if (name) flash(name); }
-  function loadExample(id) { var x = EX[id]; if (!x) return; if (x.code) code = x.code; setBench(B.convert(JSON.parse(JSON.stringify(x.lab))), "حُمّل: " + x.name + (x.code ? " — اضغط تشغيل لتشغيل الكود." : "")); }
+  function loadExample(id) { var x = EX[id]; if (!x) return; if (x.code) code = x.code; goal = null; setBench(B.convert(JSON.parse(JSON.stringify(x.lab))), "حُمّل: " + x.name + (x.code ? " — اضغط تشغيل لتشغيل الكود." : "")); }
   function loadLab(obj, name) { setBench(B.convert(JSON.parse(JSON.stringify(obj))), name ? "حُمّلت: " + name : ""); }
   function aliasP(p) { var a = solved && solved.c.lab.alias, k = p && p.join ? p.join(",") : p; return a && a[k] ? [a[k]] : p; }
   CV.lab = {
@@ -318,6 +333,12 @@
       else if (key === "Escape") { pick("select"); act = 1; }
       if (act) e.preventDefault();
     });
+    $("goal-pic").addEventListener("click", function () {
+      var box = $("goal-view"), on = box.hidden; box.hidden = !on; this.setAttribute("aria-expanded", on);
+      if (on && goal) box.innerHTML = V.picture(goal.b, { full: goal.b });
+    });
+    $("goal-fill").addEventListener("click", function () { if (goal) setBench(JSON.parse(JSON.stringify(goal.b)), "حُمّلت الدائرة المطلوبة جاهزة."); });
+    $("goal-stop").addEventListener("click", function () { goal = null; save(); changed(); });
     $("wc-badge").addEventListener("click", function () { $("status-card").scrollIntoView({ behavior: "smooth", block: "center" }); });
     $("wire-c").addEventListener("change", function () { V.color(this.value); });
     var z = 1; function zoom(d) { z = Math.max(0.8, Math.min(2.4, Math.round((z + d) * 10) / 10)); $("zoom-v").textContent = Math.round(z * 100) + "%"; V.zoom(z); }
@@ -341,7 +362,14 @@
     $("ard-code").addEventListener("keydown", function (e) { if (e.key === "Tab") { e.preventDefault(); var s = this.selectionStart; this.setRangeText("  ", s, this.selectionEnd, "end"); } });
     $("ard-clear").addEventListener("click", function () { serialBuf = ""; serial(""); });
     syncUI();
-    function fromProject() { try { var d = JSON.parse(sessionStorage.getItem("cv.projlab")); if (d && d.lab) { sessionStorage.removeItem("cv.projlab"); loadLab(d.lab, d.name); } } catch (x) {} }
+    function fromProject() {
+      try {
+        var d = JSON.parse(sessionStorage.getItem("cv.projlab")); if (!d || !d.lab) return;
+        sessionStorage.removeItem("cv.projlab");
+        if (d.build) { goal = { name: d.name, b: B.convert(JSON.parse(JSON.stringify(d.lab))) }; var e = B.blank(); e.inst.ard = !!d.lab.arduino; setBench(e, "ابنِ الدائرة بنفسك: " + d.name.replace(/^مشروع: /, "")); }
+        else { goal = null; loadLab(d.lab, d.name); }
+      } catch (x) {}
+    }
     var h = location.hash.replace("#", "").replace(/^ex-/, ""); if (EX[h]) loadExample(h); else if (h === "proj") fromProject();
     window.addEventListener("hashchange", function () { var k = location.hash.replace("#", "").replace(/^ex-/, ""); if (EX[k]) loadExample(k); else if (k === "proj") fromProject(); });
     $("lab-hint").textContent = hintFor(tool);

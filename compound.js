@@ -65,7 +65,7 @@
   function mount(root) {
     var st = null, uid = "cp" + Math.floor(Math.random() * 1e6);
     root.innerHTML = '<div class="cp-top"><label class="cp-dep"><input type="checkbox" id="' + uid + '-dep"> مع مصدر تابع</label><button type="button" class="btn btn-primary btn-sm cp-new">مسألة جديدة ↻</button></div>' +
-      '<div class="cp-tag muted"></div><div class="cp-fig"></div><ol class="cp-parts"></ol><div class="cp-end"></div>';
+      '<div class="cp-tag muted"></div><div class="cp-fig"></div><ol class="cp-parts"></ol><div class="cp-end"></div><div class="cp-ws"></div>';
     var $ = function (s) { return root.querySelector(s); };
     function tagsHtml(p) { return p.tags.map(function (k) { return '<a class="cp-req" href="lesson.html#' + TAG[k][1] + '">' + TAG[k][0] + '</a>'; }).join(""); }
     function next(seed) {
@@ -83,6 +83,16 @@
           '</select><button class="btn btn-ghost btn-sm" type="submit">تحقق</button><button class="btn btn-ghost btn-sm cp-h" type="button">تلميح</button></form><p class="cp-fb" role="status" hidden></p></li>';
       }).join("");
       $(".cp-end").innerHTML = '<button type="button" class="btn btn-ghost btn-sm cp-sol">اعرض الحل</button><div class="cp-solution" hidden></div>';
+      if (CV.workspace) {
+        var stepCtx = function () { var A = CV.analysis; return { c: g.circuit, sol: g.solution, nodes: A.nodeLabels(g.circuit), meshes: A.meshes(g.circuit, g.solution) || [] }; };
+        CV.workspace.mount($(".cp-ws"), { key: "adv-" + g.seed, lessonId: "advanced", circuit: stepCtx,
+          onLabels: function () { var x = stepCtx(); g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".cp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة المسألة المركّبة" }); },
+          tutor: CV.tutor ? function () {
+            return { key: "adv:" + g.seed, title: "مسألة مركّبة", problem: r.parts.map(function (p, i) { return (i + 1) + ") " + p.q.replace(/<[^>]+>/g, ""); }).join(" "),
+              facts: ["قيم العناصر من محرك الحل (v, i, p ممتصة): " + g.solution.elements.filter(function (it) { return it.edge.type !== "W"; }).map(function (it) { return it.edge.name + ": v=" + n(it.v) + " V, i=" + n(it.i) + " A, p=" + n(it.p) + " W"; }).join("؛ ")] };
+          } : null,
+          onAnswer: function () { return false; } });
+      }
       root.querySelectorAll(".cp-part").forEach(function (li) {
         var i = +li.dataset.i, p = r.parts[i], fb = li.querySelector(".cp-fb");
         li.querySelector(".cp-h").addEventListener("click", function () { fb.hidden = false; fb.className = "cp-fb hint"; fb.textContent = HINT[p.k]; });

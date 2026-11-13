@@ -717,6 +717,23 @@
   bi.add({
     "المستوى المتقدم": "Advanced level",
     "تنبيهات التشبيك": "Wiring alerts",
+    "دقّق الحل على الدائرة": "Check the solution on the circuit",
+    "اكتب معادلاتك بأسماء الرسم: جهود العقد v1, v2…، تيارات الحلقات i1, i2…، والعناصر R2, Vs, i_R2, v_R2. يفحص كل سطر على الدائرة نفسها، لا الأرقام فقط.": "Write your equations with the drawing’s names: node voltages v1, v2…, mesh currents i1, i2…, and elements R2, Vs, i_R2, v_R2. Every line is checked on the circuit itself, not just the numbers.",
+    "أظهر أسماء العقد والحلقات على الرسم": "Show node and mesh names on the drawing",
+    "اكتب حلّك أولًا، كل معادلة في سطر فيها علامة =.": "Write your solution first, one equation with an = sign per line.",
+    "اشرح لي الخطأ (المعلم الذكي)": "Explain the mistake (AI tutor)",
+    "كل الأسطر التي فحصتها صحيحة لهذه الدائرة. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "Every line I checked is right for this circuit. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
+    "وجدت # سطرًا فيه خطأ. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "I found # line with a mistake. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
+    "وجدت # أسطر فيها أخطاء. أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.": "I found # lines with mistakes. I judge each equation by substituting the circuit’s real values from the solver, so a correct equation is accepted in any form you write it.",
+    "ابنِها بنفسك": "Build it yourself",
+    "# من # قطع في مكانها": "# of # parts in place",
+    "✓ دائرتك تطابق الدائرة المطلوبة: كل القطع بقيمها وتوصيلاتها صحيحة.": "✓ Your circuit matches the one you are building: every part, value and connection is right.",
+    "صورة الدائرة المطلوبة": "Picture of the target circuit",
+    "حمّلها جاهزة": "Load it ready-made",
+    "أوقف المقارنة": "Stop comparing",
+    "حُمّلت الدائرة المطلوبة جاهزة.": "Loaded the target circuit ready-made.",
+    "أو ابنِها بنفسك من لوحة فارغة، والمعمل يقارن دائرتك بالمطلوب ←": "or build it yourself on an empty board, and the lab compares your circuit with the target →",
+    "ابنِها في المعمل الذكي على لوحة التجارب ←": "Build it in the Smart Lab on the breadboard →",
     "صورة:": "Photo:",
     "⚠ تنبيهات التشبيك: # · اعرضها ←": "⚠ Wiring alerts: # · show them →",
     "مسائل مركّبة: أكثر من متطلب على نفس الدائرة": "Compound problems: several prerequisites on one circuit",
@@ -755,6 +772,7 @@
     var a = document.querySelector("#prev-warn a"), href = a ? a.getAttribute("href") : "#";
     return "⚠ You haven’t finished the previous lesson <b>" + tr(x) + "</b>. You can carry on here, or <a href='" + href + "'>go back to it</a>."; });
   P(/^([^·]+(?: · [^·]+)+)$/, function (m, x) { return x.split(" · ").map(function (p) { return tr(p); }).join(" · "); }); // e.g. colour bands "أحمر · أحمر · بني"
+  P(/^ابنِ الدائرة بنفسك: (.+)$/, function (m, x) { return "Build the circuit yourself: " + tr(x); });
   P(/^تجربة: (.+)$/, function (m, x) { return "Experiment: " + tr(x); });
   P(/^أهلًا، (.+)$/, function (m, x) { return "Hi, <bdi>" + (x === "طالب" ? "student" : x) + "</bdi>"; });
   P(/^دائرة رقم (\d+) · (.+)$/, function (m, n, x) { return "Circuit no. " + n + " · " + tr(x); });

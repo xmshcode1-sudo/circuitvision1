@@ -55,7 +55,8 @@
           '<div class="ws-syms" aria-label="رموز">' + SYMBOLS.map(function (s) { return '<button type="button" class="ws-sym" data-s="' + s + '">' + s + '</button>'; }).join("") + '</div>' +
           '<label class="ws-label" for="' + uid + '-txt">اكتب كل خطوة في سطر. اختصارات: <span class="ltr">^2 → ²</span> ، <span class="ltr">_1 → ₁</span> ، <span class="ltr">ohm → Ω</span> ، <span class="ltr">|| → ∥</span></label>' +
           '<textarea class="input ws-text" id="' + uid + '-txt" dir="ltr" rows="7" spellcheck="false" placeholder="i₁ = 30 / (5 + 10) = 2 A"></textarea>' +
-          '<div class="pb-actions"><button type="button" class="btn btn-primary btn-sm" data-act="check">دقّق الحساب</button><button type="button" class="btn btn-ghost btn-sm" data-act="use">استخدم الناتج الأخير كإجابة</button></div>' +
+          (opts.circuit ? '<p class="ws-note ws-names">اكتب معادلاتك بأسماء الرسم: جهود العقد <span class="ltr">v1, v2…</span>، تيارات الحلقات <span class="ltr">i1, i2…</span>، والعناصر <span class="ltr">R2, Vs, i_R2, v_R2</span>. يفحص كل سطر على الدائرة نفسها، لا الأرقام فقط.' + (opts.onLabels ? ' <button type="button" class="lk ws-labels">أظهر أسماء العقد والحلقات على الرسم</button>' : '') + '</p>' : '') +
+          '<div class="pb-actions"><button type="button" class="btn btn-primary btn-sm" data-act="check">' + (opts.circuit ? 'دقّق الحل على الدائرة' : 'دقّق الحساب') + '</button><button type="button" class="btn btn-ghost btn-sm" data-act="use">استخدم الناتج الأخير كإجابة</button></div>' +
           '<div class="ws-check" aria-live="polite"></div>' +
         '</div>' +
         // Photo
@@ -166,13 +167,37 @@
       txt.selectionStart = txt.selectionEnd = s + b.dataset.s.length; txt.focus(); data.text = txt.value; persist();
     }); });
     root.querySelector('[data-act="check"]').addEventListener("click", function () { renderCheck(); });
+    var lb = root.querySelector(".ws-labels"); if (lb) lb.addEventListener("click", function () { opts.onLabels(); lb.disabled = true; });
     root.querySelector('[data-act="use"]').addEventListener("click", function () {
       var v = CV.mathcheck.lastValue(txt.value);
       if (!v) { status("لم أجد رقمًا في آخر سطر. اكتب الناتج في آخر سطر مثل: i = 2 A", "warn"); return; }
       if (opts.onAnswer && opts.onAnswer(v)) status("وضعت " + CV.num(v.value) + " (بالوحدة الأساسية) في خانة الإجابة. اضغط «تحقق».", "ok");
       else status("لا توجد خطوة مفتوحة الآن لوضع الإجابة فيها.", "warn");
     });
+    function esc(t) { return String(t).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+    function renderSteps(ctx) { // the solution checked against the circuit itself (stepcheck.js)
+      var box = $(".ws-check"), r = CV.stepcheck.check(txt.value, ctx);
+      if (!r.lines.length) { box.innerHTML = "<p class='ws-note'>اكتب حلّك أولًا، كل معادلة في سطر فيها علامة =.</p>"; return; }
+      if (CV.bi) { r.lines.forEach(function (l) { if (l.en) { var o = {}; o[l.msg] = l.en; CV.bi.add(o); } }); r.summary.notes.forEach(function (x) { var o = {}; o[x.t] = x.en; CV.bi.add(o); }); }
+      var cls = { ok: "good", err: "bad", warn: "warn", skip: "skip" };
+      box.innerHTML = "<ul class='ws-lines'>" + r.lines.map(function (l) {
+        return "<li class='" + cls[l.status] + "'><span class='ln'>" + l.n + "</span><span class='ltr lt'>" + esc(l.text) + "</span><span class='why'>" + esc(l.msg) + "</span></li>";
+      }).join("") + "</ul>" +
+        r.summary.notes.map(function (x) { return "<p class='ws-note ws-method'>" + esc(x.t) + "</p>"; }).join("") +
+        "<p class='ws-note'>" + (r.summary.err ? "وجدت " + r.summary.err + " " + (r.summary.err === 1 ? "سطرًا فيه خطأ" : "أسطر فيها أخطاء") + "." : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
+        " أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.</p>" +
+        (r.summary.err && CV.tutor && opts.tutor ? "<button type='button' class='btn btn-ghost btn-sm ws-explain'>اشرح لي الخطأ (المعلم الذكي)</button>" : "");
+      var ex = box.querySelector(".ws-explain");
+      if (ex) ex.addEventListener("click", function () {
+        var c = opts.tutor(), bad = r.lines.filter(function (l) { return l.status === "err"; }).slice(0, 2);
+        c.attempt = "حل الطالب مكتوب خطوة خطوة. أسطر فيها خطأ حدده محرك الحل: " + bad.map(function (l) { return "«" + l.text.slice(0, 90) + "» ← " + l.msg; }).join(" | ") + " — اشرح سبب الخطأ ووجّهه دون أن تعطي الحل النهائي أو أرقامًا من عندك.";
+        CV.tutor.open(c);
+      });
+      if (r.summary.err && CV.store) CV.store.recordAttempt(opts.lessonId || "workspace", "ws-" + key, false, "steps");
+    }
     function renderCheck() {
+      var ctx = opts.circuit && CV.stepcheck ? opts.circuit() : null;
+      if (ctx) { renderSteps(ctx); return; }
       var res = CV.mathcheck.checkLines(txt.value), box = $(".ws-check");
       if (!res.length) { box.innerHTML = "<p class='ws-note'>اكتب حلّك أولًا.</p>"; return; }
       var errs = res.filter(function (r) { return r.status === "err"; }).length, oks = res.filter(function (r) { return r.status === "ok"; }).length;

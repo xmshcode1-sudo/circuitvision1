@@ -544,3 +544,9 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .kb-open { font: inherit; font-size: 12.5px; color: var(--fg-3); background: none; border: 0; padding: 8px 12px; cursor: pointer; display: flex; gap: 8px; align-items: center; text-align: start; }
 .kb-open:hover { color: var(--fg); }
 .kb-open kbd { font: 600 11px/1 var(--font-mono, monospace); padding: 3px 6px; border: 1px solid var(--line-soft); border-radius: 5px; }
+/* step-by-step check against the circuit */
+.ws-lines li.warn { background: color-mix(in srgb, var(--orange) 9%, var(--surface)); } .ws-lines li.warn .why { color: var(--orange); }
+.ws-lines li.skip .why { color: var(--fg-3); }
+.ws-method { border-inline-start: 3px solid var(--orange); padding-inline-start: 10px; color: var(--fg-2); }
+.ws-names .lk { font: inherit; background: none; border: 0; padding: 0; color: var(--glow); text-decoration: underline; cursor: pointer; }
+.ws-names .lk:disabled { color: var(--fg-3); text-decoration: none; cursor: default; }

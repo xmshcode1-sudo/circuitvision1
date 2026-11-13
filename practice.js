@@ -124,7 +124,7 @@
             : req ? G.generate({ seed: seed, req: true, families: fams, sp: cfg.sp })
                   : G.generate({ seed: seed, families: fams, dependent: dep, types: typesNow(), allowI: cfg.allowI, single: cfg.single });
       if (!g) { $(".gp-q").textContent = "تعذّر توليد دائرة بهذه الإعدادات. جرّب إعدادات أخرى."; return; }
-      state.gen = g; state.wrong = 0; state.hints = 0;
+      state.gen = g; state.wrong = 0; state.hints = 0; root.cvGen = g; // read by tests
       $(".gp-tag").innerHTML = "دائرة رقم <span class='ltr mono'>" + g.seed + "</span> · " + FAM_AR[g.family] + (ackinds ? " · تيار متردد" : akinds ? (dep ? " · مصدر تابع" : "") : req ? " · مقاومة مكافئة" + (g.reduction.usedDY ? " (تحتاج Δ-Y)" : "") : dep ? " · مصدر تابع" : "");
       $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] });
       $(".gp-q").innerHTML = questionText(g.question, g);
@@ -143,9 +143,17 @@
       root.classList.remove("pb-complete");
       if (CV.workspace) CV.workspace.mount($(".gp-ws"), { key: "gen-" + g.family + "-" + g.seed, lessonId: cfg.lessonId || "generator",
         context: $(".gp-q").textContent,
+        circuit: g.circuit.omega ? null : function () { return stepCtx(g); },
+        onLabels: g.circuit.omega ? null : function () { var x = stepCtx(g); g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
+        tutor: CV.tutor ? function () { return CV.tutor.fromGenerated(g, $(".gp-q").textContent); } : null,
         onAnswer: function (v) { return CV.workspace.fillAnswer($("#" + uid + "-in"), $("#" + uid + "-u"), v); } });
     }
 
+    function stepCtx(g) { // the circuit's unknowns, named as they are (or will be) drawn
+      var A = CV.analysis, c = g.circuit, sol = g.solution;
+      var nodes = c.nodeLabels && c.nodeLabels.length ? c.nodeLabels : A.nodeLabels(c), meshes = A.meshes(c, sol) || [];
+      return { c: c, sol: sol, nodes: nodes, meshes: meshes };
+    }
     function hintsFor(g) {
       var AH = {
         vN: ["اختر الأرضي عقدة مرجعية (هنا أسفل اليسار)، ثم اكتب KCL عند كل عقدة أساسية بدلالة جهود العقد: <span class='ltr'>Σ (vₖ − vⱼ)/R = 0</span>.", "مصدر جهد بين عقدة والأرضي يعطيك جهد العقدة مباشرة. ومصدر جهد بين عقدتين يجعلهما عقدة عظمى (supernode)."],

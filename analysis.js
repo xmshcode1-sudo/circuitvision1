@@ -93,7 +93,11 @@
     for (r = 0; r < R - 1; r++) for (cc = 0; cc < C - 1; cc++) { var f = find("w" + r + "," + cc); if (f !== find("out") && !faces[f]) faces[f] = { at: [r, cc], value: I[f] }; }
     var list = Object.keys(faces).map(function (k) { return faces[k]; });
     list.sort(function (x, y) { return (x.at[0] - y.at[0]) || (x.at[1] - y.at[1]); });
-    return list.map(function (m, i) { return { at: m.at, value: m.value, text: "i" + SUB[i + 1], name: "i" + (i + 1) }; });
+    var out = list.map(function (m, i) { return { at: m.at, value: m.value, text: "i" + SUB[i + 1], name: "i" + (i + 1) }; });
+    // which mesh currents run through each element: i_ab = I(p) − I(m)  (used to check written KVL equations)
+    var nameOf = {}; out.forEach(function (m) { nameOf[find("w" + m.at[0] + "," + m.at[1])] = m.name; });
+    out.edgeFaces = rel.map(function (x) { return { e: x.e, p: nameOf[x.p] || null, m: nameOf[x.m] || null }; });
+    return out;
   }
 
   /* ---------- Thévenin / Norton ---------- */

@@ -308,6 +308,15 @@
   .wc li.wc-err { color: var(--fg); font-weight: 600; } .wc li.wc-err::marker { color: #ff5a6e; } .wc li.wc-warn::marker { color: var(--orange); }
   .wc-badge { font: inherit; font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center; margin: 0 0 8px; padding: 7px 12px; border-radius: 9px; cursor: pointer; color: #ff8a99; background: color-mix(in srgb, #ff5a6e 10%, var(--surface)); border: 1px solid color-mix(in srgb, #ff5a6e 45%, var(--line-soft)); text-align: start; }
   .wc-badge:hover { border-color: #ff5a6e; }
+  .goal { display: grid; gap: 10px; border-color: color-mix(in srgb, var(--blue) 45%, var(--line-soft)); }
+  .goal h2 { font-size: 16px; }
+  .goal-prog { display: grid; gap: 5px; font-size: 13px; color: var(--fg-2); }
+  .goal-track { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; } .goal-track i { display: block; height: 100%; background: var(--blue); transition: width .3s; }
+  #goal-list ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 6px; font-size: 13.5px; }
+  #goal-list li.wc-err::marker { color: #ff5a6e; } #goal-list li.wc-warn::marker { color: var(--orange); }
+  .goal-ok { margin: 0; color: var(--ok, #22c55e); font-size: 13.5px; }
+  .goal-act { display: flex; flex-wrap: wrap; gap: 6px; }
+  .goal-view { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -352,6 +361,13 @@
     <div class="inst" id="lab-inst"></div>
     <aside class="side">
       <div class="card"><h2>القطعة المحددة</h2><div id="lab-insp"></div></div>
+      <div class="card goal" id="goal-card" hidden>
+        <span class="eyebrow">ابنِها بنفسك</span><h2 id="goal-name"></h2>
+        <div class="goal-prog"><span id="goal-prog"></span><div class="goal-track"><i id="goal-bar"></i></div></div>
+        <div id="goal-list" aria-live="polite"></div>
+        <div class="goal-act"><button type="button" class="btn btn-ghost btn-sm" id="goal-pic" aria-expanded="false">صورة الدائرة المطلوبة</button><button type="button" class="btn btn-ghost btn-sm" id="goal-fill">حمّلها جاهزة</button><button type="button" class="btn btn-ghost btn-sm" id="goal-stop">أوقف المقارنة</button></div>
+        <div class="goal-view bb-pic" id="goal-view" hidden></div>
+      </div>
       <div class="card" id="status-card"><h2>حالة الدائرة</h2><div id="lab-status" aria-live="polite"></div></div>
       <div class="card env"><h2>البيئة</h2>
         <label for="env-light"><span>الإضاءة (للـ LDR)</span><output id="env-light-o" class="mono"></output></label><input type="range" id="env-light" min="0" max="100" step="1">
@@ -409,7 +425,7 @@
 <script src="benchview.js"></script>
 <script src="instruments.js"></script>
 <script>CV.shell.init({ active: "lab" });</script>
-<script src="icons.js"></script><script src="wirecheck.js"></script><script src="lab.js"></script>
+<script src="icons.js"></script><script src="wirecheck.js"></script><script src="compare.js"></script><script src="lab.js"></script>
 <script src="experiments.js"></script>
 <script src="calc.js"></script>
 </body>

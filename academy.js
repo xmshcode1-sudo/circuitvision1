@@ -68,7 +68,7 @@
       '<div class="l-grid"><div class="l-body">' +
       sec("idea", "1. الفكرة", "Idea", '<div class="prose">' + p.idea.html + '<div class="callout"><b>مواصفات التصميم</b><ul class="ticks">' + p.idea.specs.map(function (s) { return "<li>" + s + "</li>"; }).join("") + '</ul></div></div>') +
       sec("design", "2. التصميم", "Design", '<div id="pj-design"></div>') +
-      sec("sim", "3. المحاكاة", "Simulation", '<p class="muted">' + p.sim.intro + ' <a class="lk" href="lab.html#proj" id="to-lab">ابنِها في المعمل الذكي على لوحة التجارب ←</a></p><form class="sim-ctl" id="sim-ctl" novalidate></form><div id="sim-out"></div>') +
+      sec("sim", "3. المحاكاة", "Simulation", '<p class="muted">' + p.sim.intro + ' <a class="lk" href="lab.html#proj" id="to-lab">ابنِها في المعمل الذكي على لوحة التجارب ←</a> · <a class="lk" href="lab.html#proj" id="to-lab-build">أو ابنِها بنفسك من لوحة فارغة، والمعمل يقارن دائرتك بالمطلوب ←</a></p><form class="sim-ctl" id="sim-ctl" novalidate></form><div id="sim-out"></div>') +
       sec("build", "4. التنفيذ", "Build", '<div class="bld"><div><b class="sub">القطع المطلوبة</b><div class="tbl-wrap"><table class="tbl"><thead><tr><th>القطعة</th><th>العدد</th></tr></thead><tbody>' + p.parts.map(function (x) { return "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td></tr>"; }).join("") + '</tbody></table></div></div>' +
         '<div class="safety"><b>السلامة</b><ul>' + p.safety.map(function (s) { return "<li>" + s + "</li>"; }).join("") + '</ul></div></div>' +
         '<div class="pj-vid"><span class="pj-vid-ic" aria-hidden="true">▶</span><p><b>فيديو المشروع · قيد التسجيل</b>فيديو يبني هذا المشروع خطوة بخطوة ويقيسه. يظهر هنا عند رفعه.</p></div>' +
@@ -85,6 +85,7 @@
     var notes = document.getElementById("pj-notes");
     notes.addEventListener("input", function () { S.saveProject(p.id, { notes: notes.value }); refresh(); });
     document.getElementById("to-lab").addEventListener("click", function () { try { sessionStorage.setItem("cv.projlab", JSON.stringify({ name: "مشروع: " + p.ar, lab: p.labFor(simValues(p)) })); } catch (x) {} });
+    document.getElementById("to-lab-build").addEventListener("click", function () { try { sessionStorage.setItem("cv.projlab", JSON.stringify({ name: "مشروع: " + p.ar, lab: p.labFor(simValues(p)), build: true })); } catch (x) {} });
     document.getElementById("copy-rep").addEventListener("click", function () {
       var txt = document.getElementById("report").textContent, stEl = document.getElementById("copy-st");
       function fallback() { var r = document.createRange(); r.selectNodeContents(document.getElementById("report")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); stEl.textContent = "حدّدت النص؛ انسخه يدويًا."; }
