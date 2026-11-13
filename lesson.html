@@ -324,11 +324,7 @@
     problemCtl = CV.feedback.renderProblem(document.getElementById("problem"), L.practice, it.id, { onChange: updateReq, focus: true, title: L.ar });
 
     // the exercise's circuit, when it is a DC circuit the solver can solve: the workspace then checks every written step on it
-    var pc = L.practice.circuit, pctx = null;
-    if (pc && !pc.omega && CV.stepcheck) try {
-      var psol = CV.mna.solve(pc);
-      if (psol.ok) pctx = { c: pc, sol: psol, nodes: pc.nodeLabels && pc.nodeLabels.length ? pc.nodeLabels : CV.analysis.nodeLabels(pc), meshes: CV.analysis.meshes(pc, psol) || [] };
-    } catch (x) { pctx = null; }
+    var pc = L.practice.circuit, pctx = pc && CV.stepcheck ? CV.stepcheck.contextFor(pc) : null;
     CV.workspace.mount(document.getElementById("workspace"), { key: it.id, lessonId: it.id,
       context: L.practice.prompt.replace(/<[^>]+>/g, ""),
       circuit: pctx ? function () { return pctx; } : null,

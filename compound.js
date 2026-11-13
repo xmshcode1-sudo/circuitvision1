@@ -84,7 +84,7 @@
       }).join("");
       $(".cp-end").innerHTML = '<button type="button" class="btn btn-ghost btn-sm cp-sol">اعرض الحل</button><div class="cp-solution" hidden></div>';
       if (CV.workspace) {
-        var stepCtx = function () { var A = CV.analysis; return { c: g.circuit, sol: g.solution, nodes: A.nodeLabels(g.circuit), meshes: A.meshes(g.circuit, g.solution) || [] }; };
+        var stepCtx = function () { return CV.stepcheck.contextFor(g.circuit); };
         CV.workspace.mount($(".cp-ws"), { key: "adv-" + g.seed, lessonId: "advanced", circuit: stepCtx,
           onLabels: function () { var x = stepCtx(); g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".cp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة المسألة المركّبة" }); },
           tutor: CV.tutor ? function () {

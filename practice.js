@@ -144,16 +144,12 @@
       if (CV.workspace) CV.workspace.mount($(".gp-ws"), { key: "gen-" + g.family + "-" + g.seed, lessonId: cfg.lessonId || "generator",
         context: $(".gp-q").textContent,
         circuit: g.circuit.omega ? null : function () { return stepCtx(g); },
-        onLabels: g.circuit.omega ? null : function () { var x = stepCtx(g); g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
+        onLabels: g.circuit.omega ? null : function () { var x = stepCtx(g); if (!x) return; g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
         tutor: CV.tutor ? function () { return CV.tutor.fromGenerated(g, $(".gp-q").textContent); } : null,
         onAnswer: function (v) { return CV.workspace.fillAnswer($("#" + uid + "-in"), $("#" + uid + "-u"), v); } });
     }
 
-    function stepCtx(g) { // the circuit's unknowns, named as they are (or will be) drawn
-      var A = CV.analysis, c = g.circuit, sol = g.solution;
-      var nodes = c.nodeLabels && c.nodeLabels.length ? c.nodeLabels : A.nodeLabels(c), meshes = A.meshes(c, sol) || [];
-      return { c: c, sol: sol, nodes: nodes, meshes: meshes };
-    }
+    function stepCtx(g) { return CV.stepcheck.contextFor(g.circuit); } // the circuit's unknowns, named as they are (or will be) drawn
     function hintsFor(g) {
       var AH = {
         vN: ["اختر الأرضي عقدة مرجعية (هنا أسفل اليسار)، ثم اكتب KCL عند كل عقدة أساسية بدلالة جهود العقد: <span class='ltr'>Σ (vₖ − vⱼ)/R = 0</span>.", "مصدر جهد بين عقدة والأرضي يعطيك جهد العقدة مباشرة. ومصدر جهد بين عقدتين يجعلهما عقدة عظمى (supernode)."],

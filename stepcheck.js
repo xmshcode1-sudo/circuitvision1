@@ -31,10 +31,24 @@
       .replace(/²/g, "^2").replace(/³/g, "^3").replace(/∥|\|\|/g, "|").trim();
   }
 
+  var PH = {
+        "p:rth": ["مقاومة ثيفنن: أطفئ المصادر المستقلة (مصدر الجهد يصبح قصرًا، ومصدر التيار يصبح فتحًا)، ثم احسب المقاومة المكافئة بين a و b. إذا في الدائرة مصدر تابع فاتركه وادفع مصدر اختبار عند الطرفين.", "Thévenin resistance: turn the independent sources off (a voltage source becomes a short, a current source an open), then find the equivalent resistance between a and b. With a dependent source, keep it and drive the terminals with a test source."],
+        "p:rab": ["المقاومة المكافئة بين a و b: ابدأ من أبعد نقطة عن الطرفين، واجمع التوالي (نفس التيار) والتوازي (نفس الجهد) خطوة خطوة.", "Equivalent resistance between a and b: start from the point farthest from the terminals and combine series (same current) and parallel (same voltage) step by step."],
+        "p:vth": ["جهد ثيفنن هو جهد الدائرة المفتوحة بين a و b (الطرف a موجب)، بدون أي حمل على الطرفين.", "The Thévenin voltage is the open-circuit voltage between a and b (a positive), with nothing connected to the terminals."],
+        "p:in": ["تيار نورتن هو تيار القصر من a إلى b عبر سلك يصل الطرفين، ويساوي V_Th ÷ R_Th.", "The Norton current is the short-circuit current from a to b through a wire joining the terminals; it equals V_Th ÷ R_Th."],
+        "p:rl": ["الحمل الذي يأخذ أقصى قدرة قيمته R_L = R_Th: احسب مقاومة ثيفنن بين a و b.", "The load that takes the most power is R_L = R_Th: find the Thévenin resistance between a and b."],
+        "p:pmax": ["أقصى قدرة للحمل عندما R_L = R_Th، وتساوي V_Th² ÷ (4 R_Th).", "The load gets maximum power when R_L = R_Th, and it equals V_Th² ÷ (4 R_Th)."]
+  };
+  function portHint(k) { k = k === "p:req" ? "p:rab" : k === "p:voc" ? "p:vth" : k === "p:isc" ? "p:in" : k; return PH[k] || null; }
+
   /* ---------- the circuit's symbols ---------- */
   function context(ctx) {
-    var c = ctx.c, sol = ctx.sol, MNA = CV.mna, nodes = MNA.buildNodes(c);
+    var c = ctx.c, MNA = CV.mna, nodes = MNA.buildNodes(c);
+    var sol = ctx.sol || { elements: [], byName: {}, volt: function () { return 0; } };
     var S = {}, idOf = {};
+    c.edges.forEach(function (e) { if (e.name && e.name !== "D" && (e.type === "R" || e.type === "V" || e.type === "I")) S[e.name] = { key: "e:" + e.name, kind: "value", name: e.name, val: e.value }; });
+    var P = ctx.port || {}, PORT = { rab: ["Rab", P.rth], req: ["Req", P.rth], rth: ["RTh", P.rth], vth: ["VTh", P.voc], voc: ["voc", P.voc], isc: ["isc", P.isc], in: ["IN", P.isc], pmax: ["pmax", P.pmax], rl: ["RL", P.rth] }; // RL with no RL in the drawing: the load that takes the most power, R_L = R_Th
+    Object.keys(PORT).forEach(function (k) { if (PORT[k][1] !== undefined && isFinite(PORT[k][1])) S["port:" + k] = { key: "p:" + k, kind: "port", name: PORT[k][0], val: PORT[k][1] }; });
     (ctx.nodes || []).forEach(function (nl) { S["v" + nl.name.slice(1)] = { key: "n:" + nl.name, kind: "node", name: nl.name, val: sol.volt(nl.at), id: nl.id }; idOf[nl.id] = nl.name; });
     (ctx.meshes || []).forEach(function (m) { S["i" + m.name.slice(1)] = { key: "m:" + m.name, kind: "mesh", name: m.name, val: m.value }; });
     sol.elements.forEach(function (it) {
@@ -53,6 +67,7 @@
   }
   function lookup(K, raw) {
     var S = K.S, t = raw.replace(/_/g, "");
+    if (S["port:" + t.toLowerCase()] && !S[raw]) return S["port:" + t.toLowerCase()];
     if (S[raw]) return S[raw];
     if (S[t]) return S[t];
     var m = /^([vViI])\(?([A-Za-z]+\d*)\)?$/.exec(raw.replace(/_/g, ""));
@@ -362,6 +377,7 @@
               var other = Object.keys(K.S).map(function (k) { return K.S[k]; }).filter(function (o) { return o.key !== sym.key && o.kind === sym.kind && close(val, o.val); })[0];
               res.msg = "قيمة " + sub(sym.name) + " لا تطابق الدائرة." + (other ? " هذه قيمة " + sub(other.name) + "، فربما خلطت بينهما." : " راجع المعادلات التي أوصلتك لها.");
               res.en = "The value of " + sub(sym.name) + " doesn’t match the circuit." + (other ? " That is the value of " + sub(other.name) + "; you may have mixed them up." : " Check the equations that led to it.");
+              var ph2 = sym.kind === "port" && !other && portHint(sym.key); if (ph2) { res.msg = "قيمة " + sym.name + " لا تطابق الدائرة. " + ph2[0]; res.en = "The value of " + sym.name + " doesn’t match the circuit. " + ph2[1]; }
             }
           }
           lines.push(res); return;
@@ -469,6 +485,9 @@
         else if (N.knownMesh) { hintAr = " تنبيه: تيار الحلقة " + N.knownMesh.map(sub).join(" و ") + " يحدده مصدر تيار على حافتها، فلا تكتب لها KVL."; hintEn = " Note: the current of mesh " + N.knownMesh.map(sub).join(", ") + " is set by a current source on its edge, so it needs no KVL."; }
         res.msg = "المعادلة لا تتحقق في هذه الدائرة: ليست KVL صحيحة لأي حلقة ولا قيدًا صحيحًا." + hintAr; res.en = "The equation doesn’t hold in this circuit: it isn’t a correct KVL for any mesh, nor a correct constraint." + hintEn; return;
       }
+      var ps = Object.keys(Object.assign({}, L.syms, R.syms)).filter(function (k) { return /^p:/.test(k); })[0];
+      var hh = ps && portHint(ps);
+      if (hh) { res.msg = "المعادلة لا تتحقق بالقيم الحقيقية لهذه الدائرة. " + hh[0]; res.en = "The equation doesn’t hold with this circuit’s real values. " + hh[1]; return; }
       res.msg = "المعادلة لا تتحقق بالقيم الحقيقية لهذه الدائرة. راجع القانون الذي استخدمته والإشارات."; res.en = "The equation doesn’t hold with this circuit’s real values. Check the law you used and the signs.";
     }
     /* the method as a whole: is a set of equations missing? */
@@ -482,5 +501,28 @@
     });
     return { lines: lines, summary: summary };
   }
-  CV.stepcheck = { check: check, context: context, _rows: function (ctx) { var K = context(ctx); return { K: K, RW: buildRows(K) }; } };
+  function contextFor(c, opts) {
+    opts = opts || {};
+    if (!c || c.omega) return null;
+    var MNA = CV.mna, A = CV.analysis;
+    var copy = function (keep) { return { rows: c.rows, cols: c.cols, ground: c.ground, edges: c.edges.filter(keep).map(function (e) { return Object.assign({}, e); }) }; };
+    var port = c.edges.filter(function (e) { return e.type === "T"; })[0], open = port ? copy(function (e) { return e.type !== "T"; }) : c;
+    var sol = null; try { var so = MNA.solve(open); if (so.ok) sol = so; } catch (e) { sol = null; }
+    var P = {};
+    if (port) {
+      try {
+        if (sol) P.voc = sol.volt(port.a) - sol.volt(port.b);
+        var sh = copy(function () { return true; }); sh.edges.forEach(function (e) { if (e.type === "T") { e.type = "V"; e.value = 0; e.plus = "a"; e.name = "__sc"; } });
+        var ss = MNA.solve(sh); if (ss.ok) P.isc = ss.byName.__sc.i;
+        // R_Th: sources off, 1 A pushed into the port (dependent sources stay)
+        var t = copy(function () { return true; }); t.edges.forEach(function (e) { if (e.type === "V" || e.type === "I") e.value = 0; if (e.type === "T") { e.type = "I"; e.value = 1; e.dir = "ba"; e.name = "__test"; } });
+        var st = MNA.solve(t); if (st.ok) P.rth = st.volt(port.a) - st.volt(port.b);
+        if (P.voc !== undefined && P.rth > 0) P.pmax = P.voc * P.voc / (4 * P.rth);
+      } catch (e) {}
+    }
+    var nodes = c.nodeLabels && c.nodeLabels.length ? c.nodeLabels : (sol ? A.nodeLabels(open) : []);
+    var meshes = sol ? (A.meshes(open, sol) || []) : [];
+    return { c: open, sol: sol, nodes: sol ? nodes : [], meshes: meshes, port: P, drawn: c };
+  }
+  CV.stepcheck = { check: check, context: context, contextFor: contextFor, _rows: function (ctx) { var K = context(ctx); return { K: K, RW: buildRows(K) }; } };
 })(typeof window !== "undefined" ? window : globalThis);
