@@ -85,15 +85,15 @@
     document.title = "معمل التصميم المنطقي — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1>معمل التصميم المنطقي</h1>' +
       '<p>تجارب المعمل الست كما في أوراق القسم. كل تجربة: الهدف والقطع، ثم الشرح خطوة بخطوة، ثم تحلّها بنفسك: تكمل جداولها، وتوصّلها على جهاز IC Trainer مطابق لجهاز المعمل، والموقع يفحص توصيلك بتجربة كل حالات المداخل.</p>' +
-      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بالتجربة 1</a><a class="btn btn-ghost" href="trainer.html">الجهاز للتجريب الحر</a></div></div>' +
-      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + e.n + '</span><div><b>' + esc(e.title) + '</b><span class="en">' + esc(e.en) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
+      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بـ Lab#1</a><a class="btn btn-ghost" href="trainer.html">الجهاز للتجريب الحر</a></div></div>' +
+      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + e.n + '</span><div><b class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
       '<p class="muted small">ما زالت دروس النظرية لمقرر Logic Design قيد الإعداد؛ هذه الصفحة للجزء العملي.</p>';
   }
   function showExp(e) {
     cur = e;
-    document.title = "التجربة " + e.n + ": " + e.title + " — CircuitVision";
+    document.title = "Lab#" + e.n + ": " + e.en + " — CircuitVision";
     var c = count(e), i = EXP.indexOf(e);
-    var nav = '<nav class="lg-tabs" aria-label="التجارب">' + EXP.map(function (x) { return '<a href="#' + x.id + '" class="' + (x === e ? "cur" : "") + '"' + (x === e ? ' aria-current="page"' : "") + '><span class="n">' + x.n + '</span>' + esc(x.title.split(":")[0].split("(")[0]) + '</a>'; }).join("") + '</nav>';
+    var nav = '<nav class="lg-tabs" aria-label="التجارب">' + EXP.map(function (x) { return '<a href="#' + x.id + '" class="' + (x === e ? "cur" : "") + '"' + (x === e ? ' aria-current="page"' : "") + '><span class="n">' + x.n + '</span><span class="ltr">Lab#' + x.n + ': ' + esc(x.en) + '</span></a>'; }).join("") + '</nav>';
     var chipsHtml = e.chips.map(function (id) { var ch = CV.chips.get(id); return '<details class="lg-chip"><summary><b class="ltr">' + id + '</b> <span>' + esc(ch.ar) + '</span></summary>' + pinout(id) + '</details>'; }).join("");
     var parts = e.parts.map(function (p, k) {
       return '<section class="card lg-sec" id="' + e.id + '-' + p.id + '"><h2><span class="n">' + (k + 1) + '</span>' + esc(p.title) + '</h2><ol class="lg-steps">' + p.steps.map(function (s) { return "<li>" + s + "</li>"; }).join("") + '</ol>' +
@@ -103,7 +103,7 @@
     var tasks = e.tasks.map(function (t, k) { return taskView(e, t, k); }).join("");
     var builds = e.tasks.filter(function (t) { return t.type === "build" || t.type === "seq"; });
     root.innerHTML = nav +
-      '<div class="lg-head"><span class="code">EE2111 · Lab ' + e.n + '</span><h1>' + esc(e.title) + '</h1><span class="en">' + esc(e.en) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span></div>' +
+      '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1 class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الهدف</h2><ul>' + e.objective.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>المتطلبات</h2><p class="muted">جهاز IC Trainer، وأسلاك، والدوائر التالية (اضغط أي دائرة لترى أرجلها):</p><div class="lg-chips">' + chipsHtml + '</div>' + (e.note ? '<p class="lg-note">' + bd(e.note) + '</p>' : "") + '</section></div>' +
       '<h2 class="lg-h">الشرح خطوة بخطوة</h2>' + parts +
@@ -112,7 +112,7 @@
       (builds.length ? '<div class="lg-bench-bar"><label>التمرين: <select id="lg-task" class="select">' + builds.map(function (t) { return '<option value="' + t.id + '">' + esc(t.title) + '</option>'; }).join("") + '</select></label>' +
         '<button type="button" class="btn btn-primary btn-sm" id="lg-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="lg-sol">اعرض الحل على الجهاز</button><button type="button" class="btn btn-ghost btn-sm" id="lg-new">لوحة فارغة</button></div><div id="lg-task-note" class="lg-note"></div><div id="lg-out" class="lg-out" aria-live="polite"></div>' : "") +
       '<div id="lg-tr"></div></section>' +
-      '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
+      '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ Lab#' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">Lab#' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     trainer = CV.trainer.mount($("#lg-tr"), { key: e.id });
     wireTasks(e);
   }
