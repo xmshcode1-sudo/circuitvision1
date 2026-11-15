@@ -12,5 +12,8 @@ window.CV_CONFIG = {
   /* Moyasar (ميسّر): the PUBLISHABLE key only (pk_test_… or pk_live_…). It is public by design.
      The secret key (sk_…) goes ONLY in Vercel → Environment Variables as MOYASAR_SECRET_KEY. Empty = payment not open yet. */
   MOYASAR_PUBLISHABLE_KEY: "",
+  /* false = subscriptions are switched off: every approved account opens everything, and the subscription page,
+     its menu link and the admin's prices/payments tabs are hidden. Accounts and admin approval stay on. */
+  SUBSCRIPTIONS: false,
   MOYASAR_METHODS: ["creditcard"]           // mada, Visa, Mastercard. Add "stcpay" after it is activated in your Moyasar account
 };

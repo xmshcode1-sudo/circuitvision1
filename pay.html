@@ -162,6 +162,7 @@
   }
 
   if (!C.configured()) { root.innerHTML = '<div class="py-msg bad">الحسابات غير مفعّلة في هذه النسخة، فلا توجد اشتراكات.</div>'; return; }
+  if (!C.subscriptionsOn()) { root.innerHTML = '<section class="card cv-lock"><h2>الاشتراكات غير متاحة حاليًا</h2><p>كل محتوى المنصة مفتوح لحسابك.</p><div class="cv-lock-cta"><a class="btn btn-primary" href="dashboard.html">لوحة الطالب</a></div></section>'; return; }
   C.ready().then(function () {
     if (!C.access()) return;
     var id = q.get("id");

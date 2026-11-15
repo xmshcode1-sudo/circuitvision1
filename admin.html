@@ -108,6 +108,8 @@
 
   function frame(inner) {
     var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"], ["survey", "الاستبيان"]];
+    if (!C.subscriptionsOn()) T = T.filter(function (x) { return x[0] !== "courses" && x[0] !== "payments"; }).map(function (x) { return x[0] === "users" ? ["users", "المستخدمون"] : x; });
+    if (!T.some(function (x) { return x[0] === tab; })) tab = "stats";
     root.innerHTML = '<header class="ad-head"><div><h1>لوحة الإدارة</h1><p>تتحكم هنا في الحسابات والاشتراكات والأسعار والإعلانات. كل عملية يتحقق منها الخادم بأنك المدير.</p></div></header>' +
       '<div class="ad-tabs" role="tablist">' + T.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join("") + '</div><div id="ad-body">' + inner + '</div>';
     root.querySelectorAll("[data-tab]").forEach(function (b) { b.onclick = function () { tab = b.dataset.tab; try { sessionStorage.setItem("cv.admin.tab", tab); } catch (e) {} show(); }; });
@@ -128,12 +130,12 @@
         '<div class="card ad-stat"><b>' + s.users + '</b><span>حساب مسجّل</span></div>' +
         '<div class="card ad-stat"><b>' + s.approved + '</b><span>حساب مقبول</span></div>' +
         '<div class="card ad-stat"><b>' + s.new_7d + '</b><span>تسجيل جديد آخر 7 أيام</span></div>' +
-        '<div class="card ad-stat"><b>' + s.active_subs + '</b><span>اشتراك نشط</span></div>' + by +
+        (C.subscriptionsOn() ? '<div class="card ad-stat"><b>' + s.active_subs + '</b><span>اشتراك نشط</span></div>' + by +
         '<div class="card ad-stat"><b>' + sar(s.revenue_30d_halalas) + '</b><span>إيراد آخر 30 يومًا (ريال)</span></div>' +
         '<div class="card ad-stat"><b>' + sar(s.revenue_halalas) + '</b><span>إجمالي الإيراد الحقيقي (ريال)</span></div>' +
-        (s.test_revenue_halalas ? '<div class="card ad-stat"><b>' + sar(s.test_revenue_halalas) + '</b><span>مدفوعات تجريبية (مفتاح sk_test)</span></div>' : '') +
+        (s.test_revenue_halalas ? '<div class="card ad-stat"><b>' + sar(s.test_revenue_halalas) + '</b><span>مدفوعات تجريبية (مفتاح sk_test)</span></div>' : '') : '') +
         '<div class="card ad-stat"><b>' + s.blocked + '</b><span>حساب موقوف</span></div></div>' +
-        '<p class="muted" style="font-size:13px">كل حساب جديد ينتظر موافقتك قبل أن يفتح المنصة. الإيراد هنا هو ما سجّلته المنصة من عمليات ميسّر المؤكدة، قبل رسوم ميسّر. المرجع المالي النهائي هو لوحة ميسّر.</p>');
+        '<p class="muted" style="font-size:13px">كل حساب جديد ينتظر موافقتك قبل أن يفتح المنصة. ' + (C.subscriptionsOn() ? 'الإيراد هنا هو ما سجّلته المنصة من عمليات ميسّر المؤكدة، قبل رسوم ميسّر. المرجع المالي النهائي هو لوحة ميسّر.' : 'الاشتراكات متوقفة حاليًا: كل حساب مقبول يفتح المنصة كاملة.') + '</p>');
       var g = document.querySelector("[data-goto]"); if (g) g.onclick = function () { tab = "users"; try { sessionStorage.setItem("cv.admin.tab", tab); } catch (e) {} show(); };
       var tb = document.querySelector('[data-tab="users"]'); if (tb && s.pending) tb.textContent = "المستخدمون والاشتراكات (" + s.pending + " بانتظارك)";
     }, fail);
@@ -154,7 +156,7 @@
           return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
             '<td class="nw">' + date(u.created_at) + '</td><td class="nw">' + date(u.last_sign_in_at, true) + '</td><td>' + (subs || '<span class="muted">لا يوجد</span>') + '</td>' +
             '<td><div class="acts">' + (u.id === me ? '' : u.approval === "pending" ? '<button type="button" class="btn btn-primary btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button><button type="button" class="btn btn-danger btn-sm" data-ap="' + esc(u.id) + '" data-v="rejected">رفض</button>' : u.approval === "rejected" ? '<button type="button" class="btn btn-ghost btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button>' : '') +
-            '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' + (u.id === me ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
+            (C.subscriptionsOn() ? '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' : '') + (u.id === me ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
             '<div class="grant" id="gr-' + esc(u.id) + '" hidden><select class="select" aria-label="المقرر">' + opts + '</select><input class="input" type="number" min="1" max="3660" value="30" aria-label="عدد الأيام"> <span class="muted">يوم</span><input class="input" style="width:10em" placeholder="ملاحظة (اختياري)" aria-label="ملاحظة"><button type="button" class="btn btn-primary btn-sm" data-go="' + esc(u.id) + '">منح</button></div></td></tr>';
         }).join("") + '</tbody></table></div></section>';
       var b = body(html);

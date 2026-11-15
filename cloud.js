@@ -122,7 +122,7 @@
   function navExtras() {
     var nav = document.getElementById("nav"); if (!nav || nav.querySelector(".cv-acc")) return;
     var ic = function (id) { return CV.shell && CV.shell.icon ? CV.shell.icon(id) : ""; };
-    var html = '<div class="cv-acc"><a class="nv' + (PAGE === "pay.html" ? ' active' : '') + '" href="pay.html">' + ic("pay") + '<span class="lbl">اشتراكاتي</span></a>' +
+    var html = '<div class="cv-acc">' + (api.subscriptionsOn() ? '<a class="nv' + (PAGE === "pay.html" ? ' active' : '') + '" href="pay.html">' + ic("pay") + '<span class="lbl">اشتراكاتي</span></a>' : '') +
       (access && access.admin ? '<a class="nv' + (PAGE === "admin.html" ? ' active' : '') + '" href="admin.html">' + ic("admin") + '<span class="lbl">لوحة الإدارة</span></a>' : '') +
       '<button type="button" class="nv" id="cv-signout">' + ic("logout") + '<span class="lbl">تسجيل الخروج</span><span class="soon cv-who">' + esc(api.name()) + '</span></button></div>';
     var sw = nav.querySelector(".lang-sw");
@@ -174,9 +174,11 @@
     onAccess: function (f) { accessListeners.push(f); },
     course: function (id) { return ((access && access.courses) || []).filter(function (c) { return c.id === id; })[0] || null; },
     sub: function (id) { return ((access && access.subs) || []).filter(function (s) { return s.course_id === id && new Date(s.ends_at) > new Date(); })[0] || null; },
+    subscriptionsOn: function () { return (window.CV_CONFIG || {}).SUBSCRIPTIONS !== false; },
     can: function (id) {
       if (!configured()) return true;                       // no accounts configured: the site runs open (development copy)
       if (!access || access.blocked || (access.approval && access.approval !== "approved")) return false;
+      if (!api.subscriptionsOn()) return true;             // subscriptions switched off: an approved account opens everything
       if (access.admin) return true;
       var c = api.course(id);
       if (!c || !c.is_paid) return true;
