@@ -48,7 +48,7 @@
         if (/^j\d/.test(w)) { t.push({ k: "id", v: "j" }); i += 1; continue; }   // j4 → j·4
         t.push({ k: "id", v: w }); i += w.length; continue;
       }
-      if ("+-*/^()∥∠,=√".indexOf(ch) > -1) { t.push({ k: ch }); i++; continue; }
+      if ("+-*/^()∥∠,=√ᴇ".indexOf(ch) > -1) { t.push({ k: ch }); i++; continue; }
       throw err("رمز غير مفهوم: " + ch);
     }
     return t;
@@ -78,7 +78,7 @@
     function term() { var v = polar(); for (;;) { if (eat("*")) v = mul(v, polar()); else if (eat("/")) v = div(v, polar()); else if (startsPrimary(peek())) v = mul(v, polar()); else return v; } }
     function polar() { var v = unary(); if (eat("∠")) { var a = unary(); if (!isReal(a)) throw err("الزاوية بعد ∠ يجب أن تكون حقيقية"); var th = a.re * Math.PI / 180; if (!isReal(v)) throw err("المقدار قبل ∠ يجب أن يكون حقيقيًا"); v = C(v.re * Math.cos(th), v.re * Math.sin(th)); } return v; }
     function unary() { if (eat("-")) return mul(C(-1), unary()); if (eat("+")) return unary(); if (eat("√")) return sqrtc(unary()); return power(); }
-    function power() { var b = primary(); if (eat("^")) return pow(b, unary()); return b; }
+    function power() { var b = primary(); while (eat("ᴇ")) b = mul(b, pow(C(10), unary())); if (eat("^")) return pow(b, unary()); return b; } // 2.4ᴇ9 is one number: 2.4×10⁹
     function primary() {
       var x = t[i++];
       if (!x) throw err("التعبير ناقص");
@@ -108,6 +108,7 @@
   function eng(x) {
     if (x === 0 || !isFinite(x)) return null; var a = Math.abs(x);
     var P = [[1e9, "G"], [1e6, "M"], [1e3, "k"], [1, ""], [1e-3, "m"], [1e-6, "µ"], [1e-9, "n"], [1e-12, "p"]];
+    if (a >= 1e12 || a < 1e-12) return null;
     for (var k = 0; k < P.length; k++) if (a >= P[k][0] * 0.9999995) return P[k][1] ? sig(x / P[k][0], 4) + " " + P[k][1] : null;
     return null;
   }
@@ -151,15 +152,15 @@
      a SHIFT action (gold, left) and an ALPHA letter (red, right). Every action is real; keys without one have no label. */
   function K(main, act, sh, shAct, al, cls) { return { m: main, a: act, s: sh || "", sa: shAct, al: al || "", c: cls || "" }; }
   var FROWS = [
-    [K("x⁻¹", "^(-1)", "Re", "re("), K("√", "√(", "Im", "im("), K("x²", "²", "x³", "³"), K("xⁿ", "^", "conj", "conj("), K("log", "log(", "10ˣ", "10^("), K("ln", "ln(", "eˣ", "e^(")],
-    [K("(−)", "-", "∠", "∠", "A"), K("∥", "∥", "", null, "B"), K("Abs", "abs(", "Arg", "ang(", "C"), K("sin", "sin(", "sin⁻¹", "asin(", "D"), K("cos", "cos(", "cos⁻¹", "acos(", "E"), K("tan", "tan(", "tan⁻¹", "atan(", "F")],
+    [K("▭⁄▭", "#frac", "x⁻¹", "#inv"), K("√", "#sqrt", "Re", "re("), K("x²", "#sq", "x³", "#cube"), K("xⁿ", "#pow", "Im", "im("), K("log", "log(", "10ˣ", "#tenx"), K("ln", "ln(", "eˣ", "#ex")],
+    [K("(−)", "-", "∠", "∠", "A"), K("∥", "∥", "conj", "conj(", "B"), K("Abs", "abs(", "Arg", "ang(", "C"), K("sin", "sin(", "sin⁻¹", "asin(", "D"), K("cos", "cos(", "cos⁻¹", "acos(", "E"), K("tan", "tan(", "tan⁻¹", "atan(", "F")],
     [K("RCL", "#rcl", "STO", "#sto"), K("j", "j", "ENG", "#eng"), K("(", "("), K(")", ")", "", null, "X"), K("S⇔D", "#sd", "", null, "Y"), K("M+", "#m+", "M−", "#m-", "M")]
   ];
   var NROWS = [
     [K("7", "7", "k", "k", "", "n"), K("8", "8", "M", "M", "", "n"), K("9", "9", "G", "G", "", "n"), K("DEL", "#del", "", null, "", "g"), K("AC", "#ac", "OFF", "#off", "", "g")],
     [K("4", "4", "m", "m", "", "n"), K("5", "5", "µ", "µ", "", "n"), K("6", "6", "n", "n", "", "n"), K("×", "×", "", null, "", "n"), K("÷", "÷", "", null, "", "n")],
     [K("1", "1", "p", "p", "", "n"), K("2", "2", "", null, "", "n"), K("3", "3", "", null, "", "n"), K("+", "+", "", null, "", "n"), K("−", "−", "", null, "", "n")],
-    [K("0", "0", "", null, "", "n"), K(".", ".", "", null, "", "n"), K("×10ˣ", "×10^", "π", "π", "e", "n"), K("Ans", "ans", "", null, "", "n"), K("=", "#eq", "", null, "", "n")]
+    [K("0", "0", "", null, "", "n"), K(".", ".", "", null, "", "n"), K("×10ˣ", "#sci", "π", "π", "e", "n"), K("Ans", "ans", "", null, "", "n"), K("=", "#eq", "", null, "", "n")]
   ];
   var ALPHA_VAL = { A: "A", B: "B", C: "C", D: "D", E: "E", F: "F", X: "X", Y: "Y", M: "M", e: "e" };
   function keyHtml(k, id) {
@@ -219,7 +220,7 @@
     html = '<div class="cx" dir="ltr">' +
       '<div class="cx-brand"><b>CircuitVision</b><span>fx-CV · Phasor edition</span></div>' +
       '<div class="cx-lcd"><div class="cx-ind"><i id="cx-s">S</i><i id="cx-a">A</i><i id="cx-m">M</i><i id="cx-eng">ENG</i><i id="cx-cx">CMPLX</i><i id="cx-dr" class="on">' + (S.deg ? "D" : "R") + '</i></div>' +
-      '<input id="calc-in" class="cx-in" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="none" aria-label="التعبير" value="' + esc(S.last || "") + '">' +
+      '<div id="calc-in" class="cx-in" dir="ltr" tabindex="0" role="textbox" aria-label="التعبير"></div>' +
       '<div class="cx-menu" id="cx-menu" hidden></div>' +
       '<div class="calc-out" aria-live="polite"><b id="calc-main"></b><span id="calc-sub"></span><span class="calc-err" id="calc-err"></span></div></div>' +
       '<div class="cx-top">' + keyHtml(K("SHIFT", "#shift", "", null, "", "shift"), "shift") + keyHtml(K("ALPHA", "#alpha", "", null, "", "alpha"), "alpha") +
@@ -231,6 +232,7 @@
       (Object.keys(vars).length ? '<div class="calc-vars"><span class="muted">الذاكرة:</span>' + Object.keys(vars).map(function (k) { return '<button type="button" data-k="' + esc(k) + '" class="chip-v"><span class="ltr">' + esc(k) + ' = ' + esc(fmt(vars[k], S.deg).main) + '</span></button>'; }).join("") + '<button type="button" class="calc-link" id="calc-clrv">امسح</button></div>' : "") +
       (S.hist.length ? '<details class="calc-hist"><summary class="calc-hh"><span class="muted">السجل (' + S.hist.length + ')</span></summary><ol>' + S.hist.map(function (h, k) { return '<li><button type="button" data-h="' + k + '"><span class="ltr q">' + esc(h.q) + '</span><span class="ltr a">= ' + esc(h.a) + '</span></button></li>'; }).join("") + '</ol><button type="button" class="calc-link" id="calc-clrh">امسح السجل</button></details>' : "") +
       '<details class="calc-help"><summary>كيف أستخدمها؟</summary><ul>' +
+      '<li><b>▭⁄▭</b> كسر: البسط فوق والمقام تحت، والأسهم ▲▼ تنقلك بينهما و ▶ تطلعك منه. نفس الشي مع الأس و √ و ×10ˣ: اضغط ▶ لتطلع منها.</li>' +
       '<li><b>SHIFT</b> ثم مفتاح: الوظيفة المكتوبة فوقه بالذهبي (مثل <span class="ltr">sin⁻¹</span> و <span class="ltr">∠</span> و π). <b>ALPHA</b> ثم مفتاح: الحرف الأحمر (متغيرات A–F و X و Y و M).</li>' +
       '<li>البادئات: SHIFT مع <span class="ltr">7 8 9</span> = <span class="ltr">k M G</span>، ومع <span class="ltr">4 5 6</span> = <span class="ltr">m µ n</span>، ومع 1 = p. مثال: <span class="ltr">4.7k ∥ 2.2k</span>.</li>' +
       '<li>المفتاح <b>j</b> للعدد التخيلي، و SHIFT ثم (−) يعطي ∠ للفيزور: <span class="ltr">10∠30</span>.</li>' +
@@ -240,50 +242,133 @@
     return html;
   }
   var KEYMAP = {}, SHOWN = null;
+
+  /* ---------- the natural display: an expression is a row of items; a fraction, power, root or ×10ˣ holds rows of its own ----------
+     item: {t:"c", v:"7"} (one key's text, deleted as a whole) · {t:"frac", n:[], d:[]} · {t:"pow", e:[]} · {t:"sqrt", a:[]} · {t:"sci", e:[]} */
+  var SLOTS = { frac: ["n", "d"], pow: ["e"], sqrt: ["a"], sci: ["e"] };
+  function ser(row) { // to the text the parser reads; open brackets in a box close at its end, as on a real calculator
+    var out = row.map(function (it) {
+      if (it.t === "c") return it.v;
+      if (it.t === "frac") return "((" + ser(it.n) + ")/(" + ser(it.d) + "))";
+      if (it.t === "pow") return "^(" + ser(it.e) + ")";
+      if (it.t === "sqrt") return "√(" + ser(it.a) + ")";
+      return "ᴇ(" + ser(it.e) + ")";
+    }).join(""), open = (out.match(/\(/g) || []).length - (out.match(/\)/g) || []).length;
+    return out + (open > 0 ? new Array(open + 1).join(")") : "");
+  }
+  function empty(row) { return !row.length; }
+  function findParent(root, row) { // → { row: parent row, i: index of the item, it: item, slot } or null at the top
+    var res = null;
+    (function walk(r) { r.forEach(function (it, i) { (SLOTS[it.t] || []).forEach(function (sl) { if (res) return; if (it[sl] === row) res = { row: r, i: i, it: it, slot: sl }; else walk(it[sl]); }); }); })(root);
+    return res;
+  }
+  var LABEL = { ans: "Ans", "sin(": "sin(", asin: "sin⁻¹(" };
+  function txt(v) { return v === "ans" ? "Ans" : v === "asin(" ? "sin⁻¹(" : v === "acos(" ? "cos⁻¹(" : v === "atan(" ? "tan⁻¹(" : v === "ang(" ? "Arg(" : v === "abs(" ? "Abs(" : v; }
+  function draw(row, cur) {
+    var h = "", here = function (k) { return cur && cur.row === row && cur.i === k ? '<span class="cx-cur"></span>' : ""; };
+    row.forEach(function (it, k) {
+      h += here(k);
+      if (it.t === "c") h += "<span>" + esc(txt(it.v)) + "</span>";
+      else if (it.t === "frac") h += '<span class="cx-fr"><span class="nu">' + slot(it.n, cur) + '</span><span class="de">' + slot(it.d, cur) + "</span></span>";
+      else if (it.t === "pow") h += '<sup class="cx-sup">' + slot(it.e, cur) + "</sup>";
+      else if (it.t === "sqrt") h += '<span class="cx-sq"><span class="rad">√</span><span class="ar">' + slot(it.a, cur) + "</span></span>";
+      else h += '<span>×10</span><sup class="cx-sup">' + slot(it.e, cur) + "</sup>";
+    });
+    return h + here(row.length);
+  }
+  function slot(row, cur) { return empty(row) ? (cur && cur.row === row ? '<span class="cx-cur"></span>' : "") + '<span class="cx-box"></span>' : draw(row, cur); }
+  function prettyNum(t) { return String(t).replace(/(-?\d+(?:\.\d+)?)e([+-]?)(\d+)/g, function (m, a, sg, d) { var SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" }; return a + "×10" + ((sg === "-" ? "-" : "") + d).split("").map(function (c) { return SUP[c]; }).join(""); }); }
+
   function wireExpr() {
-    var inp = panel.querySelector("#calc-in"), shift = false, alpha = false, pending = null, menu = null, hpos = -1;
+    var box = panel.querySelector("#calc-in"), shift = false, alpha = false, pending = null, menu = null, hpos = -1;
+    var root = S.tree && Array.isArray(S.tree) ? S.tree : [], cur = { row: root, i: root.length }, done = false;
+    if (SHOWN && SHOWN.tree) { root = SHOWN.tree; cur = { row: root, i: root.length }; done = true; }
     function ind() {
       panel.querySelector("#cx-s").classList.toggle("on", shift); panel.querySelector("#cx-a").classList.toggle("on", alpha || !!pending);
       panel.querySelector("#cx-m").classList.toggle("on", !!vars.M && (vars.M.re !== 0 || vars.M.im !== 0)); panel.querySelector("#cx-eng").classList.toggle("on", !!S.eng);
       panel.querySelector("#cx-dr").textContent = S.deg ? "D" : "R";
       panel.querySelector(".cx-k.shift").classList.toggle("armed", shift); panel.querySelector(".cx-k.alpha").classList.toggle("armed", alpha);
     }
+    function paint() { box.innerHTML = draw(root, done ? null : cur) || ""; var c = box.querySelector(".cx-cur"); if (c && c.scrollIntoView) try { c.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {} }
     function show(v, assign) {
       var m = panel.querySelector("#calc-main"), sb = panel.querySelector("#calc-sub"), ins = panel.querySelector(".calc-ins"), f = fmt(v, S.deg), c = clean(v);
       var main = f.main, sub2 = f.sub;
-      if (c.im !== 0 && S.polar) { var ps = f.sub.replace(/^= /, ""); sub2 = "= " + f.main; main = ps; }
-      if (c.im === 0 && S.eng) { var e3 = engExp(c.re); if (e3) { sub2 = f.sub || ""; main = e3; } }
-      m.textContent = (assign ? assign + " = " : "") + main; sb.textContent = sub2; ins.dataset.ins = f.plain;
+      if (c.im !== 0 && S.polar) { sub2 = "= " + f.main; main = f.sub.replace(/^= /, ""); }
+      if (c.im === 0 && S.eng) { var e3 = engExp(c.re); if (e3) main = e3; }
+      m.textContent = (assign ? assign + " = " : "") + prettyNum(main); sb.textContent = prettyNum(sub2); ins.dataset.ins = f.plain;
       panel.querySelector("#cx-cx").classList.toggle("on", c.im !== 0);
     }
+    function clearOut() { panel.querySelector("#calc-main").textContent = ""; panel.querySelector("#calc-sub").textContent = ""; panel.querySelector(".calc-ins").dataset.ins = ""; panel.querySelector("#cx-cx").classList.remove("on"); }
     function preview(commit) {
-      var q = inp.value.trim(), m = panel.querySelector("#calc-main"), sb = panel.querySelector("#calc-sub"), e = panel.querySelector("#calc-err"), ins = panel.querySelector(".calc-ins");
-      S.last = inp.value;
-      if (!q) { m.textContent = commit && ans ? "" : ""; sb.textContent = ""; e.textContent = ""; ins.dataset.ins = ""; panel.querySelector("#cx-cx").classList.remove("on"); persist(); return; }
+      var q = ser(root), e = panel.querySelector("#calc-err");
+      S.tree = root; paint();
+      if (!root.length) { clearOut(); e.textContent = ""; persist(); return; }
       try {
         var r = parse(q, { deg: S.deg, vars: vars, ans: ans });
         e.textContent = ""; show(r.value, r.assign);
         if (commit) {
           if (r.assign) vars[r.assign] = r.value;
-          ans = r.value; S.hist.unshift({ q: q, a: (r.assign ? r.assign + " = " : "") + fmt(r.value, S.deg).main }); S.hist = S.hist.slice(0, 15); hpos = -1; persist();
-          SHOWN = { q: q, v: r.value, assign: r.assign };
-          var keep = inp.value; render(); var ni = panel.querySelector("#calc-in"); ni.value = keep; S.last = keep; wireExprPreview();
+          ans = r.value; S.hist.unshift({ q: q, a: (r.assign ? r.assign + " = " : "") + fmt(r.value, S.deg).main, tree: JSON.parse(JSON.stringify(root)) }); S.hist = S.hist.slice(0, 15); hpos = -1;
+          SHOWN = { tree: root, v: r.value, assign: r.assign }; persist(); render(); toggle(true);
           return;
         }
       } catch (x) {
         if (!x.calc) throw x;
-        m.textContent = ""; sb.textContent = ""; ins.dataset.ins = ""; e.textContent = commit ? x.message : (/ناقص|غير مكتمل|قوس غير مغلق|اكتب تعبيرًا/.test(x.message) ? "" : x.message);
+        clearOut(); e.textContent = commit ? x.message : (/ناقص|غير مكتمل|قوس غير مغلق|اكتب تعبيرًا/.test(x.message) ? "" : x.message);
       }
       persist();
     }
-    function caret() { return [inp.selectionStart == null ? inp.value.length : inp.selectionStart, inp.selectionEnd == null ? inp.value.length : inp.selectionEnd]; }
-    function setCaret(p) { try { inp.setSelectionRange(p, p); } catch (e) {} if (matchMedia("(pointer: fine)").matches) inp.focus(); }
-    function put(txt) {
-      if (inp.dataset.done) { // after "=", a new number starts fresh and an operator continues from the result
-        inp.dataset.done = ""; if (/^[×÷−+^∥²³]/.test(txt) || txt === "^(-1)") { inp.value = "ans"; } else inp.value = "";
-        setCaret(inp.value.length);
+    function fresh(withAns) { root = withAns ? [{ t: "c", v: "ans" }] : []; cur = { row: root, i: root.length }; done = false; SHOWN = null; }
+    function startEdit(isOp) { if (done) fresh(isOp); SHOWN = null; }
+    function ins(item, into) { // put an item at the cursor; `into` = the slot the cursor goes to
+      cur.row.splice(cur.i, 0, item);
+      if (into) cur = { row: item[into], i: item[into].length }; else cur.i++;
+    }
+    function put(v) { startEdit(/^[×÷−+∥]$/.test(v)); ins({ t: "c", v: v }); preview(false); }
+    function struct(kind) {
+      startEdit(kind === "pow" || kind === "sq" || kind === "cube" || kind === "inv");
+      if (kind === "frac") { // digits just typed become the numerator, as on newer calculators
+        var k = cur.i; while (k > 0 && cur.row[k - 1].t === "c" && /^[0-9.]$/.test(cur.row[k - 1].v)) k--;
+        var it = { t: "frac", n: cur.row.splice(k, cur.i - k), d: [] }; cur.i = k; cur.row.splice(k, 0, it);
+        cur = it.n.length ? { row: it.d, i: 0 } : { row: it.n, i: 0 };
+      } else if (kind === "sqrt") ins({ t: "sqrt", a: [] }, "a");
+      else if (kind === "sci") ins({ t: "sci", e: [] }, "e");
+      else if (kind === "pow") ins({ t: "pow", e: [] }, "e");
+      else if (kind === "sq" || kind === "cube") ins({ t: "pow", e: [{ t: "c", v: kind === "sq" ? "2" : "3" }] });
+      else if (kind === "inv") ins({ t: "pow", e: [{ t: "c", v: "−" }, { t: "c", v: "1" }] });
+      else if (kind === "tenx") { ins({ t: "c", v: "10" }); ins({ t: "pow", e: [] }, "e"); }
+      else if (kind === "ex") { ins({ t: "c", v: "e" }); ins({ t: "pow", e: [] }, "e"); }
+      preview(false);
+    }
+    function moveRight() {
+      if (done) { done = false; cur = { row: root, i: 0 }; return; }
+      if (cur.i < cur.row.length) { var it = cur.row[cur.i], sl = SLOTS[it.t]; if (sl) cur = { row: it[sl[0]], i: 0 }; else cur.i++; return; }
+      var p = findParent(root, cur.row); if (!p) return;
+      if (p.it.t === "frac" && p.slot === "n") cur = { row: p.it.d, i: 0 }; else cur = { row: p.row, i: p.i + 1 };
+    }
+    function moveLeft() {
+      if (done) { done = false; cur = { row: root, i: root.length }; return; }
+      if (cur.i > 0) { var it = cur.row[cur.i - 1], sl = SLOTS[it.t]; if (sl) { var last = it[sl[sl.length - 1]]; cur = { row: last, i: last.length }; } else cur.i--; return; }
+      var p = findParent(root, cur.row); if (!p) return;
+      if (p.it.t === "frac" && p.slot === "d") cur = { row: p.it.n, i: p.it.n.length }; else cur = { row: p.row, i: p.i };
+    }
+    function vert(dir) { // ▲▼ inside a fraction move between numerator and denominator; elsewhere they recall history
+      var p = findParent(root, cur.row), r = cur.row;
+      while (p && p.it.t !== "frac") { r = p.row; p = findParent(root, p.row); }
+      if (p && !done) { var to = dir === "up" ? p.it.n : p.it.d; if (to !== r && !(p.slot === (dir === "up" ? "n" : "d"))) { cur = { row: to, i: Math.min(cur.i, to.length) }; return true; } }
+      return false;
+    }
+    function del() {
+      if (done) { fresh(false); preview(false); return; }
+      if (cur.i > 0) {
+        var it = cur.row[cur.i - 1], sl = SLOTS[it.t];
+        if (!sl || sl.every(function (k) { return empty(it[k]); })) { cur.row.splice(cur.i - 1, 1); cur.i--; }
+        else moveLeft(); // step into a box that still has content
+      } else {
+        var p = findParent(root, cur.row);
+        if (p) { if (SLOTS[p.it.t].every(function (k) { return empty(p.it[k]); })) { p.row.splice(p.i, 1); cur = { row: p.row, i: p.i }; } else moveLeft(); }
       }
-      SHOWN = null; var c = caret(); inp.value = inp.value.slice(0, c[0]) + txt + inp.value.slice(c[1]); setCaret(c[0] + txt.length); preview(false);
+      preview(false);
     }
     function setMenu(kind) {
       menu = kind; var el = panel.querySelector("#cx-menu");
@@ -295,50 +380,77 @@
       var k = KEYMAP[id], act;
       if (id === "shift") { shift = !shift; alpha = false; ind(); return; }
       if (id === "alpha") { alpha = pending ? true : !alpha; if (!alpha) pending = null; shift = false; ind(); return; }
-      if (id === "left" || id === "right") { var c = caret()[0]; setCaret(Math.max(0, Math.min(inp.value.length, c + (id === "left" ? -1 : 1)))); inp.dataset.done = ""; return; }
-      if (id === "up" || id === "down") { if (!S.hist.length) return; hpos = Math.max(-1, Math.min(S.hist.length - 1, hpos + (id === "up" ? 1 : -1))); inp.value = hpos < 0 ? "" : S.hist[hpos].q; inp.dataset.done = ""; setCaret(inp.value.length); preview(false); return; }
-      if (menu) { // a menu on the screen takes the next number
+      if (id === "left") { moveLeft(); paint(); return; }
+      if (id === "right") { moveRight(); paint(); return; }
+      if (id === "up" || id === "down") {
+        if (vert(id)) { paint(); return; }
+        if (!S.hist.length) return;
+        hpos = Math.max(-1, Math.min(S.hist.length - 1, hpos + (id === "up" ? 1 : -1)));
+        var h = hpos < 0 ? null : S.hist[hpos];
+        root = h && h.tree ? JSON.parse(JSON.stringify(h.tree)) : h ? h.q.split("").map(function (c) { return { t: "c", v: c }; }) : [];
+        cur = { row: root, i: root.length }; done = false; SHOWN = null; preview(false); return;
+      }
+      if (menu) {
         var d = k && /^[12]$/.test(k.m) ? k.m : null, mk = menu; setMenu(null);
         if (d && mk === "mode" && d === "2") { tab = "sys"; persist(); render(); toggle(true); return; }
         if (d && mk === "setup") { S.deg = d === "1"; persist(); ind(); SHOWN = null; preview(false); }
         return;
       }
       if (!k) return;
-      if (alpha) { alpha = false; ind(); var L = k.al; if (!L) return; if (pending) { var nm = ALPHA_VAL[L]; pending = null; if (!ans) { panel.querySelector("#calc-err").textContent = "لا يوجد ناتج لحفظه بعد."; ind(); return; } vars[nm] = ans; persist(); render(); toggle(true); return; } var pc = caret()[0], prev = inp.value.slice(0, pc).slice(-1); put((/[0-9.)]/.test(prev) && !inp.dataset.done ? "×" : "") + ALPHA_VAL[L]); return; } // 2×M, so the letter is never read as a prefix
+      if (alpha) {
+        alpha = false; ind(); var L = k.al; if (!L) return;
+        if (pending) { var nm = ALPHA_VAL[L]; pending = null; if (!ans) { panel.querySelector("#calc-err").textContent = "لا يوجد ناتج لحفظه بعد."; ind(); return; } vars[nm] = ans; persist(); render(); toggle(true); return; }
+        startEdit(false); var prev = cur.row[cur.i - 1]; if (prev && (prev.t !== "c" || /[0-9.)]$/.test(prev.v))) ins({ t: "c", v: "×" }); // 2×M, never read as a prefix
+        put(ALPHA_VAL[L]); return;
+      }
       act = shift ? k.sa : k.a; shift = false; ind();
       if (act == null) return;
       if (act[0] !== "#") { put(act); return; }
       switch (act) {
         case "#eq": preview(true); return;
-        case "#del": { inp.dataset.done = ""; var cc = caret(); if (cc[0] === cc[1] && cc[0] > 0) { inp.value = inp.value.slice(0, cc[0] - 1) + inp.value.slice(cc[1]); setCaret(cc[0] - 1); } else { inp.value = inp.value.slice(0, cc[0]) + inp.value.slice(cc[1]); setCaret(cc[0]); } preview(false); return; }
-        case "#ac": inp.value = ""; inp.dataset.done = ""; hpos = -1; setCaret(0); preview(false); return;
+        case "#del": del(); return;
+        case "#ac": fresh(false); hpos = -1; preview(false); return;
         case "#off": toggle(false); return;
         case "#mode": setMenu("mode"); return;
         case "#setup": setMenu("setup"); return;
-        case "#sd": S.polar = !S.polar; persist(); wireExprPreview(); return;
-        case "#eng": S.eng = !S.eng; persist(); ind(); wireExprPreview(); return;
-        case "#rcl": alpha = true; ind(); return; // RCL then a letter key: puts that memory in the expression
+        case "#frac": case "#sqrt": case "#sci": case "#pow": case "#sq": case "#cube": case "#inv": case "#tenx": case "#ex": struct(act.slice(1)); return;
+        case "#sd": S.polar = !S.polar; persist(); redisplay(); return;
+        case "#eng": S.eng = !S.eng; persist(); ind(); redisplay(); return;
+        case "#rcl": alpha = true; ind(); return;
         case "#sto": pending = "sto"; alpha = true; ind(); return;
         case "#m+": case "#m-": {
           if (!ans) { panel.querySelector("#calc-err").textContent = "احسب ناتجًا أولًا ثم اضغط M+."; return; }
-          vars.M = (act === "#m+" ? add : sub)(vars.M || C(0), ans); persist(); ind(); var cur = inp.value; render(); toggle(true); panel.querySelector("#calc-in").value = cur; wireExprPreview(); return;
+          vars.M = (act === "#m+" ? add : sub)(vars.M || C(0), ans); persist(); render(); toggle(true); return;
         }
       }
     }
+    function redisplay() { if (done && SHOWN) { paint(); show(SHOWN.v, SHOWN.assign); } else preview(false); }
     panel.querySelectorAll(".cx [data-key]").forEach(function (b) { b.addEventListener("click", function () { press(b.dataset.key); }); });
-    inp.addEventListener("input", function () { inp.dataset.done = ""; SHOWN = null; preview(false); });
-    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); preview(true); } });
+    var KB = { "*": "×", "/": "#frac", "-": "−", "^": "#pow", "x": "×" };
+    box.addEventListener("keydown", function (e) { // a hardware keyboard types into the display
+      e.stopPropagation();
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var key = e.key;
+      if (key === "Enter" || key === "=") { e.preventDefault(); preview(true); return; }
+      if (key === "Backspace") { e.preventDefault(); del(); return; }
+      if (key === "ArrowLeft") { e.preventDefault(); moveLeft(); paint(); return; }
+      if (key === "ArrowRight") { e.preventDefault(); moveRight(); paint(); return; }
+      if (key === "ArrowUp" || key === "ArrowDown") { e.preventDefault(); press(key === "ArrowUp" ? "up" : "down"); return; }
+      if (key === "Escape") return;
+      if (key.length !== 1) return;
+      e.preventDefault();
+      var m = KB[key] || key;
+      if (m[0] === "#") { struct(m.slice(1)); return; }
+      put(m);
+    });
     panel.querySelectorAll(".calc-vars [data-k]").forEach(function (b) { b.addEventListener("click", function () { put(b.dataset.k); }); });
-    panel.querySelectorAll("[data-h]").forEach(function (b) { b.addEventListener("click", function () { inp.value = S.hist[+b.dataset.h].q; inp.dataset.done = ""; preview(false); }); });
+    panel.querySelectorAll("[data-h]").forEach(function (b) { b.addEventListener("click", function () { var h = S.hist[+b.dataset.h]; root = h.tree ? JSON.parse(JSON.stringify(h.tree)) : h.q.split("").map(function (c) { return { t: "c", v: c }; }); cur = { row: root, i: root.length }; done = false; SHOWN = null; preview(false); }); });
     var ch = panel.querySelector("#calc-clrh"); if (ch) ch.addEventListener("click", function () { S.hist = []; persist(); render(); toggle(true); });
     var cv = panel.querySelector("#calc-clrv"); if (cv) cv.addEventListener("click", function () { vars = {}; persist(); render(); toggle(true); });
     panel.querySelector(".calc-ins").addEventListener("click", function () { if (this.dataset.ins) doInsert(this.dataset.ins); });
-    wireExprPreview = function () { // a re-drawn panel shows the last "=" result as it was, not re-evaluated with the new Ans
-      if (SHOWN && SHOWN.q === inp.value.trim()) { inp.dataset.done = "1"; panel.querySelector("#calc-err").textContent = ""; show(SHOWN.v, SHOWN.assign); } else preview(false);
-    };
-    ind(); wireExprPreview();
+    ind();
+    if (done && SHOWN) { paint(); show(SHOWN.v, SHOWN.assign); } else preview(false);
   }
-  var wireExprPreview = function () {};
   function engExp(x) { // engineering notation: mantissa 1–999 and a power of ten that is a multiple of 3
     if (x === 0 || !isFinite(x)) return null; var p = Math.floor(Math.log10(Math.abs(x)) / 3) * 3; if (p === 0) return null;
     var SUP = { "-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };

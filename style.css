@@ -563,7 +563,22 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .cx-ind i { font-style: normal; opacity: .12; }
 .cx-ind i.on { opacity: .9; }
 .cx-ind #cx-dr { margin-inline-start: auto; }
-.cx-in { width: 100%; border: 0; background: transparent; color: #16201b; font: 500 19px/1.3 ui-monospace, "SF Mono", Menlo, monospace; outline: none; text-align: left; padding: 2px 0; caret-color: #16201b; }
+.cx-in { display: flex; align-items: center; flex-wrap: nowrap; min-height: 34px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; color: #16201b; font: 500 19px/1.2 ui-monospace, "SF Mono", Menlo, monospace; outline: none; padding: 3px 0; white-space: nowrap; }
+.cx-in::-webkit-scrollbar { display: none; }
+.cx-in:focus-visible { outline: none; }
+.cx-in > span, .cx-in span { display: inline-flex; align-items: center; }
+.cx-fr { display: inline-flex !important; flex-direction: column; align-items: center; margin: 0 2px; vertical-align: middle; font-size: .86em; }
+.cx-fr > .nu, .cx-fr > .de { display: inline-flex; align-items: center; justify-content: center; padding: 0 3px; min-width: 14px; }
+.cx-fr > .nu { border-bottom: 2px solid currentColor; padding-bottom: 2px; }
+.cx-fr > .de { padding-top: 2px; }
+.cx-sup { display: inline-flex; align-items: center; font-size: .66em; align-self: flex-start; margin-top: -2px; margin-left: 1px; }
+.cx-sq { display: inline-flex; align-items: stretch; }
+.cx-sq .rad { font-size: 1.05em; }
+.cx-sq .ar { border-top: 2px solid currentColor; padding: 1px 2px 0; display: inline-flex; align-items: center; }
+.cx-box { display: inline-block !important; width: .62em; height: .9em; border: 1.5px dotted currentColor; border-radius: 1px; margin: 0 1px; opacity: .7; }
+.cx-cur { display: inline-block !important; width: 2px; height: 1.05em; background: #16201b; margin: 0 -1px; animation: cx-blink 1s steps(1) infinite; }
+@keyframes cx-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cx-cur { animation: none; } }
 .cx .calc-out { min-height: 40px; display: grid; justify-items: end; gap: 1px; }
 .cx .calc-out b { font: 600 25px/1.15 ui-monospace, "SF Mono", Menlo, monospace; color: #10171a; word-break: break-all; text-align: right; }
 .cx .calc-out span { font: 12.5px/1.3 ui-monospace, monospace; color: #33433b; }
