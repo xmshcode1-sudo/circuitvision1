@@ -270,7 +270,7 @@
       var wrap = wraps[c.group || "core"];
       if (c.planned) {
         var pl = document.createElement("article"); pl.className = "course card";
-        pl.innerHTML = '<div class="thumb">' + thumb(c.thumb) + '</div><div class="course-body"><div class="course-head"><div><span class="code">' + c.code + '</span><h3>' + c.ar + '</h3></div><span class="chip chip-plan">قيد الإعداد</span></div><p class="meta">' + c.level + '</p></div>';
+        pl.innerHTML = '<div class="thumb">' + thumb(c.thumb) + '</div><div class="course-body"><div class="course-head"><div><span class="code">' + c.code + '</span><h3>' + c.ar + '</h3></div><span class="chip chip-plan">قيد الإعداد</span></div><p class="meta">' + c.level + '</p>' + (c.lab ? '<a class="btn btn-ghost btn-sm" href="' + c.lab + '">' + c.labNote + ' ←</a>' : '') + '</div>';
         wrap.appendChild(pl); return;
       }
       var p = S.courseProgress(c, d);

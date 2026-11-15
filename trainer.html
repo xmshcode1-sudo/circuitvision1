@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>جهاز IC Trainer — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .main { min-width: 0; padding-block: 22px 56px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; align-content: start; width: 100%; }
+  .t-head { display: grid; gap: 6px; }
+  .t-head h1 { font-size: clamp(24px, 3vw, 32px); }
+  .t-head p { color: var(--fg-2); max-width: 75ch; margin: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+  <main class="main" id="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div class="t-head">
+      <div class="crumbs"><a href="logic.html">معمل التصميم المنطقي</a> › جهاز IC Trainer</div>
+      <h1>جهاز IC Trainer · W5101-3D</h1>
+      <p>نفس جهاز المعمل: ركّب الـ IC في المقبس، وصّل VCC بـ +5V و GND بـ 0V، ثم وصّل المداخل بالمفاتيح a–h والمخارج بالـ LED. هذه لوحة حرة للتجريب، والتجارب الموجّهة في صفحة المعمل.</p>
+    </div>
+    <div id="tr"></div>
+  </main>
+</div>
+<script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script src="chips.js"></script>
+<script src="trainer.js"></script>
+<script>CV.shell.init({ active: "logic" }); CV.trainer.mount(document.getElementById("tr"), { key: "free" });</script>
+</body>
+</html>

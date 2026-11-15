@@ -16,10 +16,11 @@
     club: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.5-3.5 3-5 6-5s5.5 1.5 6 5M15 15c3 0 5 1.5 5.5 4.5"/>',
     portfolio: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
     notebook: '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>',
+    logic: '<rect x="7" y="5" width="10" height="14" rx="1.5"/><path d="M4 8h3M4 12h3M4 16h3M17 8h3M17 12h3M17 16h3"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
   };
   // Order follows the main navigation in the project brief.
-  var order = ["home", "dashboard", "courses", "generator", "lab", "tutor", "challenges", "bank", "academy", "realworld", "club", "portfolio", "notebook"];
+  var order = ["home", "dashboard", "courses", "generator", "lab", "logic", "tutor", "challenges", "bank", "academy", "realworld", "club", "portfolio", "notebook"];
 
   function svg(id) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icons[id] + '</svg>'; }
 
@@ -55,7 +56,7 @@
   }
 
   /* ---------- keyboard shortcuts: "?" shows them, G then a letter moves between sections ---------- */
-  var NAV = { H: "home", D: "dashboard", C: "courses", P: "generator", L: "lab", T: "tutor", E: "challenges", B: "bank", A: "academy", R: "realworld", K: "club", F: "portfolio", N: "notebook" };
+  var NAV = { H: "home", D: "dashboard", C: "courses", P: "generator", L: "lab", I: "logic", T: "tutor", E: "challenges", B: "bank", A: "academy", R: "realworld", K: "club", F: "portfolio", N: "notebook" };
   var LAB_KEYS = [["V", "تحديد"], ["W", "سلك"], ["R", "مقاومة"], ["E", "LED"], ["C", "مكثف"], ["L", "ملف"], ["B", "بطارية"], ["S", "مفتاح ضغط"], ["A", "لمبة"], ["P", "حساس حركة"], ["M", "أميتر لوحة"], ["D", "مصدر تابع"], ["X", "ممحاة"],
     ["Delete", "احذف القطعة المحددة"], ["F", "اقلب القطعة المحددة"], ["T", "اضغط المفتاح المحدد أو اتركه"], ["+ / −", "تكبير وتصغير اللوحة"], ["N", "إظهار الأسماء والقيم"], ["Esc", "ارجع لأداة التحديد"], ["⌘Z / Ctrl+Z", "تراجع عن تحميل مثال"]];
   function typing(t) { var g = t && t.tagName; return g === "INPUT" || g === "TEXTAREA" || g === "SELECT" || (t && t.isContentEditable); }

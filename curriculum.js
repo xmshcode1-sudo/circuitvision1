@@ -79,7 +79,7 @@
     },
     /* Courses with a place reserved on the platform. Their chapters are added only from the department's course
        description when the founder provides it, so nothing here is guessed. */
-    { id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "next", planned: true, thumb: "logic",
+    { id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "next", planned: true, thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 6 تجارب عملية مع جهاز IC Trainer",
       level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] },
     { id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "next", planned: true, thumb: "signals",
       level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] }
@@ -105,7 +105,8 @@
     { id: "club",       ar: "نادي Beyond Theory",     en: "Beyond Theory",           step: 6, status: "build", href: "club.html" },
     { id: "realworld",  ar: "الهندسة في الواقع",      en: "Real-World Engineering",  step: 6, status: "build", href: "realworld.html" },
     { id: "portfolio",  ar: "ملف الإنجاز",            en: "My Portfolio",            step: 6, status: "build", href: "portfolio.html" },
-    { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" }
+    { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" },
+    { id: "logic",      ar: "معمل التصميم المنطقي",   en: "Logic Design Lab",        step: 6, status: "build", href: "logic.html" }
   ];
 
   var statusLabel = { ok: "متاح", build: "متاح جزئيًا", plan: "مخطط" };
