@@ -23,8 +23,11 @@
       return client.auth.getSession();
     }).then(function (r) {
       user = r && r.data && r.data.session ? r.data.session.user : null;
-      client.auth.onAuthStateChange(function (_e, session) { user = session ? session.user : null; profile = null; emit(); });
-      return loadProfile().then(function () { return client; });
+      client.auth.onAuthStateChange(function (_e, session) {
+        var was = user && user.id; user = session ? session.user : null;
+        if ((user && user.id) !== was) { profile = null; access = null; loadProfile().then(loadAccess).then(emit); } else emit();
+      });
+      return loadProfile().then(loadAccess).then(function () { return client; });
     }).catch(function () { client = null; return null; });
     return loading;
   }
@@ -34,6 +37,12 @@
     if (!client || !user) { profile = null; return Promise.resolve(null); }
     return client.from("profiles").select("id,display_name").eq("id", user.id).maybeSingle().then(function (r) { profile = r.data || null; return profile; });
   }
+  /* what this student may open: { admin, blocked, subs: [{course_id, ends_at}], courses: [...], announcements: [...] } */
+  var access = null, accessListeners = [];
+  function loadAccess() {
+    if (!client || !user) { access = null; return Promise.resolve(null); }
+    return client.rpc("my_access").then(function (r) { access = r && !r.error ? r.data : null; accessListeners.forEach(function (f) { try { f(access); } catch (e) {} }); return access; }, function () { access = null; return null; });
+  }
   function err(r) { if (r && r.error) throw new Error(msg(r.error)); return r; }
   function msg(e) {
     var m = (e && (e.message || e.error_description)) || "";
@@ -42,7 +51,95 @@
     if (/Password should be/i.test(m)) return "كلمة المرور قصيرة: 6 أحرف على الأقل.";
     if (/Email not confirmed/i.test(m)) return "أكّد بريدك من الرسالة التي وصلتك ثم سجّل الدخول.";
     if (/duplicate key|one_daily/i.test(m)) return "سجّلت نتيجة تحدي اليوم مسبقًا.";
+    if (/expired|invalid.*(otp|token)|token.*(invalid|expired)|otp/i.test(m)) return "الكود غير صحيح أو انتهت صلاحيته. اطلب كودًا جديدًا.";
+    if (/not authorized/i.test(m)) return "تعذّر إرسال الكود لهذا البريد الآن: خدمة البريد في المنصة قيد الإعداد. حاول لاحقًا.";
+    if (/rate limit|security purposes|too many/i.test(m)) return "طلبات كثيرة. انتظر دقيقة ثم حاول مرة أخرى.";
+    if (/same.*password|different from the old/i.test(m)) return "اختر كلمة مرور مختلفة عن القديمة.";
+    if (/valid email|invalid.*email|email.*invalid/i.test(m)) return "اكتب بريدًا إلكترونيًا صحيحًا.";
+    if (/signups not allowed|signup.*disabled/i.test(m)) return "التسجيل مغلق مؤقتًا.";
     return "تعذّر الاتصال بالخادم. حاول مرة أخرى.";
+  }
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
+
+  /* ---------- the gate: every page except the home page and login needs a signed-in account ---------- */
+  var PAGE = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+  if (PAGE && PAGE.indexOf(".") < 0) PAGE += ".html";
+  var PUBLIC = { "index.html": 1, "login.html": 1 };
+  /* pages that belong to one paid course; the first lesson of each chapter stays open in the lab and the academy */
+  var PAGE_COURSE = { "practice.html": "circuits-1", "bank.html": "circuits-1", "tutor.html": "circuits-1", "challenges.html": "circuits-1",
+    "realworld.html": "circuits-1", "lab.html": "circuits-1", "academy.html": "circuits-1", "trainer.html": "logic-design" };
+  function pageNeeds() {
+    var c = PAGE_COURSE[PAGE], h = decodeURIComponent(location.hash.slice(1));
+    if (!c) return null;
+    if (PAGE === "lab.html" && /^exp-/.test(h) && api.freeLesson(h.slice(4))) return null;
+    if (PAGE === "academy.html" && /^c\d-/.test(h) && api.freeLesson(h)) return null;
+    return c;
+  }
+  function mainEl() { return document.getElementById("main") || document.querySelector("main"); }
+  function onDom(f) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", f); else f(); }
+  function gate() {
+    if (!configured() || PUBLIC[PAGE] || window.CV_NO_GATE) return;
+    document.documentElement.classList.add("cv-gate");
+    ready().then(function (c) {
+      if (!c) return onDom(function () { screen("تعذّر الاتصال بخادم الحسابات", "تحقق من الإنترنت ثم أعد المحاولة.", '<button type="button" class="btn btn-primary" onclick="location.reload()">أعد المحاولة</button>'); });
+      if (!user) { location.replace("login.html?next=" + encodeURIComponent(PAGE + location.search + location.hash)); return; }
+      if (!access) return onDom(function () { screen("تعذّر تحميل بيانات حسابك", "حدّث الصفحة بعد قليل.", '<button type="button" class="btn btn-primary" onclick="location.reload()">حدّث الصفحة</button>'); });
+      if (access.blocked) return onDom(function () { screen("حسابك موقوف", "تواصل مع إدارة المنصة لمعرفة السبب.", '<button type="button" class="btn btn-ghost" id="cv-out">تسجيل الخروج</button>'); outBtn(); });
+      if (access.approval === "rejected") return onDom(function () { screen("لم تتم الموافقة على حسابك", "تواصل مع إدارة المنصة إذا كنت تعتقد أن هذا خطأ.", '<button type="button" class="btn btn-ghost" id="cv-out">تسجيل الخروج</button>'); outBtn(); });
+      if (access.approval !== "approved") return onDom(function () {
+        screen("حسابك بانتظار موافقة الإدارة", "استلمنا طلبك يا " + api.name() + ". تُفتح لك المنصة بعد أن يوافق مدير المنصة على حسابك؛ حدّث الصفحة لاحقًا.", '<button type="button" class="btn btn-primary" onclick="location.reload()">تحقق الآن</button><button type="button" class="btn btn-ghost" id="cv-out">تسجيل الخروج</button>'); outBtn();
+      });
+      onDom(pass);
+    });
+  }
+  function outBtn() { var b = document.getElementById("cv-out"); if (b) b.onclick = function () { api.signOut().then(function () { location.replace("login.html"); }); }; }
+  function screen(title, text, actions) {
+    document.documentElement.classList.remove("cv-gate");
+    /* a full-screen layer over the page (the page's own scripts keep their elements, so nothing breaks underneath) */
+    Array.prototype.forEach.call(document.body.children, function (el) { el.setAttribute("inert", ""); el.setAttribute("aria-hidden", "true"); });
+    var d = document.createElement("div"); d.className = "cv-screen"; d.setAttribute("role", "alertdialog"); d.setAttribute("aria-modal", "true");
+    d.innerHTML = '<section class="card cv-lock"><h2>' + esc(title) + '</h2><p>' + esc(text) + '</p><div class="cv-lock-cta">' + actions + '</div></section>';
+    document.body.appendChild(d);
+  }
+  function pass() {
+    document.documentElement.classList.remove("cv-gate");
+    navExtras(); announce(); pageLock();
+    window.addEventListener("hashchange", pageLock);
+    api.onChange(function (u) { if (!u) location.replace("login.html"); });
+  }
+  var locked = false;
+  function pageLock() {
+    var need = pageNeeds(), main = mainEl(); if (!main) return;
+    var shouldLock = !!need && !api.can(need);
+    if (shouldLock === locked) return;
+    locked = shouldLock;
+    Array.prototype.forEach.call(main.children, function (el) { if (!el.classList.contains("mobile-top") && !el.classList.contains("cv-ann")) { if (shouldLock) { el.dataset.cvHid = el.hidden ? "1" : "0"; el.hidden = true; } else if (el.dataset.cvHid) { el.hidden = el.dataset.cvHid === "1"; delete el.dataset.cvHid; } } });
+    var box = document.getElementById("cv-page-lock");
+    if (shouldLock) { box = document.createElement("div"); box.id = "cv-page-lock"; box.innerHTML = api.lockHtml(need, "هذه الأداة"); main.appendChild(box); }
+    else if (box) box.remove();
+  }
+  function navExtras() {
+    var nav = document.getElementById("nav"); if (!nav || nav.querySelector(".cv-acc")) return;
+    var ic = function (id) { return CV.shell && CV.shell.icon ? CV.shell.icon(id) : ""; };
+    var html = '<div class="cv-acc"><a class="nv' + (PAGE === "pay.html" ? ' active' : '') + '" href="pay.html">' + ic("pay") + '<span class="lbl">اشتراكاتي</span></a>' +
+      (access && access.admin ? '<a class="nv' + (PAGE === "admin.html" ? ' active' : '') + '" href="admin.html">' + ic("admin") + '<span class="lbl">لوحة الإدارة</span></a>' : '') +
+      '<button type="button" class="nv" id="cv-signout">' + ic("logout") + '<span class="lbl">تسجيل الخروج</span><span class="soon cv-who">' + esc(api.name()) + '</span></button></div>';
+    var sw = nav.querySelector(".lang-sw");
+    if (sw) sw.insertAdjacentHTML("beforebegin", html); else nav.insertAdjacentHTML("beforeend", html);
+    document.getElementById("cv-signout").addEventListener("click", function () { api.signOut().then(function () { location.replace("login.html"); }); });
+  }
+  function announce() {
+    var main = mainEl(), list = (access && access.announcements) || [];
+    if (!main || !list.length) return;
+    var seen = {}; try { seen = JSON.parse(localStorage.getItem("cv.ann.seen") || "{}"); } catch (e) {}
+    list.filter(function (a) { return !seen[a.id]; }).slice(0, 2).forEach(function (a) {
+      var d = document.createElement("div"); d.className = "cv-ann"; d.setAttribute("role", "status");
+      d.innerHTML = '<span>' + esc(a.body) + '</span><button type="button" class="btn btn-ghost btn-sm">إخفاء</button>';
+      d.querySelector("button").onclick = function () { seen[a.id] = 1; try { localStorage.setItem("cv.ann.seen", JSON.stringify(seen)); } catch (e) {} d.remove(); };
+      var top = main.querySelector(".mobile-top");
+      if (top) top.insertAdjacentElement("afterend", d); else main.insertBefore(d, main.firstChild);
+    });
   }
 
   var api = {
@@ -58,7 +155,54 @@
       return ready().then(function (c) { return c.auth.signInWithPassword({ email: email, password: password }); }).then(err)
         .then(function (r) { user = r.data.user; return loadProfile().then(function () { emit(); return user; }); });
     },
-    signOut: function () { return ready().then(function (c) { return c.auth.signOut(); }).then(function () { user = null; profile = null; emit(); }); },
+    signOut: function () { return ready().then(function (c) { return c.auth.signOut(); }).then(function () { user = null; profile = null; access = null; emit(); }); },
+    /* e-mail code: the "Confirm signup" and "Reset password" e-mail templates show {{ .Token }} (a 6-digit code) */
+    verifySignup: function (email, code) {
+      return ready().then(function (c) { return c.auth.verifyOtp({ email: email, token: code, type: "signup" }); }).then(err)
+        .then(function (r) { user = r.data.user; return loadProfile().then(loadAccess).then(function () { emit(); return user; }); });
+    },
+    resendSignup: function (email) { return ready().then(function (c) { return c.auth.resend({ type: "signup", email: email }); }).then(err); },
+    sendReset: function (email) { return ready().then(function (c) { return c.auth.resetPasswordForEmail(email); }).then(err); },
+    verifyReset: function (email, code, password) {
+      return ready().then(function (c) {
+        return c.auth.verifyOtp({ email: email, token: code, type: "recovery" }).then(err).then(function () { return c.auth.updateUser({ password: password }); }).then(err);
+      }).then(function (r) { user = r.data.user; return loadProfile().then(loadAccess).then(function () { emit(); return user; }); });
+    },
+    /* subscriptions */
+    access: function () { return access; },
+    reloadAccess: function () { return ready().then(loadAccess); },
+    onAccess: function (f) { accessListeners.push(f); },
+    course: function (id) { return ((access && access.courses) || []).filter(function (c) { return c.id === id; })[0] || null; },
+    sub: function (id) { return ((access && access.subs) || []).filter(function (s) { return s.course_id === id && new Date(s.ends_at) > new Date(); })[0] || null; },
+    can: function (id) {
+      if (!configured()) return true;                       // no accounts configured: the site runs open (development copy)
+      if (!access || access.blocked || (access.approval && access.approval !== "approved")) return false;
+      if (access.admin) return true;
+      var c = api.course(id);
+      if (!c || !c.is_paid) return true;
+      return !!api.sub(id);
+    },
+    freeLesson: function (lessonId) { return /-1$/.test(lessonId); },   // the first lesson of every chapter is the free sample
+    canLesson: function (lessonId) { return api.freeLesson(lessonId) || api.can("circuits-1"); },
+    price: function (id) { var c = api.course(id); return c ? (c.price_halalas / 100).toFixed(2) : "9.99"; },
+    freeNote: function (id) { return id === "logic-design" ? "تجربة Lab#1 مجانية كاملة." : "الدرس الأول من كل فصل مجاني لتجربة المنصة."; },
+    lockHtml: function (courseId, what) {
+      var c = api.course(courseId), name = c ? c.name_ar : "المقرر";
+      return '<section class="card cv-lock" role="region" aria-label="محتوى للمشتركين"><span class="cv-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>' +
+        '<h2>' + (what || "هذا الجزء") + ' للمشتركين في ' + esc(name) + '</h2>' +
+        '<p>الاشتراك <b class="ltr">' + api.price(courseId) + '</b> ريال لمدة شهر، ويفتح كل دروس المقرر وأدواته. ' + api.freeNote(courseId) + '</p>' +
+        '<div class="cv-lock-cta"><a class="btn btn-primary" href="pay.html?course=' + encodeURIComponent(courseId) + '">اشترك الآن</a><a class="btn btn-ghost" href="dashboard.html">لوحة الطالب</a></div></section>';
+    },
+    /* calls to our own /api endpoints carry the student's session so the server can check it */
+    authFetch: function (url, opts) {
+      opts = Object.assign({}, opts || {}); opts.headers = Object.assign({}, opts.headers || {});
+      if (!configured()) return fetch(url, opts);
+      return ready().then(function (c) { return c ? c.auth.getSession() : null; }).then(function (r) {
+        var s = r && r.data && r.data.session; if (s) opts.headers.Authorization = "Bearer " + s.access_token;
+        return fetch(url, opts);
+      }, function () { return fetch(url, opts); });
+    },
+    client: function () { return client; },
 
     /* progress sync: whole local store as one snapshot */
     pullProgress: function () { return ready().then(function (c) { return c.from("progress").select("data,updated_at").eq("user_id", user.id).maybeSingle(); }).then(err).then(function (r) { return r.data; }); },
@@ -127,6 +271,7 @@
   function flush() { if (!pendingPush || !api.autoSync()) return; pendingPush = false; clearTimeout(syncT); api.pushProgress(CV.store.get()).then(function () { api.lastPush = new Date(); }, function () { pendingPush = true; }); }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); });
   window.addEventListener("pagehide", flush);
-  if (configured()) ready();
   CV.cloud = api;
+  gate();
+  if (configured()) ready();
 })();

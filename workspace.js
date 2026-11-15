@@ -248,7 +248,7 @@
       var m = /^data:(image\/[a-z]+);base64,(.*)$/.exec(dataUrl);
       status("جارٍ التعرف على المكتوب…", "busy");
       var ctrl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 70000);
-      fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime: m[1], image: m[2], context: opts.context || "" }), signal: ctrl && ctrl.signal })
+      (CV.cloud ? CV.cloud.authFetch : fetch)(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime: m[1], image: m[2], context: opts.context || "" }), signal: ctrl && ctrl.signal })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
         .then(function (o) {
           clearTimeout(timer);

@@ -143,8 +143,8 @@
       root.classList.remove("pb-complete");
       if (CV.workspace) CV.workspace.mount($(".gp-ws"), { key: "gen-" + g.family + "-" + g.seed, lessonId: cfg.lessonId || "generator",
         context: $(".gp-q").textContent,
-        circuit: g.circuit.omega ? null : function () { return stepCtx(g); },
-        onLabels: g.circuit.omega ? null : function () { var x = stepCtx(g); if (!x) return; g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
+        circuit: function () { return stepCtx(g); },
+        onLabels: function () { var x = stepCtx(g); if (!x) return; g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
         tutor: CV.tutor ? function () { return CV.tutor.fromGenerated(g, $(".gp-q").textContent); } : null,
         onAnswer: function (v) { return CV.workspace.fillAnswer($("#" + uid + "-in"), $("#" + uid + "-u"), v); } });
     }

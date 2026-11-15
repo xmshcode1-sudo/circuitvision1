@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة الإدارة — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .main { min-width: 0; padding-block: 22px 56px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; align-content: start; max-width: 1240px; width: 100%; }
+  .ad-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+  .ad-head h1 { font-size: clamp(24px, 3vw, 32px); }
+  .ad-head p { color: var(--fg-3); font-size: 13.5px; }
+  .ad-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ad-tabs button { padding: 8px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--fg-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ad-tabs button[aria-selected="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .ad-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .ad-stat { padding: 16px; display: grid; gap: 4px; }
+  .ad-stat b { font-family: var(--font-display); font-size: 28px; direction: ltr; justify-self: start; }
+  .ad-stat span { color: var(--fg-3); font-size: 13px; }
+  .ad-sec { padding: 18px; display: grid; gap: 12px; min-width: 0; }
+  .ad-sec h2 { font-size: 17px; }
+  .ad-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .ad-bar .input { width: auto; flex: 1 1 220px; }
+  .tbl-wrap { overflow-x: auto; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 900px; }
+  .tbl td:last-child { min-width: 270px; }
+  .tbl th, .tbl td { padding: 9px 10px; border-bottom: 1px solid var(--line-soft); text-align: start; vertical-align: top; }
+  .tbl th { color: var(--fg-3); font-weight: 600; white-space: nowrap; }
+  .tbl td.nw { white-space: nowrap; }
+  .tbl tr.blk td { opacity: .6; }
+  .sub-chip { display: inline-flex; gap: 6px; align-items: center; padding: 3px 4px 3px 10px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); font-size: 12.5px; margin: 2px; white-space: nowrap; }
+  .sub-chip button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 14px; padding: 0 6px; border-radius: 99px; }
+  .sub-chip button:hover { background: var(--muted-soft); }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--muted-soft); color: var(--fg-2); white-space: nowrap; }
+  .tag.warn { background: var(--orange-soft); color: var(--orange); }
+  .tag.pend { background: var(--blue-soft); color: var(--blue-2); }
+  button.ad-stat { text-align: start; font: inherit; color: inherit; cursor: pointer; }
+  .ad-pend { border-color: var(--blue); }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .grant { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 10px; border-radius: 10px; background: var(--bg-2); margin-top: 6px; }
+  .grant .select, .grant .input { width: auto; padding: 6px 8px; font-size: 13px; }
+  .grant .input { width: 6em; }
+  .crs { display: grid; grid-template-columns: minmax(0, 2fr) 9em auto auto; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+  .crs .input { padding: 7px 9px; }
+  .crs label { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; white-space: nowrap; }
+  .ann { display: flex; gap: 10px; justify-content: space-between; align-items: start; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+  .ann p { min-width: 0; flex: 1 1 260px; overflow-wrap: anywhere; }
+  .ad-msg { font-size: 13.5px; }
+  .ad-msg.ok { color: var(--ok); } .ad-msg.bad { color: var(--orange); }
+  .muted { color: var(--fg-3); }
+  textarea.input { min-height: 80px; resize: vertical; }
+  @media (max-width: 700px) { .crs { grid-template-columns: 1fr 1fr; } .crs > :first-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main" id="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div id="ad-root" style="display:grid;gap:18px"><p class="muted">جارٍ التحميل…</p></div>
+  </main>
+</div>
+<script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script>
+(function () {
+  "use strict";
+  CV.shell.init({ active: "" });
+  var C = CV.cloud, root = document.getElementById("ad-root"), db = null;
+  var tab = "stats", users = [], courses = [], qText = "";
+  try { tab = sessionStorage.getItem("cv.admin.tab") || "stats"; } catch (e) {}
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function date(s, time) { if (!s) return "—"; try { return new Date(s).toLocaleString("ar-SA-u-ca-gregory-nu-latn", time ? { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } : { year: "numeric", month: "short", day: "numeric" }); } catch (e) { return String(s).slice(0, 10); } }
+  function sar(h) { return (h / 100).toFixed(2); }
+  function cname(id) { var c = courses.filter(function (x) { return x.id === id; })[0]; return c ? c.name_ar : id; }
+  function rpcErr(e) { var m = (e && e.message) || ""; if (/not admin/.test(m)) return "هذه العملية للمدير فقط."; if (/cannot (block|change) yourself/.test(m)) return "لا يمكنك تغيير حالة حسابك."; if (/days out of range/.test(m)) return "عدد الأيام من 1 إلى 3660."; return "تعذّر تنفيذ العملية. حاول مرة أخرى."; }
+  function call(fn, args) { return db.rpc(fn, args).then(function (r) { if (r.error) throw r.error; return r.data; }); }
+  /* two-step button instead of a browser confirm() */
+  function confirmBtn(b, label, run) {
+    if (b.dataset.armed) { delete b.dataset.armed; clearTimeout(+b.dataset.t); b.disabled = true; run(); return; }
+    b.dataset.armed = "1"; b.dataset.orig = b.textContent; b.textContent = label;
+    b.dataset.t = setTimeout(function () { delete b.dataset.armed; b.textContent = b.dataset.orig; }, 4000);
+  }
+
+  function frame(inner) {
+    var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"]];
+    root.innerHTML = '<header class="ad-head"><div><h1>لوحة الإدارة</h1><p>تتحكم هنا في الحسابات والاشتراكات والأسعار والإعلانات. كل عملية يتحقق منها الخادم بأنك المدير.</p></div></header>' +
+      '<div class="ad-tabs" role="tablist">' + T.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join("") + '</div><div id="ad-body">' + inner + '</div>';
+    root.querySelectorAll("[data-tab]").forEach(function (b) { b.onclick = function () { tab = b.dataset.tab; try { sessionStorage.setItem("cv.admin.tab", tab); } catch (e) {} show(); }; });
+  }
+  function show() {
+    frame('<p class="muted">جارٍ التحميل…</p>');
+    ({ stats: stats, users: usersTab, courses: coursesTab, payments: paymentsTab, ann: annTab })[tab]();
+  }
+  function body(html) { var b = document.getElementById("ad-body"); if (b) b.innerHTML = html; return b; }
+  function fail(e) { body('<p class="ad-msg bad">' + esc(rpcErr(e)) + '</p>'); }
+
+  /* ---------- overview ---------- */
+  function stats() {
+    call("admin_stats").then(function (s) {
+      var by = Object.keys(s.by_course || {}).map(function (k) { return '<div class="card ad-stat"><b>' + s.by_course[k] + '</b><span>مشترك نشط في ' + esc(cname(k)) + '</span></div>'; }).join("");
+      body('<div class="ad-stats">' +
+        '<button type="button" class="card ad-stat ad-pend" data-goto="users"><b>' + s.pending + '</b><span>طلب بانتظار موافقتك' + (s.pending ? ' · راجعها الآن' : '') + '</span></button>' +
+        '<div class="card ad-stat"><b>' + s.users + '</b><span>حساب مسجّل</span></div>' +
+        '<div class="card ad-stat"><b>' + s.approved + '</b><span>حساب مقبول</span></div>' +
+        '<div class="card ad-stat"><b>' + s.new_7d + '</b><span>تسجيل جديد آخر 7 أيام</span></div>' +
+        '<div class="card ad-stat"><b>' + s.active_subs + '</b><span>اشتراك نشط</span></div>' + by +
+        '<div class="card ad-stat"><b>' + sar(s.revenue_30d_halalas) + '</b><span>إيراد آخر 30 يومًا (ريال)</span></div>' +
+        '<div class="card ad-stat"><b>' + sar(s.revenue_halalas) + '</b><span>إجمالي الإيراد الحقيقي (ريال)</span></div>' +
+        (s.test_revenue_halalas ? '<div class="card ad-stat"><b>' + sar(s.test_revenue_halalas) + '</b><span>مدفوعات تجريبية (مفتاح sk_test)</span></div>' : '') +
+        '<div class="card ad-stat"><b>' + s.blocked + '</b><span>حساب موقوف</span></div></div>' +
+        '<p class="muted" style="font-size:13px">كل حساب جديد ينتظر موافقتك قبل أن يفتح المنصة. الإيراد هنا هو ما سجّلته المنصة من عمليات ميسّر المؤكدة، قبل رسوم ميسّر. المرجع المالي النهائي هو لوحة ميسّر.</p>');
+      var g = document.querySelector("[data-goto]"); if (g) g.onclick = function () { tab = "users"; try { sessionStorage.setItem("cv.admin.tab", tab); } catch (e) {} show(); };
+      var tb = document.querySelector('[data-tab="users"]'); if (tb && s.pending) tb.textContent = "المستخدمون والاشتراكات (" + s.pending + " بانتظارك)";
+    }, fail);
+  }
+
+  /* ---------- users ---------- */
+  function usersTab() {
+    call("admin_users", { p_q: qText }).then(function (rows) {
+      users = rows || [];
+      var paid = courses.filter(function (c) { return c.is_paid; });
+      var opts = (paid.length ? paid : courses).map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name_ar) + '</option>'; }).join("");
+      var me = C.user() && C.user().id;
+      var html = '<section class="card ad-sec"><form class="ad-bar" id="ad-q"><input class="input" id="ad-qt" placeholder="ابحث بالاسم أو البريد" value="' + esc(qText) + '"><button class="btn btn-ghost btn-sm" type="submit">بحث</button><span class="muted" style="font-size:13px">' + users.length + ' حساب' + (users.length >= 300 ? ' (أول 300، استخدم البحث)' : '') + '</span></form>' +
+        '<p class="ad-msg" id="ad-um" hidden></p>' +
+        '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>الطالب</th><th>التسجيل</th><th>آخر دخول</th><th>الاشتراكات النشطة</th><th>إجراءات</th></tr></thead><tbody>' +
+        users.map(function (u) {
+          var subs = (u.subs || []).map(function (s) { return '<span class="sub-chip">' + esc(cname(s.course_id)) + ' حتى ' + date(s.ends_at) + (s.source === "manual" ? ' · يدوي' : '') + '<button type="button" title="إلغاء الاشتراك" aria-label="إلغاء اشتراك ' + esc(cname(s.course_id)) + '" data-rev="' + esc(u.id) + '" data-c="' + esc(s.course_id) + '">×</button></span>'; }).join("");
+          return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
+            '<td class="nw">' + date(u.created_at) + '</td><td class="nw">' + date(u.last_sign_in_at, true) + '</td><td>' + (subs || '<span class="muted">لا يوجد</span>') + '</td>' +
+            '<td><div class="acts">' + (u.id === me ? '' : u.approval === "pending" ? '<button type="button" class="btn btn-primary btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button><button type="button" class="btn btn-danger btn-sm" data-ap="' + esc(u.id) + '" data-v="rejected">رفض</button>' : u.approval === "rejected" ? '<button type="button" class="btn btn-ghost btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button>' : '') +
+            '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' + (u.id === me ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
+            '<div class="grant" id="gr-' + esc(u.id) + '" hidden><select class="select" aria-label="المقرر">' + opts + '</select><input class="input" type="number" min="1" max="3660" value="30" aria-label="عدد الأيام"> <span class="muted">يوم</span><input class="input" style="width:10em" placeholder="ملاحظة (اختياري)" aria-label="ملاحظة"><button type="button" class="btn btn-primary btn-sm" data-go="' + esc(u.id) + '">منح</button></div></td></tr>';
+        }).join("") + '</tbody></table></div></section>';
+      var b = body(html);
+      function msg(t, ok) { var m = document.getElementById("ad-um"); m.hidden = false; m.className = "ad-msg " + (ok ? "ok" : "bad"); m.textContent = t; }
+      document.getElementById("ad-q").onsubmit = function (e) { e.preventDefault(); qText = document.getElementById("ad-qt").value.trim(); usersTab(); };
+      b.querySelectorAll("[data-gr]").forEach(function (x) { x.onclick = function () { var g = document.getElementById("gr-" + x.dataset.gr); g.hidden = !g.hidden; }; });
+      b.querySelectorAll("[data-go]").forEach(function (x) { x.onclick = function () {
+        var g = document.getElementById("gr-" + x.dataset.go), course = g.querySelector("select").value, days = parseInt(g.querySelectorAll("input")[0].value, 10), note = g.querySelectorAll("input")[1].value;
+        if (!(days >= 1 && days <= 3660)) return msg("عدد الأيام من 1 إلى 3660.", false);
+        x.disabled = true;
+        call("admin_grant", { p_user: x.dataset.go, p_course: course, p_days: days, p_note: note }).then(function (end) { usersTab(); setTimeout(function () { msg("✓ مُنح اشتراك " + cname(course) + " حتى " + date(end) + ".", true); }, 300); }, function (e) { x.disabled = false; msg(rpcErr(e), false); });
+      }; });
+      b.querySelectorAll("[data-rev]").forEach(function (x) { x.onclick = function () {
+        confirmBtn(x, "تأكيد؟", function () { call("admin_revoke", { p_user: x.dataset.rev, p_course: x.dataset.c }).then(function () { usersTab(); }, function (e) { msg(rpcErr(e), false); }); });
+      }; });
+      b.querySelectorAll("[data-ap]").forEach(function (x) { x.onclick = function () {
+        var v = x.dataset.v, run = function () { x.disabled = true; call("admin_set_approval", { p_user: x.dataset.ap, p_approval: v }).then(function () { usersTab(); }, function (e) { x.disabled = false; msg(rpcErr(e), false); }); };
+        if (v === "rejected") confirmBtn(x, "تأكيد الرفض", run); else run();
+      }; });
+      b.querySelectorAll("[data-blk]").forEach(function (x) { x.onclick = function () {
+        var v = x.dataset.v === "true";
+        var run = function () { call("admin_set_blocked", { p_user: x.dataset.blk, p_blocked: v }).then(function () { usersTab(); }, function (e) { x.disabled = false; msg(rpcErr(e), false); }); };
+        if (v) confirmBtn(x, "اضغط للتأكيد", run); else { x.disabled = true; run(); }
+      }; });
+    }, fail);
+  }
+
+  /* ---------- courses and prices ---------- */
+  function coursesTab() {
+    db.from("courses").select("id,name_ar,price_halalas,is_paid,sort").order("sort").then(function (r) {
+      if (r.error) return fail(r.error);
+      courses = r.data;
+      var b = body('<section class="card ad-sec"><h2>المقررات والأسعار</h2><p class="muted" style="font-size:13px">«مدفوع» يعني أن المقرر يحتاج اشتراكًا (الدرس الأول من كل فصل يبقى مجانيًا). إذا ألغيت «مدفوع» يُفتح المقرر لكل المسجّلين. السعر لشهر واحد، والحد الأدنى عند ميسّر 1.00 ريال. تغيير السعر يطبَّق على المدفوعات الجديدة فقط.</p>' +
+        courses.map(function (c) { return '<div class="crs" data-id="' + esc(c.id) + '"><input class="input" value="' + esc(c.name_ar) + '" aria-label="اسم المقرر" maxlength="80"><input class="input ltr" type="number" step="0.01" min="1" value="' + sar(c.price_halalas) + '" aria-label="السعر بالريال"><label><input type="checkbox"' + (c.is_paid ? " checked" : "") + '> مدفوع</label><button type="button" class="btn btn-ghost btn-sm">احفظ</button></div>'; }).join("") +
+        '<p class="ad-msg" id="ad-cm" hidden></p></section>');
+      b.querySelectorAll(".crs").forEach(function (row) {
+        row.querySelector("button").onclick = function () {
+          var ins = row.querySelectorAll("input"), name = ins[0].value.trim(), price = Math.round(parseFloat(ins[1].value) * 100), paid = ins[2].checked, m = document.getElementById("ad-cm");
+          m.hidden = false;
+          if (name.length < 2) { m.className = "ad-msg bad"; m.textContent = "اكتب اسم المقرر."; return; }
+          if (!(price >= 100)) { m.className = "ad-msg bad"; m.textContent = "السعر 1.00 ريال على الأقل."; return; }
+          db.from("courses").update({ name_ar: name, price_halalas: price, is_paid: paid, updated_at: new Date().toISOString() }).eq("id", row.dataset.id).select().then(function (r2) {
+            if (r2.error || !r2.data || !r2.data.length) { m.className = "ad-msg bad"; m.textContent = "تعذّر الحفظ."; return; }
+            m.className = "ad-msg ok"; m.textContent = "✓ حُفظ " + name + ": " + sar(price) + " ريال" + (paid ? "" : " (مفتوح مجانًا)") + ".";
+            C.reloadAccess();
+          });
+        };
+      });
+    });
+  }
+
+  /* ---------- payments ---------- */
+  function paymentsTab() {
+    Promise.all([db.from("payments").select("id,user_id,course_id,amount,currency,live,created_at").order("created_at", { ascending: false }).limit(300), users.length ? Promise.resolve(users) : call("admin_users", { p_q: "" })]).then(function (x) {
+      var r = x[0]; if (r.error) return fail(r.error);
+      if (!users.length) users = x[1] || [];
+      var who = {}; users.forEach(function (u) { who[u.id] = u; });
+      var rows = r.data || [];
+      body('<section class="card ad-sec"><h2>المدفوعات المؤكدة</h2><p class="muted" style="font-size:13px">تظهر هنا العمليات التي تحقق منها الخادم عند ميسّر وفعّلت اشتراكًا. للاسترجاع (Refund) استخدم لوحة ميسّر ثم ألغِ الاشتراك من تبويب المستخدمين.</p>' +
+        (rows.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>التاريخ</th><th>الطالب</th><th>المقرر</th><th>المبلغ</th><th>النوع</th><th>رقم العملية</th></tr></thead><tbody>' +
+          rows.map(function (p) { var u = who[p.user_id]; return '<tr><td class="nw">' + date(p.created_at, true) + '</td><td>' + esc(u ? (u.display_name || u.email) : p.user_id.slice(0, 8)) + (u ? '<br><span class="ltr muted">' + esc(u.email) + '</span>' : '') + '</td><td>' + esc(cname(p.course_id)) + '</td><td class="nw ltr">' + sar(p.amount) + ' ' + esc(p.currency) + '</td><td>' + (p.live ? '<span class="tag">حقيقي</span>' : '<span class="tag warn">تجريبي</span>') + '</td><td class="ltr nw">' + esc(p.id) + '</td></tr>'; }).join("") +
+          '</tbody></table></div>' : '<p class="muted">لا توجد مدفوعات بعد.</p>') + '</section>');
+    }, fail);
+  }
+
+  /* ---------- announcements ---------- */
+  function annTab() {
+    db.from("announcements").select("id,body,active,created_at").order("created_at", { ascending: false }).then(function (r) {
+      if (r.error) return fail(r.error);
+      var b = body('<section class="card ad-sec"><h2>إعلان جديد</h2><p class="muted" style="font-size:13px">يظهر الإعلان النشط أعلى كل صفحة لكل الطلاب المسجّلين، ويستطيع الطالب إخفاءه.</p><form id="ad-af" style="display:grid;gap:10px"><textarea class="input" id="ad-at" maxlength="500" placeholder="مثال: اختبار المعمل العملي يوم الأحد. راجعوا Lab#4 و Lab#5." required></textarea><div><button class="btn btn-primary btn-sm" type="submit">انشر</button></div></form><p class="ad-msg" id="ad-am" hidden></p></section>' +
+        '<section class="card ad-sec"><h2>الإعلانات</h2>' + ((r.data || []).map(function (a) { return '<div class="ann"><p>' + esc(a.body) + '<br><span class="muted" style="font-size:12.5px">' + date(a.created_at, true) + ' · ' + (a.active ? "نشط" : "مخفي") + '</span></p><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-tg="' + a.id + '" data-v="' + (!a.active) + '">' + (a.active ? "إخفاء" : "إظهار") + '</button><button type="button" class="btn btn-danger btn-sm" data-del="' + a.id + '">حذف</button></div></div>'; }).join("") || '<p class="muted">لا توجد إعلانات.</p>') + '</section>');
+      document.getElementById("ad-af").onsubmit = function (e) {
+        e.preventDefault(); var t = document.getElementById("ad-at").value.trim(); if (!t) return;
+        db.from("announcements").insert({ body: t }).then(function (r2) { if (r2.error) { var m = document.getElementById("ad-am"); m.hidden = false; m.className = "ad-msg bad"; m.textContent = "تعذّر النشر."; return; } annTab(); });
+      };
+      b.querySelectorAll("[data-tg]").forEach(function (x) { x.onclick = function () { x.disabled = true; db.from("announcements").update({ active: x.dataset.v === "true" }).eq("id", +x.dataset.tg).then(annTab); }; });
+      b.querySelectorAll("[data-del]").forEach(function (x) { x.onclick = function () { confirmBtn(x, "تأكيد الحذف", function () { db.from("announcements").delete().eq("id", +x.dataset.del).then(annTab); }); }; });
+    });
+  }
+
+  if (!C.configured()) { root.innerHTML = '<p class="ad-msg bad">الحسابات غير مفعّلة في هذه النسخة.</p>'; return; }
+  C.ready().then(function (client) {
+    var a = C.access();
+    if (!client || !a) return;
+    if (!a.admin) { root.innerHTML = '<section class="card cv-lock"><h2>هذه الصفحة لمدير المنصة فقط</h2><p>إذا كنت المدير فادخل ببريد الإدارة بعد تأكيده.</p><div class="cv-lock-cta"><a class="btn btn-ghost" href="dashboard.html">لوحة الطالب</a></div></section>'; return; }
+    db = client; courses = a.courses || [];
+    show();
+  });
+})();
+</script>
+</body>
+</html>

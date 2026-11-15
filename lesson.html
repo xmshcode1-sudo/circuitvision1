@@ -258,6 +258,22 @@
       return '<a class="ch-tab' + (x.id === it.id ? ' cur' : '') + (d.lessons[x.id] ? ' done' : '') + '" href="#' + x.id + '"' + (x.id === it.id ? ' aria-current="page"' : '') + '><span class="n">' + (d.lessons[x.id] ? '✓' : i + 1) + '</span><span class="t">' + x.data.ar + '</span></a>';
     }).join("");
 
+    // subscriptions: the first lesson of each chapter is free, the rest need the course subscription
+    var C = CV.cloud;
+    if (C && C.configured()) tabs = tabs.replace(/<a class="ch-tab([^"]*)" href="#([^"]+)"([^>]*)><span class="n">([^<]*)<\/span><span class="t">/g, function (m0, cls, lid, rest, n) {
+      return C.canLesson(lid) ? m0 : '<a class="ch-tab' + cls + '" href="#' + lid + '"' + rest + '><span class="n" aria-label="مقفل">🔒</span><span class="t">';
+    });
+    if (C && !C.canLesson(it.id)) {
+      root.innerHTML = '<div style="display:grid; gap:16px">' +
+        '<nav class="crumbs" aria-label="المسار"><a href="dashboard.html">المقررات</a><span>›</span><span class="ltr">' + it.course.code + '</span><span>›</span><span>' + it.chapter.ar + '</span></nav>' +
+        '<nav class="chaps" aria-label="فصول ' + it.course.code + '">' + chips + '</nav>' +
+        '<div class="ch-tabs" aria-label="دروس الفصل">' + tabs + '</div>' +
+        '<header class="l-head"><span class="eyebrow">الدرس ' + (it.index + 1) + ' من ' + chapterLessons.length + ' · ' + it.chapter.ar + '</span><h1>' + L.ar + '</h1><span class="en ltr">' + L.en + '</span></header>' +
+        C.lockHtml(it.course.id, "هذا الدرس") + '</div>';
+      window.scrollTo(0, 0);
+      return;
+    }
+
     var order = ["concept", "diagram", "terms", "laws", "when", "example"];
     var byId = {}; L.sections.forEach(function (s) { byId[s.id] = s; });
     var body = "";
@@ -404,6 +420,7 @@
   });
   window.addEventListener("hashchange", render);
   render();
+  if (CV.cloud && CV.cloud.configured()) CV.cloud.ready().then(function () { if (CV.cloud.access()) render(); });
 })();
 </script>
 <script src="calc.js"></script>

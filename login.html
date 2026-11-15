@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الدخول — CircuitVision</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .au-page { min-height: 100vh; display: grid; place-items: center; padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .au-box { width: min(440px, 100%); display: grid; gap: 18px; }
+  .au-box > .logo { justify-self: center; }
+  .au-card { padding: 24px; display: grid; gap: 16px; }
+  .au-card h1 { font-size: 22px; }
+  .au-card .lead { color: var(--fg-2); font-size: 14px; }
+  .au-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 11px; background: var(--bg-2); border: 1px solid var(--line-soft); }
+  .au-tabs button { padding: 9px; border-radius: 8px; border: 0; background: transparent; color: var(--fg-2); font: inherit; font-weight: 600; cursor: pointer; }
+  .au-tabs button[aria-selected="true"] { background: var(--blue); color: #fff; }
+  form { display: grid; gap: 14px; }
+  .au-err { color: #ff8a9a; font-size: 13.5px; }
+  .au-ok { color: var(--ok); font-size: 13.5px; }
+  .au-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+  .au-row button, .au-link { background: none; border: 0; padding: 0; color: var(--glow); font: inherit; cursor: pointer; text-decoration: underline; }
+  .au-row button:disabled { color: var(--fg-3); text-decoration: none; cursor: default; }
+  .au-code { font-family: var(--font-mono); font-size: 24px; letter-spacing: .35em; text-align: center; direction: ltr; }
+  .au-foot { text-align: center; font-size: 12.5px; color: var(--fg-3); }
+  .ltr-in { direction: ltr; text-align: left; }
+  .btn-wide { justify-content: center; }
+</style>
+</head>
+<body>
+<main class="au-page">
+  <div class="au-box">
+    <a class="logo" href="index.html" aria-label="CircuitVision الرئيسية">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <section class="card au-card" id="au" aria-live="polite"></section>
+    <p class="au-foot">بريدك يُستخدم لتسجيل الدخول فقط.</p>
+  </div>
+</main>
+<script src="store.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script>
+(function () {
+  "use strict";
+  var C = CV.cloud, box = document.getElementById("au");
+  var q = new URLSearchParams(location.search);
+  /* only a page of this site may follow the login */
+  var next = q.get("next") || "dashboard.html";
+  if (!/^[a-z0-9-]+\.html([?#][^\s]*)?$/i.test(next) || /^login\.html/i.test(next)) next = "dashboard.html";
+  var state = { mode: q.get("mode") === "up" ? "up" : "in", email: "" };
+  function esc(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function go() { location.replace(next); }
+
+  function fail(m) { var e = $("au-err"); e.textContent = m; e.hidden = false; var b = box.querySelector("[type=submit]"); if (b) b.disabled = false; }
+  function busy() { var e = $("au-err"); e.hidden = true; var b = box.querySelector("[type=submit]"); if (b) b.disabled = true; }
+  function okMsg(m) { var e = $("au-okm"); if (e) { e.textContent = m; e.hidden = !m; } }
+
+  function viewMain() {
+    var up = state.mode === "up";
+    box.innerHTML =
+      '<div><h1>' + (up ? "أنشئ حسابك" : "سجّل الدخول") + '</h1><p class="lead">' + (up ? "حساب واحد يحفظ تقدمك في كل الأجهزة." : "ادخل لتكمل من حيث توقفت.") + '</p></div>' +
+      '<div class="au-tabs" role="tablist"><button type="button" role="tab" data-m="in" aria-selected="' + !up + '">دخول</button><button type="button" role="tab" data-m="up" aria-selected="' + up + '">حساب جديد</button></div>' +
+      '<form id="f" novalidate>' +
+      (up ? '<div class="field"><label for="nm">الاسم</label><input class="input" id="nm" autocomplete="name" maxlength="40" required></div>' : '') +
+      '<div class="field"><label for="em">البريد الإلكتروني</label><input class="input ltr-in" id="em" type="email" inputmode="email" autocomplete="email" required value="' + esc(state.email) + '"></div>' +
+      '<div class="field"><label for="pw">كلمة المرور</label><input class="input ltr-in" id="pw" type="password" autocomplete="' + (up ? "new-password" : "current-password") + '" minlength="8" required>' + (up ? '<span class="note">8 أحرف على الأقل.</span>' : '') + '</div>' +
+      '<p class="au-err" id="au-err" role="alert" hidden></p>' +
+      '<button type="submit" class="btn btn-primary btn-wide">' + (up ? "أنشئ الحساب" : "دخول") + '</button>' +
+      (up ? '' : '<p class="note">نسيت كلمة المرور؟ تواصل مع إدارة المنصة.</p>') +
+      '</form>';
+    box.querySelectorAll("[data-m]").forEach(function (b) { b.onclick = function () { state.mode = b.dataset.m; state.email = $("em").value.trim(); viewMain(); }; });
+    if ($("forgot")) $("forgot").onclick = function () { state.email = $("em").value.trim(); viewForgot(); };
+    $("f").onsubmit = function (e) {
+      e.preventDefault();
+      var em = $("em").value.trim().toLowerCase(), pw = $("pw").value, nm = up ? $("nm").value.trim() : "";
+      if (up && (nm.length < 2 || nm.length > 40)) return fail("اكتب اسمك (من 2 إلى 40 حرفًا).");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail("اكتب بريدًا إلكترونيًا صحيحًا.");
+      if (up && pw.length < 8) return fail("كلمة المرور قصيرة: 8 أحرف على الأقل.");
+      if (!pw) return fail("اكتب كلمة المرور.");
+      state.email = em; busy();
+      if (up) C.signUp(em, pw, nm).then(function (r) { if (r && r.needsConfirm) viewCode("signup"); else go(); }, function (x) { fail(x.message); });
+      else C.signIn(em, pw).then(go, function (x) {
+        if (/أكّد بريدك/.test(x.message)) { C.resendSignup(em).then(function () {}, function () {}); viewCode("signup", "بريدك لم يُؤكَّد بعد. أرسلنا لك كودًا جديدًا."); }
+        else fail(x.message);
+      });
+    };
+    (up ? $("nm") : $("em")).focus();
+  }
+
+  function codeField() { return '<div class="field"><label for="cd">كود التحقق</label><input class="input au-code" id="cd" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></div>'; }
+  function viewCode(kind, note) {
+    box.innerHTML = '<div><h1>أدخل كود التحقق</h1><p class="lead">' + esc(note || "أرسلنا كودًا إلى") + ' <b class="ltr">' + esc(state.email) + '</b>. افحص صندوق الوارد والرسائل غير المرغوبة (Spam).</p></div>' +
+      '<form id="f" novalidate>' + codeField() + '<p class="au-err" id="au-err" role="alert" hidden></p><p class="au-ok" id="au-okm" hidden></p>' +
+      '<button type="submit" class="btn btn-primary btn-wide">تحقق وادخل</button>' +
+      '<div class="au-row"><button type="button" id="resend">أرسل كودًا جديدًا</button><button type="button" id="back">غيّر البريد</button></div></form>';
+    $("back").onclick = function () { state.mode = "up"; viewMain(); };
+    $("resend").onclick = function () {
+      var b = this; b.disabled = true; okMsg("");
+      C.resendSignup(state.email).then(function () { okMsg("أرسلنا كودًا جديدًا."); cooldown(b); }, function (x) { fail(x.message); b.disabled = false; });
+    };
+    $("f").onsubmit = function (e) {
+      e.preventDefault();
+      var code = $("cd").value.replace(/\D/g, "");
+      if (code.length < 6) return fail("الكود أرقام فقط (6 أرقام أو أكثر كما وصلك).");
+      busy();
+      C.verifySignup(state.email, code).then(go, function (x) { fail(x.message); });
+    };
+    $("cd").focus();
+  }
+  function cooldown(b) { var n = 60; b.textContent = "أرسل كودًا جديدًا (" + n + ")"; var t = setInterval(function () { n--; if (n <= 0) { clearInterval(t); b.disabled = false; b.textContent = "أرسل كودًا جديدًا"; } else b.textContent = "أرسل كودًا جديدًا (" + n + ")"; }, 1000); }
+
+  function viewForgot() {
+    box.innerHTML = '<div><h1>استعادة كلمة المرور</h1><p class="lead">نرسل كودًا إلى بريدك، ثم تختار كلمة مرور جديدة.</p></div>' +
+      '<form id="f" novalidate><div class="field"><label for="em">البريد الإلكتروني</label><input class="input ltr-in" id="em" type="email" inputmode="email" autocomplete="email" required value="' + esc(state.email) + '"></div>' +
+      '<p class="au-err" id="au-err" role="alert" hidden></p><button type="submit" class="btn btn-primary btn-wide">أرسل الكود</button>' +
+      '<div class="au-row"><button type="button" id="back">رجوع للدخول</button></div></form>';
+    $("back").onclick = function () { state.mode = "in"; viewMain(); };
+    $("f").onsubmit = function (e) {
+      e.preventDefault();
+      var em = $("em").value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail("اكتب بريدًا إلكترونيًا صحيحًا.");
+      state.email = em; busy();
+      C.sendReset(em).then(viewReset, function (x) { fail(x.message); });
+    };
+    $("em").focus();
+  }
+  function viewReset() {
+    box.innerHTML = '<div><h1>كلمة مرور جديدة</h1><p class="lead">إذا كان <b class="ltr">' + esc(state.email) + '</b> مسجّلًا عندنا فقد وصلك كود. اكتبه هنا مع كلمة المرور الجديدة.</p></div>' +
+      '<form id="f" novalidate>' + codeField() + '<div class="field"><label for="pw">كلمة المرور الجديدة</label><input class="input ltr-in" id="pw" type="password" autocomplete="new-password" minlength="8" required><span class="note">8 أحرف على الأقل.</span></div>' +
+      '<p class="au-err" id="au-err" role="alert" hidden></p><button type="submit" class="btn btn-primary btn-wide">احفظ وادخل</button>' +
+      '<div class="au-row"><button type="button" id="back">رجوع للدخول</button></div></form>';
+    $("back").onclick = function () { state.mode = "in"; viewMain(); };
+    $("f").onsubmit = function (e) {
+      e.preventDefault();
+      var code = $("cd").value.replace(/\D/g, ""), pw = $("pw").value;
+      if (code.length < 6) return fail("اكتب الكود كما وصلك.");
+      if (pw.length < 8) return fail("كلمة المرور قصيرة: 8 أحرف على الأقل.");
+      busy();
+      C.verifyReset(state.email, code, pw).then(go, function (x) { fail(x.message); });
+    };
+    $("cd").focus();
+  }
+
+  if (!C.configured()) { box.innerHTML = '<h1>الحسابات غير مفعّلة</h1><p class="lead">هذه النسخة بلا خادم حسابات. <a class="au-link" href="dashboard.html">ادخل للمنصة</a></p>'; return; }
+  box.innerHTML = '<p class="lead">جارٍ التحميل…</p>';
+  C.ready().then(function (c) {
+    if (!c) { box.innerHTML = '<h1>تعذّر الاتصال</h1><p class="lead">تحقق من الإنترنت ثم <a class="au-link" href="login.html">أعد المحاولة</a>.</p>'; return; }
+    if (C.user()) return go();
+    viewMain();
+  });
+})();
+</script>
+</body>
+</html>

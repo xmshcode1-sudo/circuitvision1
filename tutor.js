@@ -33,7 +33,7 @@
       inp.value = ""; grow(); hist.push({ role: "user", text: t }); keep(); draw(true);
       var btn = form.querySelector("button"); btn.disabled = true;
       var c = getCtx();
-      fetch("/api/tutor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: hist.filter(function (m) { return m.role !== "sys"; }).slice(-12), context: { title: c.title, problem: c.problem, facts: c.facts, attempt: c.attempt } }) })
+      (CV.cloud ? CV.cloud.authFetch : fetch)("/api/tutor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: hist.filter(function (m) { return m.role !== "sys"; }).slice(-12), context: { title: c.title, problem: c.problem, facts: c.facts, attempt: c.attempt } }) })
         .then(function (r) { return r.json().catch(function () { return { error: r.status === 404 ? "nosrv" : "bad" }; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
         .then(function (x) {
           if (x.ok && x.j.reply) hist.push({ role: "tutor", text: x.j.reply });

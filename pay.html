@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>اشتراكاتي — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .main { min-width: 0; padding-block: 22px 56px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; align-content: start; max-width: 1000px; width: 100%; }
+  .py-head h1 { font-size: clamp(24px, 3vw, 32px); }
+  .py-head p { color: var(--fg-2); max-width: 64ch; }
+  .py-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .py-card { padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .py-card h2 { font-size: 18px; }
+  .py-price { font-family: var(--font-display); font-size: 30px; font-weight: 700; direction: ltr; justify-self: start; }
+  .py-price small { font-size: 14px; color: var(--fg-3); font-weight: 400; }
+  .py-card ul { margin: 0; padding-inline-start: 18px; color: var(--fg-2); font-size: 14px; display: grid; gap: 4px; }
+  .py-state { font-size: 13.5px; padding: 8px 10px; border-radius: 9px; background: var(--muted-soft); color: var(--fg-2); }
+  .py-state.on { background: var(--ok-soft); color: var(--ok); }
+  .py-pay { padding: 22px; display: grid; gap: 14px; }
+  .py-pay h2 { font-size: 18px; }
+  .py-note { font-size: 13px; color: var(--fg-3); }
+  .py-msg { padding: 14px 16px; border-radius: var(--r-sm); font-size: 14.5px; }
+  .py-msg.ok { background: var(--ok-soft); border: 1px solid var(--ok); }
+  .py-msg.bad { background: var(--orange-soft); border: 1px solid var(--orange); }
+  .py-msg.busy { background: var(--blue-soft); border: 1px solid var(--blue); }
+  .py-hist { padding: 18px; display: grid; gap: 10px; }
+  .py-hist h2 { font-size: 16px; }
+  .tbl-wrap { overflow-x: auto; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 460px; }
+  .tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); text-align: start; white-space: nowrap; }
+  .tbl th { color: var(--fg-3); font-weight: 600; }
+  .mysr-form { direction: ltr; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main" id="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div id="py-root" style="display:grid;gap:18px"></div>
+  </main>
+</div>
+<script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script>
+(function () {
+  "use strict";
+  CV.shell.init({ active: "" });
+  var C = CV.cloud, cfg = window.CV_CONFIG || {}, root = document.getElementById("py-root");
+  var q = new URLSearchParams(location.search);
+  var MPF = "https://cdn.moyasar.com/mpf/1.15.0/";
+  var WHAT = {
+    "circuits-1": ["كل دروس الفصول الستة مع التمارين و Smart Feedback", "مولّد التمارين وبنك الأسئلة والتحديات", "المعمل الذكي وأكاديمية المشاريع", "المعلم الذكي والتعرف على الكتابة اليدوية"],
+    "logic-design": ["تجارب المعمل الست (Lab#1 إلى Lab#6) مع الشرح خطوة بخطوة", "جهاز IC Trainer للتجريب الحر", "فحص التوصيل وجداول الحقيقة تلقائيًا"]
+  };
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function date(s) { try { return new Date(s).toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", { year: "numeric", month: "long", day: "numeric" }); } catch (e) { return String(s).slice(0, 10); } }
+  function sar(h) { return (h / 100).toFixed(2); }
+
+  function render(msg) {
+    var a = C.access() || { courses: [], subs: [] };
+    var sale = (a.courses || []).filter(function (c) { return c.is_paid; });
+    var free = (a.courses || []).filter(function (c) { return !c.is_paid; });
+    var cards = sale.map(function (c) {
+      var s = C.sub(c.id), adm = a.admin;
+      return '<article class="card py-card"><h2>' + esc(c.name_ar) + '</h2><span class="py-price">' + sar(c.price_halalas) + ' <small>SAR / شهر</small></span>' +
+        (WHAT[c.id] ? '<ul>' + WHAT[c.id].map(function (w) { return "<li>" + w + "</li>"; }).join("") + '</ul>' : '') +
+        (s ? '<span class="py-state on">✓ مشترك حتى ' + date(s.ends_at) + '</span>' : adm ? '<span class="py-state on">✓ مفتوح لك كمدير للمنصة</span>' : '<span class="py-state">غير مشترك. ' + C.freeNote(c.id) + '</span>') +
+        '<button type="button" class="btn ' + (s ? "btn-ghost" : "btn-primary") + '" data-buy="' + esc(c.id) + '">' + (s ? "مدّد شهرًا إضافيًا" : "اشترك الآن") + '</button></article>';
+    }).join("");
+    root.innerHTML =
+      '<header class="py-head"><h1>اشتراكاتي</h1><p>الاشتراك لكل مقرر على حدة، لمدة شهر من تاريخ الدفع، ولا يتجدد تلقائيًا ولا يُخصم منك شيء بعده. تاريخ انتهاء كل اشتراك يظهر هنا، وتمدده متى شئت. إذا مدّدت قبل الانتهاء يُضاف الشهر بعد نهاية اشتراكك الحالي.</p></header>' +
+      (msg || "") + '<div id="py-pay"></div>' +
+      '<div class="py-grid">' + cards + '</div>' +
+      (free.length ? '<p class="py-note">مقررات مجانية الآن لكل المسجّلين: ' + free.map(function (c) { return esc(c.name_ar); }).join("، ") + ' (محتواها قيد الإعداد).</p>' : '') +
+      '<section class="card py-hist" id="py-hist"><h2>سجل المدفوعات</h2><p class="py-note">جارٍ التحميل…</p></section>';
+    root.querySelectorAll("[data-buy]").forEach(function (b) { b.onclick = function () { openPay(b.dataset.buy); }; });
+    loadHistory();
+  }
+
+  function loadHistory() {
+    var c = C.client(), u = C.user(); if (!c || !u) return;
+    c.from("payments").select("id,course_id,amount,currency,created_at").eq("user_id", u.id).order("created_at", { ascending: false }).limit(50).then(function (r) {
+      var box = document.getElementById("py-hist"); if (!box) return;
+      var rows = (r && r.data) || [];
+      box.innerHTML = '<h2>سجل المدفوعات</h2>' + (rows.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>التاريخ</th><th>المقرر</th><th>المبلغ</th><th>رقم العملية</th></tr></thead><tbody>' +
+        rows.map(function (p) { var co = C.course(p.course_id); return '<tr><td>' + date(p.created_at) + '</td><td>' + esc(co ? co.name_ar : p.course_id) + '</td><td class="ltr">' + sar(p.amount) + ' ' + esc(p.currency) + '</td><td class="ltr">' + esc(p.id) + '</td></tr>'; }).join("") +
+        '</tbody></table></div>' : '<p class="py-note">لا توجد مدفوعات بعد.</p>');
+    });
+  }
+
+  function load(src, css) {
+    return new Promise(function (res, rej) {
+      if (css) { var l = document.createElement("link"); l.rel = "stylesheet"; l.href = src; document.head.appendChild(l); return res(); }
+      if (window.Moyasar) return res();
+      var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  function openPay(id) {
+    var c = C.course(id), box = document.getElementById("py-pay"); if (!c || !box) return;
+    if (!cfg.MOYASAR_PUBLISHABLE_KEY) {
+      box.innerHTML = '<div class="py-msg bad"><b>الدفع الإلكتروني قيد الإعداد.</b> لم يُفعَّل حساب ميسّر في المنصة بعد. إذا دفعت بطريقة أخرى فسيفعّل المدير اشتراكك يدويًا.</div>';
+      box.scrollIntoView({ block: "center" }); return;
+    }
+    box.innerHTML = '<section class="card py-pay"><h2>الدفع: ' + esc(c.name_ar) + ' · <span class="ltr">' + sar(c.price_halalas) + ' SAR</span></h2>' +
+      '<p class="py-note">الدفع عبر ميسّر (Moyasar) ببطاقة مدى أو فيزا أو ماستركارد. بيانات البطاقة تُرسل مباشرة إلى ميسّر ولا تمر على خوادمنا. Apple Pay و STC Pay قيد الإعداد.</p>' +
+      '<div class="mysr-form"></div><button type="button" class="btn btn-ghost btn-sm" id="py-cancel">إلغاء</button></section>';
+    document.getElementById("py-cancel").onclick = function () { box.innerHTML = ""; };
+    Promise.all([load(MPF + "moyasar.css", true), load(MPF + "moyasar.js")]).then(function () {
+      window.Moyasar.init({
+        element: ".mysr-form",
+        amount: c.price_halalas,
+        currency: "SAR",
+        description: "CircuitVision · " + c.name_ar + " · شهر",
+        publishable_api_key: cfg.MOYASAR_PUBLISHABLE_KEY,
+        callback_url: location.origin + location.pathname + "?course=" + encodeURIComponent(c.id),
+        methods: cfg.MOYASAR_METHODS || ["creditcard"],
+        supported_networks: ["mada", "visa", "mastercard"],
+        language: "ar",
+        fixed_width: false,
+        metadata: { user_id: C.user().id, course_id: c.id }
+      });
+    }, function () { box.innerHTML = '<div class="py-msg bad">تعذّر تحميل نموذج الدفع من ميسّر. تحقق من الإنترنت وحاول مرة أخرى.</div>'; });
+    box.scrollIntoView({ block: "start" });
+  }
+
+  /* back from Moyasar (after 3-D Secure): ?id=…&status=…&message=… */
+  function afterPay(id) {
+    render('<div class="py-msg busy" id="py-res">جارٍ التحقق من عملية الدفع عند ميسّر…</div>');
+    C.authFetch("/api/pay-verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: id }) })
+      .then(function (r) { return r.json().catch(function () { return { error: "تعذّر الوصول لخادم الدفع." }; }).then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        history.replaceState(null, "", location.pathname);
+        if (x.ok && x.j.ok) return C.reloadAccess().then(function () { var co = C.course(x.j.course); render('<div class="py-msg ok"><b>✓ تم الاشتراك.</b> ' + esc(co ? co.name_ar : "") + ' مفتوح لك حتى ' + date(x.j.ends_at) + '.</div>'); });
+        render('<div class="py-msg bad">' + esc(x.j.error || "لم يكتمل الدفع.") + '</div>');
+      }, function () { render('<div class="py-msg bad">تعذّر الوصول لخادم الدفع. إذا خُصم المبلغ فسيُفعَّل اشتراكك تلقائيًا خلال دقائق؛ حدّث الصفحة.</div>'); });
+  }
+
+  if (!C.configured()) { root.innerHTML = '<div class="py-msg bad">الحسابات غير مفعّلة في هذه النسخة، فلا توجد اشتراكات.</div>'; return; }
+  C.ready().then(function () {
+    if (!C.access()) return;
+    var id = q.get("id");
+    if (id) afterPay(id); else render();
+    if (q.get("course") && !id) openPay(q.get("course"));
+  });
+})();
+</script>
+</body>
+</html>

@@ -60,6 +60,10 @@
         return { status: "wrong", type: "unit", why: "الأرقام في حلك صحيحة، لكن قيمتك " + FACTORS[j][1] + " من الصحيحة. هذا يحدث عادة عند نسيان تحويل البادئة (m، k، µ) أو وحدة الزمن (ثانية، دقيقة، ساعة).", hint: "حوّل كل القيم المعطاة إلى الوحدات الأساسية في SI قبل التعويض، ثم اختر وحدة الإجابة بعناية." };
       }
     }
+    if (close(v, ans * 10, tol) || close(v, ans / 10, tol) || close(v, ans * 100, tol) || close(v, ans / 100, tol)) { // the digits are right, the decimal point moved
+      var big = Math.abs(v) > Math.abs(ans), x10 = close(v, ans * 10, tol) || close(v, ans / 10, tol);
+      return { status: "wrong", type: "math", why: "أرقام إجابتك صحيحة لكن الفاصلة العشرية في غير مكانها: قيمتك " + (big ? "أكبر" : "أصغر") + " من الصحيحة " + (x10 ? "بعشر مرات" : "بمئة مرة") + ". غالبًا خطأ في القسمة أو الضرب بقيمة مثل 10 أو 20.", hint: "أعد آخر قسمة أو ضرب بالحاسبة، وانتبه لمكان الفاصلة." };
+    }
     if (close(v, ans, 0.1)) {
       var pct = Math.abs((v - ans) / ans * 100);
       return { status: "wrong", type: "math", why: "إجابتك قريبة من الصحيحة (الفرق حوالي " + (pct < 1 ? pct.toFixed(1) : Math.round(pct)) + "%). الطريقة على الأرجح صحيحة، والخطأ في التقريب أو في عملية حسابية.", hint: "أعد الحساب بدون تقريب في الخطوات الوسيطة، وقرّب النتيجة النهائية فقط." };

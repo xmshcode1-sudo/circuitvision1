@@ -77,8 +77,15 @@
   function route() {
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (trainer) { trainer.destroy(); trainer = null; }
-    if (e) showExp(e); else showIndex();
+    if (e && !free(e)) showLocked(e); else if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
+  }
+  /* subscriptions: Lab#1 is the free sample; the other labs need the Logic Design subscription */
+  function free(e) { return e.n === 1 || !CV.cloud || CV.cloud.can("logic-design"); }
+  function showLocked(e) {
+    document.title = "Lab#" + e.n + ": " + e.en + " — CircuitVision";
+    root.innerHTML = '<div class="lg-head"><span class="code ltr">Lab#' + e.n + ': ' + esc(e.en) + '</span><h1>' + esc(e.title) + '</h1></div>' + CV.cloud.lockHtml("logic-design", "هذه التجربة") +
+      '<p><a class="btn btn-ghost btn-sm" href="#exp1">جرّب Lab#1 مجانًا</a></p>';
   }
   function count(e) { var t = e.tasks.length, d = e.tasks.filter(function (x) { return done(e.id, x.id); }).length; return { t: t, d: d }; }
   function showIndex() {
@@ -86,7 +93,7 @@
     root.innerHTML = '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1>معمل التصميم المنطقي</h1>' +
       '<p>تجارب المعمل الست كما في أوراق القسم. كل تجربة: الهدف والقطع، ثم الشرح خطوة بخطوة، ثم تحلّها بنفسك: تكمل جداولها، وتوصّلها على جهاز IC Trainer مطابق لجهاز المعمل، والموقع يفحص توصيلك بتجربة كل حالات المداخل.</p>' +
       '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بـ Lab#1</a><a class="btn btn-ghost" href="trainer.html">الجهاز للتجريب الحر</a></div></div>' +
-      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + e.n + '</span><div><b class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
+      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + (free(e) ? e.n : "🔒") + '</span><div><b class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
       '<p class="muted small">ما زالت دروس النظرية لمقرر Logic Design قيد الإعداد؛ هذه الصفحة للجزء العملي.</p>';
   }
   function showExp(e) {
@@ -270,5 +277,6 @@
   function lv(v) { return v === null || v === undefined ? "عائم" : v; }
 
   window.addEventListener("hashchange", route);
+  if (CV.cloud && CV.cloud.configured()) CV.cloud.ready().then(function () { if (CV.cloud.access()) route(); });
   route();
 })();

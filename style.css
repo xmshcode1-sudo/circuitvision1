@@ -631,3 +631,18 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .tr-pin td { padding: 2px 8px; border-bottom: 1px solid var(--line-soft); }
 .tr-pin td.ic { background: #1e1f22; width: 34px; border: 0; }
 .tr-pick .small { font-size: 12.5px; }
+
+/* ---------- accounts gate, subscriptions lock, announcements ---------- */
+.cv-gate body { visibility: hidden; }
+.cv-lock { padding: 28px 24px; display: grid; gap: 12px; justify-items: start; max-width: 640px; border-color: var(--orange); background: linear-gradient(180deg, var(--orange-soft), transparent 70%), var(--surface); }
+.cv-lock h2 { font-size: 20px; }
+.cv-lock p { color: var(--fg-2); max-width: 60ch; }
+.cv-lock-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--orange-soft); color: var(--orange); }
+.cv-lock-ic svg { width: 24px; height: 24px; }
+.cv-lock-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+.cv-screen { position: fixed; inset: 0; z-index: 300; overflow-y: auto; background: var(--bg); min-height: 100vh; display: grid; place-items: center; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.cv-ann { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; border-radius: var(--r-sm); border: 1px solid var(--blue); background: var(--blue-soft); font-size: 14px; }
+.cv-ann span { min-width: 0; overflow-wrap: anywhere; }
+.cv-acc { display: grid; gap: 2px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.cv-acc .cv-who { max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lock-tag { font-size: 11px; color: var(--orange); }

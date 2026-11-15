@@ -97,7 +97,7 @@
       <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       CircuitVision
     </a>
-    <a class="btn btn-primary btn-sm" href="dashboard.html">ابدأ التعلم <span class="arr">→</span></a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-ghost btn-sm" href="login.html" id="hd-login">تسجيل الدخول</a><a class="btn btn-primary btn-sm" href="login.html?mode=up" id="hd-start">أنشئ حسابك <span class="arr">→</span></a></div>
   </div>
 </header>
 
@@ -110,7 +110,7 @@
         <p class="tagline-en ltr">From Knowing the Laws to Understanding the Circuit.</p>
         <p class="lead">تعلّم المفهوم، جرّبه في معمل افتراضي يحسب النتائج بدقة، واكتشف أين أخطأت ولماذا. CircuitVision تساعدك تفكر كمهندس، لا أن تحفظ القانون فقط.</p>
         <div class="ctas">
-          <a class="btn btn-primary" href="dashboard.html">ابدأ التعلم <span class="arr">→</span></a>
+          <a class="btn btn-primary" href="dashboard.html" id="hero-start">ابدأ التعلم <span class="arr">→</span></a>
           <a class="btn btn-ghost" href="#modules">استكشف الأقسام</a>
         </div>
       </div>
@@ -161,6 +161,13 @@
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="curriculum.js"></script>
+<script>
+  if (CV.cloud && CV.cloud.configured()) CV.cloud.ready().then(function () {
+    if (!CV.cloud.user()) return;
+    var a = document.getElementById("hd-login"), b = document.getElementById("hd-start");
+    if (a) a.remove(); if (b) { b.href = "dashboard.html"; b.innerHTML = 'أكمل التعلم <span class="arr">→</span>'; }
+  });
+</script>
 <script>
 (function () {
   "use strict";

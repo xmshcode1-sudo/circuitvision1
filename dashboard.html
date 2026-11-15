@@ -150,7 +150,7 @@
 <div class="modal-back" id="m-profile" hidden>
   <form class="modal" id="f-profile" novalidate>
     <h3 id="m-profile-title">أهلًا بك في CircuitVision</h3>
-    <p class="note" style="font-size:14px; color:var(--fg-2)">اكتب اسمك لنبدأ. يُحفظ الاسم وتقدمك في هذا المتصفح فقط حتى نضيف الحسابات الحقيقية لاحقًا.</p>
+    <p class="note" style="font-size:14px; color:var(--fg-2)">اكتب اسمك كما تحب أن يظهر في لوحتك.</p>
     <div class="field">
       <label for="in-name">الاسم</label>
       <input class="input" id="in-name" name="name" autocomplete="given-name" maxlength="40" required>
@@ -339,7 +339,11 @@
   /* ---------- Boot ---------- */
   if (!S.storageWorks()) $("storage-banner").hidden = false;
   render();
-  if (!S.get().profile) openProfile(false);
+  var C = CV.cloud;
+  if (C && C.configured()) {
+    /* with accounts the name comes from the account: no local name prompt */
+    C.ready().then(function () { if (C.user() && !S.get().profile) { S.setProfile(C.name() || "طالب"); render(); } if (location.hash === "#prefs") openSettings(); });
+  } else if (!S.get().profile) openProfile(false);
   else if (location.hash === "#prefs") openSettings();
   window.addEventListener("hashchange", function () { if (location.hash === "#prefs" && S.get().profile) openSettings(); });
 })();
