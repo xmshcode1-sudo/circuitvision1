@@ -422,6 +422,12 @@
       level: holeVal,
       chips: function () { return Object.assign({}, S.chips); },
       issues: function () { return R.issues.slice(); },
+      /* switches and LEDs that have at least one wire on them (for checking a build wired to other switches/LEDs) */
+      used: function () {
+        var sw = {}, led = {};
+        S.wires.forEach(function (w) { [w.a, w.b].forEach(function (id) { var h = L.byId[id]; if (!h) return; var m = /^(SW|LED)([a-h])$/.exec(h.g); if (m) (m[1] === "SW" ? sw : led)[m[2]] = 1; }); });
+        return { sw: SW.filter(function (s) { return sw[s]; }), led: SW.filter(function (s) { return led[s]; }) };
+      },
       placeChip: function (sn, id) { if (id) { S.chips[sn] = id; R.ff[sn] = CV.chips.newState(id); } else { delete S.chips[sn]; delete R.ff[sn]; } save(); update(); },
       addWire: function (a, b) { S.wires.push({ a: a, b: b, c: S.wires.length }); },
       reset: function () { S.wires = []; S.chips = {}; R.ff = {}; Object.keys(S.sw).forEach(function (k) { S.sw[k] = 0; }); save(); update(); },

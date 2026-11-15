@@ -209,9 +209,13 @@
   }
   function check(e, t, el) {
     if (t.type === "table") {
-      var bad = 0, empty = 0, all = t.rows;
+      var bad = 0, empty = 0, all = t.rows, fns = [t.answer].concat((t.alts || []).map(function (a) { return a.fn; })), pick = 0;
+      if (fns.length > 1) {   // several correct readings (e.g. DEMUX1 or DEMUX2 of the 74155): grade against the one the student followed
+        var score = fns.map(function (fn) { var s = 0; all.forEach(function (r, i) { fn(r, i, all).forEach(function (w, j) { var f = el.querySelector('[data-r="' + i + '"][data-c="' + (t.nin + j) + '"]'), v = f.tagName === "BUTTON" ? f.textContent : f.value; if (v !== "·" && v !== "" && norm(w) !== norm(v)) s++; }); }); return s; });
+        pick = score.indexOf(Math.min.apply(null, score));
+      }
       all.forEach(function (r, i) {
-        var want = t.answer(r, i, all);
+        var want = fns[pick](r, i, all);
         want.forEach(function (w, j) {
           var col = t.nin + j, f = el.querySelector('[data-r="' + i + '"][data-c="' + col + '"]'), v = f.tagName === "BUTTON" ? f.textContent : f.value;
           if (v === "·" || v === "") { empty++; f.classList.remove("good", "bad"); return; }
@@ -221,7 +225,7 @@
       });
       if (empty) return res(el, false, "باقي " + empty + " خانة فاضية.");
       if (bad) return res(el, false, "فيه " + bad + " خانة خطأ (باللون الأحمر). راجعها" + (t.type === "table" && t.nin <= 4 ? "، أو وصّل الدائرة على الجهاز وجرّب نفس المداخل." : "."));
-      mark(e.id, t.id, 1); return res(el, true, "الجدول صحيح ✓");
+      mark(e.id, t.id, 1); return res(el, true, "الجدول صحيح ✓" + (pick ? " " + esc(t.alts[pick - 1].say) : t.say ? " " + esc(t.say) : ""));
     }
     if (t.type === "expr") {
       var inp = $("[data-x]", el), p;
@@ -266,13 +270,46 @@
       if (el) res(el, true, "تم على الجهاز ✓"); return;
     }
     var ins = t.inputs.map(function (x) { return x[0]; }), rows = trainer.table(ins, outs, t.fn), bad = rows.filter(function (r) { return !r.ok; });
-    if (!bad.length) { mark(e.id, t.id, 1); out.className = "lg-out ok"; out.innerHTML = "توصيلك صحيح ✓ جرّبت كل الحالات (" + rows.length + ") وكلها تطابق."; if (el) res(el, true, "تم على الجهاز ✓"); return; }
+    var okMsg = function (extra) { mark(e.id, t.id, 1); out.className = "lg-out ok"; out.innerHTML = "توصيلك صحيح ✓ جرّبت كل الحالات (" + rows.length + ") وكلها تطابق." + (extra || ""); if (el) res(el, true, "تم على الجهاز ✓"); };
+    if (!bad.length) return okMsg();
+    if (!t.probes) {
+      var fl = flexMatch(t);
+      if (fl) return okMsg(" " + (fl.say ? esc(fl.say) + " " : "") + (fl.moved ? "وصّلتها على مفاتيح أو LED غير المقترحة، ولا مشكلة: " + fl.map + "." : ""));
+    }
     var floating = bad.some(function (r) { return r.got.some(function (v) { return v === null; }); });
     out.className = "lg-out bad";
     out.innerHTML = "<b>" + bad.length + " من " + rows.length + " حالة لا تطابق.</b>" + (floating ? " فيه مخرج غير موصول (عائم): تأكد أن الـ LED موصول بمخرج البوابة." : "") + "<ul>" + bad.slice(0, 6).map(function (r) {
       var diff = r.want.map(function (w, j) { return w !== null && w !== r.got[j] ? names[j] + ": المتوقع " + w + " والموجود " + lv(r.got[j]) : null; }).filter(Boolean);
       return "<li>عند " + t.inputs.map(function (x, j) { return x[1] + " = " + r.in[j]; }).join("، ") + " ← " + diff.join("؛ ") + "</li>";
     }).join("") + "</ul>" + (bad.length > 6 ? "<p class='muted small'>و" + (bad.length - 6) + " حالات أخرى.</p>" : "");
+  }
+  /* the circuit may be right but on other switches/LEDs than the suggested ones, or follow another correct reading (t.alts):
+     try every way the wired switches can carry the inputs, and look for an LED that shows each output */
+  function flexMatch(t) {
+    var u = trainer.used(), k = t.inputs.length, m = t.outputs.length, fns = [{ fn: t.fn }].concat(t.alts || []);
+    var sws = u.sw.length >= k && u.sw.length <= 6 ? u.sw : null, leds = u.led.length >= m ? u.led : null;
+    if (!sws || !leds) return null;
+    var perms = [];
+    (function rec(cur, left) { if (cur.length === k) { perms.push(cur.slice()); return; } left.forEach(function (s, i) { cur.push(s); rec(cur, left.slice(0, i).concat(left.slice(i + 1))); cur.pop(); }); })([], sws);
+    for (var pi = 0; pi < perms.length; pi++) {
+      var P = perms[pi], rows = trainer.table(P, leds, function () { return leds.map(function () { return null; }); });
+      for (var fi = 0; fi < fns.length; fi++) {
+        var want = rows.map(function (r) { return fns[fi].fn(r.in); }), taken = {}, assign = [];
+        var okAll = t.outputs.every(function (o, j) {
+          for (var li = 0; li < leds.length; li++) {
+            if (taken[li]) continue;
+            if (rows.every(function (r, ri) { var w = want[ri][j]; return w === null || w === r.got[li]; })) { taken[li] = 1; assign.push(leds[li]); return true; }
+          }
+          return false;
+        });
+        if (okAll) {
+          var moved = P.some(function (s, i) { return s !== t.inputs[i][0]; }) || assign.some(function (l, j) { return l !== t.outputs[j][0]; });
+          return { say: fi ? fns[fi].say : "", moved: moved,
+            map: t.inputs.map(function (x, i) { return x[1] + " على المفتاح " + P[i]; }).concat(t.outputs.map(function (o, j) { return o[1] + " على LED " + assign[j]; })).join("، ") };
+        }
+      }
+    }
+    return null;
   }
   function lv(v) { return v === null || v === undefined ? "عائم" : v; }
 
