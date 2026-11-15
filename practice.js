@@ -81,6 +81,7 @@
       (cfg.controls ? '<div class="gp-controls">' +
         '<div class="field"><label for="' + uid + '-fam">شكل الدائرة</label><select class="select" id="' + uid + '-fam"><option value="auto">عشوائي</option>' + famOptions.map(function (f) { return '<option value="' + f + '">' + FAM_AR[f] + '</option>'; }).join("") + '</select></div>' +
         '<div class="field"><label for="' + uid + '-type">المطلوب</label><select class="select" id="' + uid + '-type"><option value="mix">متنوع</option><option value="iR">تيار</option><option value="vR">جهد</option><option value="p">قدرة</option><option value="Req">مقاومة مكافئة</option><option value="vN">جهد عقدة</option><option value="iM">تيار حلقة</option><option value="thev">ثيفنن ونورتن</option><option value="Pmax">أقصى نقل للقدرة</option><option value="sup">التراكب</option><option value="acI">AC: تيار عنصر (فيزور)</option><option value="acV">AC: جهد عنصر (فيزور)</option><option value="acZ">AC: ممانعة مكافئة</option><option value="acVN">AC: جهد عقدة</option><option value="acIM">AC: تيار حلقة</option><option value="acTh">AC: ثيفنن</option><option value="acPow">AC: القدرة P و Q و S</option><option value="acPmax">AC: أقصى نقل للقدرة</option></select></div>' +
+        '<div class="field"><label for="' + uid + '-loops">عدد الحلقات</label><select class="select" id="' + uid + '-loops"><option value="0">أي عدد</option><option value="1">حلقة واحدة</option><option value="2">حلقتان</option><option value="3">3 حلقات</option><option value="4">4 حلقات</option></select></div>' +
         '<label class="gp-check" for="' + uid + '-dep"><input type="checkbox" id="' + uid + '-dep"' + (cfg.dependent ? " checked" : "") + '> مع مصدر تابع</label>' +
         '</div>' : '') +
       '<div class="gp-top"><span class="gp-tag"></span>' + (cfg.hideNew ? '' : '<button type="button" class="btn btn-ghost btn-sm gp-new">دائرة جديدة ↻</button>') + '</div>' +
@@ -105,27 +106,63 @@
       return [v, "ctrl"];
     }
 
+    /* independent loops the student sees = windows of the drawing (merged across missing edges)
+       and must equal the electrical count B − N + 1 (wires merge nodes, the a–b port is open) */
+    function loopsOf(c) {
+      var par = {}, f = function (k) { if (par[k] === undefined) par[k] = k; while (par[k] !== k) k = par[k] = par[par[k]]; return k; };
+      var u = function (a, b) { var x = f(a), y = f(b); if (x !== y) par[x] = y; };
+      var K = function (p) { return p[0] + "," + p[1]; }, pts = {}, B = 0;
+      c.edges.forEach(function (e) { pts[K(e.a)] = pts[K(e.b)] = 1; if (e.type === "W") u("n" + K(e.a), "n" + K(e.b)); });
+      c.edges.forEach(function (e) { if (e.type !== "W" && e.type !== "T") B++; });
+      var nodes = {}; Object.keys(pts).forEach(function (k) { nodes[f("n" + k)] = 1; });
+      var electrical = B - Object.keys(nodes).length + 1;
+      var has = {}; c.edges.forEach(function (e) { if (e.type !== "T") has[K(e.a) + "|" + K(e.b)] = 1; });
+      var R = c.rows, C = c.cols, r, q; par = {};
+      for (r = 0; r < R - 1; r++) for (q = 0; q < C - 1; q++) {
+        var w = "w" + r + "," + q; f(w);
+        if (!has[K([r, q + 1]) + "|" + K([r + 1, q + 1])]) u(w, q + 1 < C - 1 ? "w" + r + "," + (q + 1) : "out");
+        if (!has[K([r + 1, q]) + "|" + K([r + 1, q + 1])]) u(w, r + 1 < R - 1 ? "w" + (r + 1) + "," + q : "out");
+        if (r === 0 && !has[K([0, q]) + "|" + K([0, q + 1])]) u(w, "out");
+        if (q === 0 && !has[K([r, 0]) + "|" + K([r + 1, 0])]) u(w, "out");
+      }
+      var faces = {}; f("out");
+      for (r = 0; r < R - 1; r++) for (q = 0; q < C - 1; q++) { var g = f("w" + r + "," + q); if (g !== f("out")) faces[g] = 1; }
+      var visual = Object.keys(faces).length;
+      return visual === electrical ? visual : -1;
+    }
+    var LOOP_FAMS = { 1: ["loop", "pair"], 2: ["pair", "ladder", "grid"], 3: ["pair", "ladder", "grid"], 4: ["grid"] };
     function wantReq() { return cfg.req || (cfg.controls && $("#" + uid + "-type").value === "Req"); }
     function next(seed) {
+      var want = cfg.controls ? +$("#" + uid + "-loops").value : 0;
+      if (seed && !want) return next1(seed, 0);   // a fixed seed (shared link, tests) is shown as is
+      seed = seed || (Math.floor(Math.random() * 900000) + 100000);
+      for (var k = 0; k < 120; k++) { if (next1(seed + k * 7717, want, k < 119)) return; }
+    }
+    function next1(seed, want, quiet) {
       var dep = cfg.controls ? $("#" + uid + "-dep").checked : !!cfg.dependent;
       var fams = familiesNow();
       var req = wantReq();
       if (req) { dep = false; fams = fams.filter(function (f) { return f === "ladder" || f === "grid"; }); if (!fams.length) fams = ["ladder", "grid"]; }
       if (dep) fams = fams.filter(function (f) { return f === "ladder" || f === "grid"; });
       if (!fams.length) fams = ["ladder", "grid"];
+      if (want) { var lf = LOOP_FAMS[want], both = fams.filter(function (x) { return lf.indexOf(x) > -1; }); fams = both.length ? both : lf; }
       seed = seed || (Math.floor(Math.random() * 900000) + 100000);
       var tsel = cfg.controls ? $("#" + uid + "-type").value : "";
       var ackinds = cfg.ackinds || ({ acI: ["acI"], acV: ["acV"], acZ: ["acZ"], acVN: ["acVN"], acIM: ["acIM"], acTh: ["acVth", "acZth"], acPow: ["acP", "acQ", "acS"], acPmax: ["acPmax"] })[tsel];
       var akinds = ackinds ? null : cfg.kinds || ({ vN: ["vN"], iM: ["iM"], thev: ["Vth", "Rth", "In"], Pmax: ["Pmax"], sup: ["sup"] })[tsel];
       if (akinds) { req = false; fams = fams.filter(function (f) { return f === "ladder" || f === "grid"; }); if (!fams.length) fams = ["ladder", "grid"]; if (akinds.length === 1 && akinds[0] === "sup") dep = false; }
       if (ackinds) { req = false; if (cfg.controls) fams = fams.filter(function (f) { return f !== "pair"; }); if (!fams.length) fams = ["loop", "ladder", "grid"]; }
-      var g = ackinds ? G.generate({ seed: seed, ac: true, kinds: ackinds, kind: ackinds[0], families: cfg.controls && $("#" + uid + "-fam").value === "auto" ? ["loop", "ladder", "grid"] : fams, dependent: dep })
+      var g = ackinds ? G.generate({ seed: seed, ac: true, kinds: ackinds, kind: ackinds[0], families: cfg.controls && $("#" + uid + "-fam").value === "auto" && !want ? ["loop", "ladder", "grid"] : fams, dependent: dep })
             : akinds ? G.generate({ seed: seed, kinds: akinds, kind: akinds[0], families: fams, dependent: dep })
             : req ? G.generate({ seed: seed, req: true, families: fams, sp: cfg.sp })
                   : G.generate({ seed: seed, families: fams, dependent: dep, types: typesNow(), allowI: cfg.allowI, single: cfg.single });
+      var nLoops = g ? loopsOf(g.circuit) : -1;
+      if (!want && g && nLoops < 1 && quiet) return false;   // the drawing must show exactly the circuit's independent loops
+      if (want && (!g || nLoops !== want)) { if (quiet) return false; $(".gp-q").textContent = want === 1 && (akinds || ackinds || req) ? "هذا النوع من الأسئلة يحتاج حلقتين على الأقل. اختر عددًا أكبر." : "تعذّر توليد دائرة بهذا العدد من الحلقات مع هذه الإعدادات. جرّب إعدادات أخرى."; return false; }
       if (!g) { $(".gp-q").textContent = "تعذّر توليد دائرة بهذه الإعدادات. جرّب إعدادات أخرى."; return; }
       state.gen = g; state.wrong = 0; state.hints = 0; root.cvGen = g; // read by tests
-      $(".gp-tag").innerHTML = "دائرة رقم <span class='ltr mono'>" + g.seed + "</span> · " + FAM_AR[g.family] + (ackinds ? " · تيار متردد" : akinds ? (dep ? " · مصدر تابع" : "") : req ? " · مقاومة مكافئة" + (g.reduction.usedDY ? " (تحتاج Δ-Y)" : "") : dep ? " · مصدر تابع" : "");
+      var LW = { 1: "حلقة واحدة", 2: "حلقتان", 3: "3 حلقات", 4: "4 حلقات" };
+      $(".gp-tag").innerHTML = "دائرة رقم <span class='ltr mono'>" + g.seed + "</span> · " + (LW[nLoops] || FAM_AR[g.family]) + (ackinds ? " · تيار متردد" : akinds ? (dep ? " · مصدر تابع" : "") : req ? " · مقاومة مكافئة" + (g.reduction.usedDY ? " (تحتاج Δ-Y)" : "") : dep ? " · مصدر تابع" : "");
       $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] });
       $(".gp-q").innerHTML = questionText(g.question, g);
       var SYM = { vN: (g.question.label || "v") + " =", iM: (g.question.label || "i") + " =", Vth: "VTh =", Rth: "RTh =", In: "IN =", Pmax: "pmax =", acP: "P =", acQ: "Q =", acPmax: "Pmax =", sup: (g.question.q === "i" ? "i" : "v") + "(" + g.question.src + ") =" };
@@ -147,6 +184,7 @@
         onLabels: function () { var x = stepCtx(g); if (!x) return; g.circuit.nodeLabels = x.nodes; g.circuit.meshLabels = x.meshes; $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] }); },
         tutor: CV.tutor ? function () { return CV.tutor.fromGenerated(g, $(".gp-q").textContent); } : null,
         onAnswer: function (v) { return CV.workspace.fillAnswer($("#" + uid + "-in"), $("#" + uid + "-u"), v); } });
+      return true;
     }
 
     function stepCtx(g) { return CV.stepcheck.contextFor(g.circuit); } // the circuit's unknowns, named as they are (or will be) drawn
@@ -185,7 +223,7 @@
     }
 
     if ($(".gp-new")) $(".gp-new").addEventListener("click", function () { next(); });
-    if (cfg.controls) ["-fam", "-type", "-dep"].forEach(function (s) { $("#" + uid + s).addEventListener("change", function () { next(); }); });
+    if (cfg.controls) ["-fam", "-type", "-dep", "-loops"].forEach(function (s) { $("#" + uid + s).addEventListener("change", function () { next(); }); });
     $(".gp-hint").addEventListener("click", function () {
       var list = hintsFor(state.gen);
       if (state.hints < list.length) { $(".gp-hints").insertAdjacentHTML("beforeend", "<p><b>تلميح " + (state.hints + 1) + ":</b> " + list[state.hints] + "</p>"); state.hints++; }
