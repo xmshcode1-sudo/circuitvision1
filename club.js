@@ -31,11 +31,36 @@
     '<rect x="292" y="44" width="8" height="32" fill="#d9413a"/><rect x="308" y="44" width="8" height="32" fill="#d9413a"/><rect x="324" y="44" width="8" height="32" fill="#6b3d1f"/><rect x="348" y="44" width="6" height="32" fill="#c8a64b"/>' +
     '<path class="bt-pr" d="M366 60h44"/><text class="bt-cap" x="320" y="104">أحمر · أحمر · بني</text>' +
     '<path class="bt-arrow" d="M196 60h22m-7-7 7 7-7 7"/></svg>';
+  /* the club's idea in one picture: the same LED circuit from the lesson to the club */
+  var SC = {
+    lesson: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect class="i-pane" x="22" y="8" width="116" height="94" rx="9"/><rect class="i-line" x="34" y="20" width="62" height="6" rx="3"/><rect class="i-dim" x="34" y="32" width="88" height="4" rx="2"/><rect class="i-dim" x="34" y="40" width="74" height="4" rx="2"/>' +
+      '<path class="i-wire" d="M44 56v26h56V56H86M44 56h14"/><path class="i-wire" d="M58 56l3-5 4 10 4-10 4 10 4-10 3 5h6"/><path class="i-wire" d="M40 66h8M42 72h4"/><text class="i-eq" x="80" y="96">V = I·R</text></svg>',
+    design: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect class="i-pane" x="18" y="10" width="124" height="76" rx="7"/><path class="i-base" d="M8 92h144l-10 8H18z"/>' +
+      '<path class="i-wire" d="M40 30v40h64V30H88M40 30h12"/><path class="i-wire" d="M52 30l3-5 4 10 4-10 4 10 4-10 3 5h4"/><path class="i-wire" d="M36 46h8M38 52h4"/><path class="i-led" d="M96 42l8 0-4 7z"/><path class="i-wire" d="M100 49v21M96 42h8"/>' +
+      '<rect class="i-chip" x="104" y="16" width="36" height="17" rx="4"/><text class="i-read" x="122" y="28">9.1 mA</text><text class="i-cap" x="72" y="80">5 V · 330 Ω</text></svg>',
+    build: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect class="i-board" x="10" y="24" width="96" height="70" rx="6"/>' +
+      [0, 1, 2, 3, 4, 5, 6, 7].map(function (i) { return '<path class="i-holes" d="M' + (20 + i * 11) + ' 34v52"/>'; }).join("") +
+      '<path class="i-r1" d="M30 52h30"/><rect class="i-res" x="37" y="48" width="16" height="8" rx="3"/><path class="i-band1" d="M41 48v8M45 48v8"/><path class="i-band2" d="M49 48v8"/>' +
+      '<circle class="i-glow" cx="74" cy="44" r="13"/><path class="i-ledr" d="M68 46a6 6 0 0 1 12 0v8H68z"/><path class="i-r1" d="M71 54v10M77 54v14"/>' +
+      '<path class="i-red" d="M30 52C24 40 20 30 16 18"/><path class="i-blk" d="M77 68c8 4 30 8 42 4"/>' +
+      '<rect class="i-meter" x="114" y="40" width="38" height="56" rx="7"/><rect class="i-lcd" x="117" y="45" width="32" height="16" rx="3"/><text class="i-read i-sm" x="133" y="56">8.9 mA</text><circle class="i-knob" cx="133" cy="78" r="9"/><path class="i-blk" d="M133 78l5-5"/></svg>',
+    club: '<svg viewBox="0 0 160 110" aria-hidden="true"><rect class="i-pane" x="30" y="6" width="100" height="98" rx="9"/><rect class="i-photo" x="40" y="16" width="80" height="44" rx="5"/>' +
+      '<circle class="i-glow" cx="80" cy="36" r="11"/><path class="i-ledr" d="M75 38a5 5 0 0 1 10 0v6H75z"/><path class="i-dimw" d="M48 52h64"/>' +
+      '<circle class="i-av" cx="46" cy="72" r="6"/><rect class="i-line" x="56" y="69" width="40" height="5" rx="2.5"/><rect class="i-dim" x="40" y="82" width="78" height="4" rx="2"/>' +
+      '<path class="i-heart" d="M46 96c-4-3-6-5-6-7a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 2-2 4-6 7z"/><text class="i-cap" x="60" y="97">12</text>' +
+      '<path class="i-bub" d="M84 88h22a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H92l-5 4v-4h-3a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3z"/><circle class="i-av2" cx="140" cy="30" r="8"/><circle class="i-av3" cx="20" cy="50" r="7"/></svg>'
+  };
+  var IDEA = '<section class="card bt-idea" aria-labelledby="bt-idea-h"><div class="bt-sh"><h2 id="bt-idea-h">فكرة النادي: من الورقة إلى دائرة حقيقية</h2></div><ol class="bt-steps">' +
+    [["lesson", "الدرس", "تفهم الفكرة والقانون من الدرس."], ["design", "التصميم والمحاكاة", "تصمّم الدائرة وتجرب قيمها قبل ما تلمس أي قطعة."],
+     ["build", "البناء والقياس", "تبنيها بيدك وتقارن قياس الجهاز بالمحاكاة."], ["club", "العرض في النادي", "تنشر صورتها وتقريرها، وزملاؤك يعلّقون ويتعلّمون منها."]]
+      .map(function (x, i) { return '<li><div class="bt-scene">' + SC[x[0]] + '</div><div class="bt-st"><i class="bt-num">' + (i + 1) + '</i><b>' + x[1] + '</b></div><p>' + x[2] + '</p></li>'; }).join("") +
+    '</ol></section>';
+
   function hero() {
     return '<header class="bt-hero card"><div class="bt-hero-t"><span class="bt-word ltr">Beyond Theory</span><h1>ما بعد النظرية</h1>' +
       '<p>نادي CircuitVision العملي. تصمّم الدائرة وتحاكيها في أكاديمية المشاريع، ثم تبنيها بيدك، وتعرضها هنا مع صورتها وتقريرها ليراها زملاؤك ويعلّقوا عليها.</p>' +
       '<ol class="bt-flow"><li><span>1</span>الدرس</li><li><span>2</span>التصميم والمحاكاة</li><li><span>3</span>البناء والقياس</li><li class="on"><span>4</span>العرض في النادي</li></ol></div>' +
-      MOTIF + '<div class="bt-stats" id="bt-stats" hidden></div></header>';
+      MOTIF + '<div class="bt-stats" id="bt-stats" hidden></div></header>' + IDEA;
   }
   function stats(posts) {
     var el = $("bt-stats"); if (!el) return;

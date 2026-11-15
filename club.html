@@ -218,6 +218,39 @@
   .bt-try { font-size: 13.5px; }
   .cl-act { flex-wrap: wrap; }
 
+  /* ---------- the club's idea (one picture) ---------- */
+  .bt-idea { padding: 18px 20px; display: grid; gap: 14px; }
+  .bt-idea h2 { font-size: 19px; }
+  .bt-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .bt-steps li { position: relative; display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .bt-steps li:not(:last-child)::after { content: "←"; position: absolute; inset-inline-end: -13px; top: 22%; color: var(--orange); font-size: 18px; font-weight: 700; }
+  .bt-scene { border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-soft); padding: 8px; }
+  .bt-scene svg { display: block; width: 100%; height: auto; direction: ltr; }
+  .bt-st { display: flex; gap: 8px; align-items: flex-start; }
+  .bt-st b { font-family: var(--font-display); font-size: 15px; line-height: 1.4; min-width: 0; }
+  .bt-num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: #fff; font: normal 600 12px var(--font-mono); flex: none; }
+  .bt-steps p { margin: 0; color: var(--fg-2); font-size: 13.5px; line-height: 1.6; }
+  .i-pane { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .i-base { fill: var(--line); }
+  .i-line { fill: var(--fg-2); } .i-dim { fill: var(--line); } .i-dimw { stroke: var(--line); stroke-width: 3; stroke-linecap: round; }
+  .i-wire { fill: none; stroke: var(--blue-2); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .i-led { fill: var(--orange); }
+  .i-eq, .i-read, .i-cap { font-family: var(--font-mono); text-anchor: middle; }
+  .i-eq { fill: var(--orange); font-size: 12px; font-weight: 700; }
+  .i-cap { fill: var(--fg-3); font-size: 9px; }
+  .i-chip { fill: var(--ok-soft); stroke: var(--ok); }
+  .i-read { fill: var(--ok); font-size: 8.5px; font-weight: 700; } .i-sm { font-size: 7.5px; }
+  .i-board { fill: #f4f1e8; stroke: #cfc8b4; stroke-width: 1.5; }
+  .i-holes { stroke: #b9b19b; stroke-width: 2.4; stroke-dasharray: 0.1 5.6; stroke-linecap: round; }
+  .i-res { fill: #e3c896; stroke: #b99b62; } .i-band1 { stroke: #e8731a; stroke-width: 2; } .i-band2 { stroke: #7a4a1d; stroke-width: 2; }
+  .i-r1 { fill: none; stroke: #8f99a8; stroke-width: 2; stroke-linecap: round; }
+  .i-glow { fill: rgba(255, 60, 40, .22); } .i-ledr { fill: #ff3b2f; stroke: #c4241a; }
+  .i-red { fill: none; stroke: #d8312b; stroke-width: 2.4; stroke-linecap: round; } .i-blk { fill: none; stroke: #1b1b1b; stroke-width: 2.4; stroke-linecap: round; }
+  .i-meter { fill: #f2c230; stroke: #b88d12; } .i-lcd { fill: #1d2a22; } .i-knob { fill: #2b2b2b; }
+  .i-photo { fill: #f4f1e8; stroke: var(--line); }
+  .i-av { fill: var(--blue); } .i-av2 { fill: var(--orange); opacity: .85; } .i-av3 { fill: var(--ok); opacity: .85; }
+  .i-heart { fill: #ff4d6a; } .i-bub { fill: var(--blue-soft); stroke: var(--blue); }
+  @media (max-width: 860px) { .bt-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bt-steps li::after { display: none; } }
   @media (max-width: 860px) { .bt-hero { grid-template-columns: 1fr; padding: 18px; } .bt-motif { max-width: 340px; } }
   @media (max-width: 420px) { .bt-track { grid-template-columns: 84px minmax(0, 1fr); } .bt-stats b { font-size: 18px; } .bt-tgrid { grid-template-columns: 1fr; } }
 </style>

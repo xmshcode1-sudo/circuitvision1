@@ -54,6 +54,10 @@
   .muted { color: var(--fg-3); }
   textarea.input { min-height: 80px; resize: vertical; }
   @media (max-width: 700px) { .crs { grid-template-columns: 1fr 1fr; } .crs > :first-child { grid-column: 1 / -1; } }
+  .ad-pages { display: grid; gap: 8px; }
+  .ad-page { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 14px; }
+  .ad-page > div { display: grid; gap: 2px; min-width: 0; } .ad-page .muted { font-size: 12.5px; justify-self: start; }
+  @media (max-width: 520px) { .ad-page { grid-template-columns: minmax(0, 1fr) auto; } .ad-page .btn { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -107,7 +111,7 @@
   }
 
   function frame(inner) {
-    var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"], ["survey", "الاستبيان"]];
+    var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"], ["pages", "الصفحات"], ["survey", "الاستبيان"]];
     if (!C.subscriptionsOn()) T = T.filter(function (x) { return x[0] !== "courses" && x[0] !== "payments"; }).map(function (x) { return x[0] === "users" ? ["users", "المستخدمون"] : x; });
     if (!T.some(function (x) { return x[0] === tab; })) tab = "stats";
     root.innerHTML = '<header class="ad-head"><div><h1>لوحة الإدارة</h1><p>تتحكم هنا في الحسابات والاشتراكات والأسعار والإعلانات. كل عملية يتحقق منها الخادم بأنك المدير.</p></div></header>' +
@@ -116,7 +120,7 @@
   }
   function show() {
     frame('<p class="muted">جارٍ التحميل…</p>');
-    ({ stats: stats, users: usersTab, courses: coursesTab, payments: paymentsTab, ann: annTab, survey: surveyTab })[tab]();
+    ({ stats: stats, users: usersTab, courses: coursesTab, payments: paymentsTab, ann: annTab, pages: pagesTab, survey: surveyTab })[tab]();
   }
   function body(html) { var b = document.getElementById("ad-body"); if (b) b.innerHTML = html; return b; }
   function fail(e) { body('<p class="ad-msg bad">' + esc(rpcErr(e)) + '</p>'); }
@@ -223,6 +227,25 @@
   }
 
   /* ---------- announcements ---------- */
+  /* ---------- pages shown to students ---------- */
+  var PAGES = ["practice.html", "lab.html", "logic.html", "tutor.html", "bank.html", "realworld.html", "challenges.html", "academy.html", "club.html", "portfolio.html", "notebook.html"];
+  function pagesTab() {
+    var hid = C.hiddenPages(), byHref = {};
+    (CV.modules || []).forEach(function (m) { if (m.href) byHref[m.href] = m.id === "club" ? "نادي Beyond Theory" : m.ar; });
+    body('<p class="muted">الصفحة المخفية تختفي من القائمة ومن كل الروابط عند الطلاب، ومن يفتح رابطها مباشرة يرى «غير متاحة حاليًا». أنت تراها دائمًا وبجانبها «مخفية عن الطلاب». الرئيسية ولوحة الطالب والدروس لا تُخفى.</p>' +
+      '<div class="ad-pages">' + PAGES.map(function (p) {
+        var h = hid.indexOf(p) > -1;
+        return '<div class="card ad-page"><div><b>' + esc(byHref[p] || p) + '</b><span class="muted ltr">' + p + '</span></div><span class="chip ' + (h ? "" : "chip-ok") + '">' + (h ? "مخفية" : "ظاهرة") + '</span>' +
+          '<button type="button" class="btn btn-sm ' + (h ? "btn-primary" : "btn-ghost") + '" data-page="' + p + '" data-hide="' + (h ? "0" : "1") + '">' + (h ? "أظهرها للطلاب" : "أخفها مؤقتًا") + '</button></div>';
+      }).join("") + '</div><p class="ad-msg" id="ad-pmsg" hidden></p>');
+    document.querySelectorAll("[data-page]").forEach(function (b) {
+      b.onclick = function () {
+        b.disabled = true;
+        C.setPageHidden(b.dataset.page, b.dataset.hide === "1").then(pagesTab, function (e) { var m = document.getElementById("ad-pmsg"); m.hidden = false; m.className = "ad-msg bad"; m.textContent = rpcErr(e); b.disabled = false; });
+      };
+    });
+  }
+
   function annTab() {
     db.from("announcements").select("id,body,active,created_at").order("created_at", { ascending: false }).then(function (r) {
       if (r.error) return fail(r.error);

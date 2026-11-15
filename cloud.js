@@ -90,6 +90,9 @@
       if (access.approval !== "approved") return onDom(function () {
         screen("حسابك بانتظار موافقة الإدارة", "استلمنا طلبك يا " + api.name() + ". تُفتح لك المنصة بعد أن يوافق مدير المنصة على حسابك؛ حدّث الصفحة لاحقًا.", '<button type="button" class="btn btn-primary" onclick="location.reload()">تحقق الآن</button><button type="button" class="btn btn-ghost" id="cv-out">تسجيل الخروج</button>'); outBtn();
       });
+      if (!access.admin && api.hiddenPages().indexOf(PAGE) > -1) return onDom(function () {
+        screen("هذه الصفحة غير متاحة حاليًا", "تُفتح قريبًا. تقدر تكمل من لوحة الطالب.", '<a class="btn btn-primary" href="dashboard.html">لوحة الطالب</a>');
+      });
       onDom(pass);
     });
   }
@@ -104,7 +107,7 @@
   }
   function pass() {
     document.documentElement.classList.remove("cv-gate");
-    navExtras(); announce(); pageLock();
+    navExtras(); announce(); pageLock(); hideLinks();
     window.addEventListener("hashchange", pageLock);
     api.onChange(function (u) { if (!u) location.replace("login.html"); });
   }
@@ -118,6 +121,24 @@
     var box = document.getElementById("cv-page-lock");
     if (shouldLock) { box = document.createElement("div"); box.id = "cv-page-lock"; box.innerHTML = api.lockHtml(need, "هذه الأداة"); main.appendChild(box); }
     else if (box) box.remove();
+  }
+  /* pages the admin has hidden for now (admin panel → «الصفحات»): students lose every link to them; the admin keeps them, marked */
+  function hideLinks() {
+    var hid = api.hiddenPages(); if (!hid.length) return;
+    var admin = !!(access && access.admin);
+    function sweep() {
+      document.querySelectorAll("a[href]").forEach(function (a) {
+        if (a.dataset.cvHidden) return;
+        var page = (a.getAttribute("href") || "").split(/[?#]/)[0];
+        if (hid.indexOf(page) < 0) return;
+        a.dataset.cvHidden = "1";
+        if (admin) { if (a.classList.contains("nv")) { a.insertAdjacentHTML("beforeend", '<span class="soon">مخفية</span>'); a.title = "مخفية عن الطلاب. تغيّرها من لوحة الإدارة ← الصفحات"; } return; }
+        if (a.classList.contains("nv") || a.classList.contains("btn") || a.closest(".card") === a) a.hidden = true;
+        else { var t = document.createElement("span"); t.textContent = a.textContent; a.replaceWith(t); }   // a link inside a sentence keeps its words
+      });
+    }
+    sweep();
+    try { new MutationObserver(sweep).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
   }
   function navExtras() {
     var nav = document.getElementById("nav"); if (!nav || nav.querySelector(".cv-acc")) return;
@@ -170,6 +191,8 @@
     },
     /* subscriptions */
     access: function () { return access; },
+    hiddenPages: function () { return (access && access.hidden_pages) || []; },
+    setPageHidden: function (page, hidden) { return ready().then(function (c) { return c.rpc("admin_set_page", { p_page: page, p_hidden: !!hidden }); }).then(err).then(loadAccess); },
     reloadAccess: function () { return ready().then(loadAccess); },
     onAccess: function (f) { accessListeners.push(f); },
     course: function (id) { return ((access && access.courses) || []).filter(function (c) { return c.id === id; })[0] || null; },
