@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>استبيان مادتي الدوائر الكهربائية</title>
+<meta name="description" content="استبيان قصير لطلاب الهندسة الكهربائية عن تجربتهم في مادتي Circuits 1 و Circuits 2.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+  /* Layout: one narrow column of numbered question cards under a sticky progress strip. */
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --ink: #14202b; --ink-2: #4b5a68; --ink-3: #7d8a96;
+    --line: #dde3e9; --accent: #0f6e78; --accent-soft: rgba(15, 110, 120, .1); --amber: #c46a12; --bad: #b4232c;
+    --display: "Readex Pro", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --body: "IBM Plex Sans Arabic", "Readex Pro", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0f1418; --card: #172027; --ink: #e8eef2; --ink-2: #a9b6c0; --ink-3: #74838f;
+    --line: #26323b; --accent: #3fb3bd; --accent-soft: rgba(63, 179, 189, .14); --amber: #f0a04b; --bad: #ff7b84; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #0f1418; --card: #172027; --ink: #e8eef2; --ink-2: #a9b6c0; --ink-3: #74838f;
+    --line: #26323b; --accent: #3fb3bd; --accent-soft: rgba(63, 179, 189, .14); --amber: #f0a04b; --bad: #ff7b84; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.7; }
+  .wrap { max-width: 720px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; }
+  header.top { display: grid; gap: 8px; padding-bottom: 6px; }
+  header.top .eyebrow { font-size: 13px; color: var(--accent); font-weight: 600; letter-spacing: .02em; }
+  h1 { font-family: var(--display); font-size: clamp(24px, 5vw, 32px); line-height: 1.35; margin: 0; text-wrap: balance; }
+  header.top p { margin: 0; color: var(--ink-2); max-width: 60ch; }
+  .meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--ink-3); }
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; }
+  .bar .track { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar .fill { height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .25s ease; }
+  .bar small { display: block; font-size: 12px; color: var(--ink-3); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  h2.sec { font-family: var(--display); font-size: 18px; margin: 14px 0 0; display: flex; gap: 10px; align-items: baseline; }
+  h2.sec span { font-size: 13px; color: var(--ink-3); font-family: var(--body); font-weight: 400; }
+  .q { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+  .q.err { border-color: var(--bad); }
+  .q legend, .q .qt { font-weight: 600; font-size: 16px; padding: 0; }
+  fieldset.q { margin: 0; min-inline-size: 0; }
+  fieldset.q legend { float: right; width: 100%; margin: 0; }
+  .q .hint { font-size: 13px; color: var(--ink-3); margin-top: -6px; }
+  .q .need { color: var(--bad); font-size: 13px; }
+  .opts { display: grid; gap: 8px; }
+  .opts.cols { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; min-width: 0; }
+  .opt:hover { border-color: var(--accent); }
+  .opt input { accent-color: var(--accent); margin-top: 6px; flex: none; width: 17px; height: 17px; }
+  .opt span { min-width: 0; overflow-wrap: anywhere; }
+  .opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .en { direction: ltr; unicode-bidi: isolate; color: var(--ink-3); font-size: 13px; }
+  .scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .scale label { display: grid; place-items: center; gap: 2px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .scale input { position: absolute; opacity: 0; pointer-events: none; }
+  .scale label:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--card); }
+  .scale label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ends { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-3); }
+  .mx { display: grid; gap: 14px; }
+  .mx .row { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+  .mx .row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .mx .row > span { font-size: 15px; }
+  textarea, input[type=text] { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 90px; resize: vertical; }
+  input[type=text] { min-height: 0; }
+  textarea:focus, input[type=text]:focus { outline: none; border-color: var(--accent); }
+  .count { font-size: 12px; color: var(--ink-3); text-align: left; font-variant-numeric: tabular-nums; }
+  .send { display: grid; gap: 10px; justify-items: start; }
+  button.go { font: inherit; font-weight: 600; font-family: var(--display); background: var(--accent); color: var(--card); border: 0; border-radius: 12px; padding: 13px 26px; cursor: pointer; font-size: 16px; }
+  button.go:disabled { opacity: .5; cursor: wait; }
+  button.go:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+  .msg { font-size: 14px; color: var(--bad); }
+  .done { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 28px 22px; display: grid; gap: 10px; text-align: center; justify-items: center; }
+  .done svg { width: 48px; height: 48px; color: var(--accent); }
+  .done h2 { font-family: var(--display); margin: 0; font-size: 22px; }
+  .done p { margin: 0; color: var(--ink-2); }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .bar .fill { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">استبيان طلاب الهندسة الكهربائية</span>
+    <h1>تجربتك في مادتي الدوائر الكهربائية <bdi>Circuits 1</bdi> و <bdi>Circuits 2</bdi></h1>
+    <p>نبي نعرف وش اللي يصعّب المادتين فعلًا، ووش اللي لو كان موجود بيغيّر تجربتك للأحسن. إجاباتك بدون اسم، وتساعدنا نفهم احتياج الطلاب.</p>
+    <div class="meta"><span>حوالي 5 دقائق</span><span>بدون اسم أو إيميل</span><span>الأسئلة اللي عليها * مطلوبة</span></div>
+  </header>
+  <div class="bar" aria-hidden="true"><div class="track"><div class="fill" id="fill"></div></div><small id="prog">0 من 0 سؤال مطلوب</small></div>
+  <form id="sv" novalidate></form>
+  <section class="done" id="done" hidden role="status">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
+    <h2>وصلت إجاباتك، شكرًا لك</h2>
+    <p>وقتك يفرق معنا. إذا عندك زملاء درسوا المادتين، أرسل لهم الرابط.</p>
+  </section>
+</div>
+<script>
+(function () {
+  "use strict";
+  var SURVEY = "circuits-2026";
+  var STATUS = ["أنهيتها", "أدرسها هذا الترم", "لم أدرسها بعد"];
+  var OBST = ["ما أفهم الفكرة من المحاضرة", "أفهم الفكرة لكن أغلط وقت الحل", "ما أعرف وين غلطت بالضبط", "قلة التمارين المحلولة خطوة بخطوة", "حلول الكتاب مختصرة أو ناقصة",
+    "الإشارات واتجاهات التيار والجهد (polarity)", "الأعداد المركبة والـ phasors", "استخدام الآلة الحاسبة", "صعوبة ربط النظري بالمعمل", "المصادر كلها بالإنجليزي", "ضيق الوقت قبل الاختبار"];
+  var HELP = [
+    "فيديو قصير يشرح كل موضوع بالعربي",
+    "تمارين كثيرة بحلول خطوة بخطوة",
+    "تصحيح فوري يقولك وين غلطت ولماذا",
+    "محاكي تبني فيه الدائرة وتشوف القيم تتغير",
+    "أسئلة اختبارات سابقة مع حلولها",
+    "أمثلة من الواقع: وين تُستخدم هذي الدوائر",
+    "مساعد تسأله وقت ما تعلق في مسألة",
+    "تجهيز للمعمل: تجرب التجربة قبل ما تدخل",
+    "ملخص ومراجعة سريعة قبل الاختبار",
+    "تتبع مستواك: وش تتقن ووش يحتاج مراجعة"
+  ];
+  var Q = [
+    { sec: "عنك" },
+    { id: "major", t: "تخصصك", type: "one", req: 1, cols: 1, o: ["هندسة كهربائية: قوى", "هندسة كهربائية: اتصالات", "هندسة كهربائية: إلكترونيات", "هندسة كهربائية: تحكم", "هندسة حاسب", "لم أتخصص بعد", "تخصص آخر"] },
+    { id: "year", t: "مستواك الدراسي", type: "one", req: 1, cols: 1, o: ["السنة الثانية", "السنة الثالثة", "السنة الرابعة", "السنة الخامسة", "متخرج"] },
+    { id: "c1", t: "مادة Circuits 1", type: "one", req: 1, cols: 1, o: STATUS },
+    { id: "c2", t: "مادة Circuits 2", type: "one", req: 1, cols: 1, o: STATUS },
+
+    { sec: "مادة Circuits 1", en: "Circuits 1", show: function (a) { return a.c1 && a.c1 !== STATUS[2]; } },
+    { id: "c1_diff", t: "كم كانت صعوبة Circuits 1 عليك؟", type: "scale", req: 1, ends: ["سهلة جدًا", "صعبة جدًا"], show: c1 },
+    { id: "c1_hard", t: "أصعب الفصول عليك", hint: "اختر إلى 3", type: "many", max: 3, req: 1, show: c1, o: [
+      ["متغيرات الدائرة: الجهد والتيار والقدرة", "Circuit Variables"], ["عناصر الدائرة وقانونا كيرشوف", "Circuit Elements"], ["دوائر المقاومات وتقسيم الجهد والتيار و Δ-Y", "Simple Resistive Circuits"],
+      ["Node و Mesh", "Techniques of Circuit Analysis"], ["Thévenin و Norton و Superposition و Max Power", "Circuit Theorems"], ["التيار المتردد والـ Phasors", "Sinusoidal Steady-State"], ["حسابات القدرة في التيار المتردد", "AC Power"]] },
+    { id: "c1_grade", t: "تقديرك في Circuits 1", hint: "اختياري", type: "one", cols: 1, show: function (a) { return a.c1 === STATUS[0]; }, o: ["A+ أو A", "B+ أو B", "C+ أو C", "D+ أو D", "F أو انسحبت", "أفضل ما أقول"] },
+
+    { sec: "مادة Circuits 2", en: "Circuits 2", show: function (a) { return a.c2 && a.c2 !== STATUS[2]; } },
+    { id: "c2_diff", t: "كم كانت صعوبة Circuits 2 عليك؟", type: "scale", req: 1, ends: ["سهلة جدًا", "صعبة جدًا"], show: c2 },
+    { id: "c2_hard", t: "أصعب الفصول عليك", hint: "اختر إلى 3", type: "many", max: 3, req: 1, show: c2, o: [
+      ["الملفات والمكثفات", "Inductance and Capacitance"], ["الملفات المقترنة والمحولات", "Coupled Coils and Transformers"], ["استجابة RL و RC", "First-Order Circuits"],
+      ["استجابة RLC", "Second-Order Circuits"], ["ثلاثي الطور", "Three-Phase Circuits"], ["الاستجابة الترددية و Laplace و Bode", "Frequency Response"], ["شبكات المنفذين", "Two-Port Networks"]] },
+    { id: "c2_grade", t: "تقديرك في Circuits 2", hint: "اختياري", type: "one", cols: 1, show: function (a) { return a.c2 === STATUS[0]; }, o: ["A+ أو A", "B+ أو B", "C+ أو C", "D+ أو D", "F أو انسحبت", "أفضل ما أقول"] },
+
+    { sec: "طريقة مذاكرتك" },
+    { id: "obstacles", t: "وش أكثر شي يعيقك في المادتين؟", hint: "اختر إلى 3", type: "many", max: 3, req: 1, o: OBST, other: 1 },
+    { id: "sources", t: "وش تستخدم عشان تفهم وتذاكر؟", hint: "اختر كل اللي ينطبق", type: "many", req: 1, o: ["المحاضرات", "الكتاب (Nilsson أو Sadiku)", "يوتيوب", "ملخصات الطلاب", "دروس خصوصية", "المذاكرة مع زملائي", "أدوات الذكاء الاصطناعي مثل ChatGPT", "مواقع ومنصات تعليمية"], other: 1 },
+    { id: "hours", t: "كم ساعة تذاكر المادة في الأسبوع خارج المحاضرات؟", type: "one", req: 1, cols: 1, o: ["أقل من ساعة", "1 إلى 3 ساعات", "3 إلى 6 ساعات", "أكثر من 6 ساعات", "ما أذاكر إلا قبل الاختبار"] },
+    { id: "device", t: "على وش تذاكر غالبًا؟", type: "one", req: 1, cols: 1, o: ["الجوال", "الآيباد أو التابلت", "اللابتوب أو الكمبيوتر", "ورق فقط"] },
+
+    { sec: "وش يغيّر تجربتك" },
+    { id: "help", t: "قيّم كل شي: كم بيفرق معك لو كان موجود؟", hint: "1 = ما يفرق، 5 = يفرق كثير", type: "matrix", req: 1, rows: HELP },
+    { id: "top", t: "لو تختار شي واحد بس من القائمة اللي فوق، وش هو؟", type: "one", req: 1, o: HELP },
+    { id: "pay", t: "لو فيه مصدر يقدّم لك أهم شي اخترته، كم تدفع شهريًا بالراحة؟", type: "one", req: 1, cols: 1, o: ["ما أدفع، أبيه مجاني", "أقل من 10 ريال", "10 إلى 25 ريال", "25 إلى 50 ريال", "أكثر من 50 ريال"] },
+    { id: "change", t: "لو تقدر تغيّر شي واحد في طريقة تعلّم المادتين، وش بيكون؟", type: "text", req: 1, max: 600 },
+    { id: "worked", t: "وش أكثر شي ساعدك فعلًا تفهم؟", hint: "اختياري", type: "text", max: 600 },
+    { id: "else", t: "شي ثاني تحب تقوله؟", hint: "اختياري", type: "text", max: 600 }
+  ];
+  function c1(a) { return a.c1 && a.c1 !== STATUS[2]; }
+  function c2(a) { return a.c2 && a.c2 !== STATUS[2]; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  var form = document.getElementById("sv"), A = {}, KEY = "survey." + SURVEY;
+  try { if (localStorage.getItem(KEY + ".sent")) { form.hidden = true; document.querySelector(".bar").hidden = true; document.getElementById("done").hidden = false; return; } } catch (e) {}
+
+  function optLabel(o) { return Array.isArray(o) ? esc(o[0]) + ' <span class="en">' + esc(o[1]) + '</span>' : esc(o); }
+  function optVal(o) { return Array.isArray(o) ? o[0] : o; }
+  function build() {
+    var html = "", n = 0;
+    Q.forEach(function (q, qi) {
+      if (q.sec) { html += '<h2 class="sec" data-sec="' + qi + '">' + esc(q.sec) + '</h2>'; return; }
+      n++;
+      var head = '<legend><span class="num"></span>' + esc(q.t) + (q.req ? ' <span class="need" aria-hidden="true">*</span>' : '') + '</legend>' + (q.hint ? '<div class="hint">' + esc(q.hint) + '</div>' : '');
+      var body = "";
+      if (q.type === "one" || q.type === "many") {
+        var tp = q.type === "one" ? "radio" : "checkbox";
+        body = '<div class="opts' + (q.cols ? " cols" : "") + '">' + q.o.map(function (o, i) { return '<label class="opt"><input type="' + tp + '" name="' + q.id + '" id="' + q.id + '_' + i + '" value="' + esc(optVal(o)) + '"><span>' + optLabel(o) + '</span></label>'; }).join("") +
+          (q.other ? '<label class="opt"><input type="checkbox" name="' + q.id + '" id="' + q.id + '_o" value="__other"><span>شي ثاني</span></label>' : '') + '</div>' +
+          (q.other ? '<input type="text" id="' + q.id + '_ot" maxlength="200" placeholder="اكتبه هنا" hidden aria-label="شي ثاني">' : '');
+      } else if (q.type === "scale") {
+        body = '<div class="scale">' + [1, 2, 3, 4, 5].map(function (v) { return '<label><input type="radio" name="' + q.id + '" id="' + q.id + '_' + v + '" value="' + v + '">' + v + '</label>'; }).join("") + '</div><div class="ends"><span>' + esc(q.ends[0]) + '</span><span>' + esc(q.ends[1]) + '</span></div>';
+      } else if (q.type === "matrix") {
+        body = '<div class="mx">' + q.rows.map(function (r, ri) {
+          return '<div class="row" role="radiogroup" aria-label="' + esc(r) + '"><span>' + esc(r) + '</span><div class="scale">' + [1, 2, 3, 4, 5].map(function (v) { return '<label><input type="radio" name="' + q.id + '_' + ri + '" id="' + q.id + '_' + ri + '_' + v + '" value="' + v + '">' + v + '</label>'; }).join("") + '</div></div>';
+        }).join("") + '</div><div class="ends"><span>ما يفرق</span><span>يفرق كثير</span></div>';
+      } else if (q.type === "text") {
+        body = '<textarea id="' + q.id + '" maxlength="' + q.max + '" aria-label="' + esc(q.t) + '"></textarea><div class="count" id="' + q.id + '_c">0 / ' + q.max + '</div>';
+      }
+      html += '<fieldset class="q" data-q="' + qi + '" id="q_' + q.id + '">' + head + body + '<div class="need" hidden>' + (q.type === "matrix" ? "قيّم كل البنود" : q.type === "text" ? "اكتب إجابتك" : "اختر إجابة") + '</div></fieldset>';
+    });
+    html += '<div class="send"><p class="msg" id="msg" hidden role="alert"></p><button type="submit" class="go" id="go">أرسل إجاباتي</button></div>';
+    form.innerHTML = html;
+  }
+  function read() {
+    A = {};
+    Q.forEach(function (q) {
+      if (!q.id) return;
+      if (q.type === "one" || q.type === "scale") { var c = form.querySelector('input[name="' + q.id + '"]:checked'); if (c) A[q.id] = q.type === "scale" ? +c.value : c.value; }
+      else if (q.type === "many") {
+        var v = Array.prototype.map.call(form.querySelectorAll('input[name="' + q.id + '"]:checked'), function (x) { return x.value; });
+        var ot = document.getElementById(q.id + "_ot");
+        if (ot) ot.hidden = v.indexOf("__other") < 0;
+        v = v.filter(function (x) { return x !== "__other"; });
+        if (ot && !ot.hidden && ot.value.trim()) v.push("أخرى: " + ot.value.trim());
+        if (v.length) A[q.id] = v;
+      } else if (q.type === "matrix") {
+        var m = {}; q.rows.forEach(function (r, ri) { var c2 = form.querySelector('input[name="' + q.id + '_' + ri + '"]:checked'); if (c2) m[r] = +c2.value; });
+        if (Object.keys(m).length) A[q.id] = m;
+      } else if (q.type === "text") { var tx = document.getElementById(q.id); var s = tx.value.trim(); if (s) A[q.id] = s; document.getElementById(q.id + "_c").textContent = tx.value.length + " / " + q.max; }
+    });
+  }
+  function visible(q) { return !q.show || q.show(A); }
+  function complete(q) {
+    var v = A[q.id];
+    if (q.type === "matrix") return v && Object.keys(v).length === q.rows.length;
+    if (q.type === "many") return v && v.length > 0;
+    return v !== undefined && v !== "";
+  }
+  function sync() {
+    read();
+    var total = 0, ok = 0, secOn = true;
+    Q.forEach(function (q, qi) {
+      if (q.sec) { secOn = visible(q); var h = form.querySelector('[data-sec="' + qi + '"]'); if (h) h.hidden = !secOn; return; }
+      var el = form.querySelector('[data-q="' + qi + '"]'), on = visible(q);
+      el.hidden = !on;
+      if (!on) { delete A[q.id]; return; }
+      if (q.type === "many" && q.max) {   // hold the choice limit
+        var boxes = el.querySelectorAll('input[type=checkbox]'), n = Array.prototype.filter.call(boxes, function (b) { return b.checked; }).length;
+        Array.prototype.forEach.call(boxes, function (b) { b.disabled = !b.checked && n >= q.max; });
+      }
+      if (q.req) { total++; if (complete(q)) { ok++; el.classList.remove("err"); el.querySelector("div.need").hidden = true; } }
+    });
+    var k = 0; Array.prototype.forEach.call(form.querySelectorAll("fieldset.q"), function (f) { if (!f.hidden) f.querySelector(".num").textContent = (++k) + ". "; });
+    document.getElementById("fill").style.width = (total ? Math.round(100 * ok / total) : 0) + "%";
+    document.getElementById("prog").textContent = ok + " من " + total + " سؤال مطلوب";
+    try { localStorage.setItem(KEY + ".draft", JSON.stringify(collectRaw())); } catch (e) {}
+    return { total: total, ok: ok };
+  }
+  function collectRaw() { var o = {}; Array.prototype.forEach.call(form.elements, function (el) { if (!el.id) return; if (el.type === "radio" || el.type === "checkbox") { if (el.checked) o[el.id] = 1; } else if (el.value) o[el.id] = el.value; }); return o; }
+  function restore() { var d; try { d = JSON.parse(localStorage.getItem(KEY + ".draft") || "{}"); } catch (e) { d = {}; } Object.keys(d).forEach(function (id) { var el = document.getElementById(id); if (!el) return; if (el.type === "radio" || el.type === "checkbox") el.checked = true; else el.value = d[id]; }); }
+
+  build(); restore(); sync();
+  form.addEventListener("input", sync); form.addEventListener("change", sync);
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var s = sync(), first = null;
+    Q.forEach(function (q, qi) {
+      if (!q.id || !q.req || !visible(q)) return;
+      var el = form.querySelector('[data-q="' + qi + '"]'), need = el.querySelector("div.need");
+      var bad = !complete(q); el.classList.toggle("err", bad); need.hidden = !bad;
+      if (bad && !first) first = el;
+    });
+    var msg = document.getElementById("msg");
+    if (first) { msg.textContent = "باقي " + (s.total - s.ok) + " سؤال مطلوب. علّمناه لك بالأحمر."; msg.hidden = false; first.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); return; }
+    var cfg = { SUPABASE_URL: "https://lftrvtaopymlqgdcsjdv.supabase.co", SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdHJ2dGFvcHltbHFnZGNzamR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0ODExOTIsImV4cCI6MjExMDA1NzE5Mn0.LCYboIYos-PD8hMEhQUnQ3lXTEE9sUw0pWnFpshePpQ" }, btn = document.getElementById("go");
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) { msg.textContent = "الاستبيان غير مربوط بقاعدة البيانات."; msg.hidden = false; return; }
+    btn.disabled = true; btn.textContent = "جارٍ الإرسال…"; msg.hidden = true;
+    A._ua = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "mobile" : /iPad|Macintosh.*Mobile/i.test(navigator.userAgent) ? "tablet" : "desktop";
+    fetch(cfg.SUPABASE_URL + "/rest/v1/survey_responses", {
+      method: "POST",
+      headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: "Bearer " + cfg.SUPABASE_ANON_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ survey: SURVEY, answers: A })
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      try { localStorage.setItem(KEY + ".sent", "1"); localStorage.removeItem(KEY + ".draft"); } catch (e) {}
+      form.hidden = true; document.querySelector(".bar").hidden = true; document.getElementById("done").hidden = false; window.scrollTo(0, 0);
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = "أرسل إجاباتي";
+      msg.textContent = "ما وصلت الإجابات. تأكد من الإنترنت واضغط إرسال مرة ثانية؛ إجاباتك محفوظة في الصفحة."; msg.hidden = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
