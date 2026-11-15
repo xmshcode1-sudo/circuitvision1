@@ -4,6 +4,7 @@
 (function () {
   "use strict";
   var LAB = CV.logicLab, EXP = LAB.experiments, KEY = "cv-logic-progress";
+  var VIDEO = { 1: "6:48", 2: "4:34", 3: "6:48", 4: "7:02", 5: "7:26", 6: "4:13" };   // logic-lab<n>.mp4, made from this page's own trainer and solutions
   var $ = function (s, r) { return (r || document).querySelector(s); };
   function bd(s) { // Latin names inside Arabic text kept in their own direction (A على a، S على LED a)
     return String(s).split(/([A-Za-z0-9][A-Za-z0-9_'’⊕+=<>·̄\-]*(?: [A-Za-z0-9][A-Za-z0-9_'’⊕+=<>·̄\-]*)*)/).map(function (p, i) { return i % 2 ? '<bdi dir="ltr">' + esc(p) + "</bdi>" : esc(p); }).join("");
@@ -113,6 +114,7 @@
       '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1 class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الهدف</h2><ul>' + e.objective.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>المتطلبات</h2><p class="muted">جهاز IC Trainer، وأسلاك، والدوائر التالية (اضغط أي دائرة لترى أرجلها):</p><div class="lg-chips">' + chipsHtml + '</div>' + (e.note ? '<p class="lg-note">' + bd(e.note) + '</p>' : "") + '</section></div>' +
+      (VIDEO[e.n] ? '<section class="card lg-sec lg-video"><h2>شرح التجربة بالفيديو <span class="muted small ltr">' + VIDEO[e.n] + '</span></h2><video controls playsinline preload="none" poster="logic-lab' + e.n + '.jpg" src="logic-lab' + e.n + '.mp4"></video><p class="muted small">نفس الجهاز اللي تحت: التوصيل سلك سلك، ثم تجربة كل الحالات وقراءة الـ LED.</p></section>' : '') +
       '<h2 class="lg-h">الشرح خطوة بخطوة</h2>' + parts +
       '<h2 class="lg-h">حلّها بنفسك</h2><p class="muted">هذي جداول وأسئلة التجربة من الورقة. أكمل كل واحد ثم اضغط «تحقق». تمارين التوصيل تحلّها على الجهاز تحت.</p>' + tasks +
       '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2>' +

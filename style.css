@@ -605,6 +605,10 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .cx-k.armed b { outline: 2px solid currentColor; outline-offset: 1px; }
 @media (max-width: 380px) { .cx-k b { font-size: 12px; } .cx-n .cx-k b { height: 34px; font-size: 17px; } .cx-lab { font-size: 8.5px; } }
 
+/* ---------- logic lab videos ---------- */
+.lg-video video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; }
+.lg-video h2 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+
 /* ---------- IC trainer (W5101-3D) ---------- */
 .tr-host { position: relative; display: grid; gap: 8px; min-width: 0; }
 .tr-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
