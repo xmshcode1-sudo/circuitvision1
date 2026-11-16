@@ -60,7 +60,7 @@
       '<span class="wb-zoom no-bi"><button type="button" class="wb-b" data-a="zo" aria-label="تصغير">−</button><button type="button" class="wb-b" data-a="fit" aria-label="كامل الطاولة">⤢</button><button type="button" class="wb-b" data-a="zi" aria-label="تكبير">＋</button></span>' +
       '<button type="button" class="wb-b wb-full" data-a="full">ملء الشاشة</button></span></div>' +
       '<div class="wb-stage"><svg class="wb-svg" viewBox="0 0 ' + W + ' ' + H + '" role="application" aria-label="طاولة معمل الدوائر"></svg><div class="wb-tool" hidden></div><div class="wb-pop" hidden></div><div class="wb-toast" hidden></div></div>' +
-      '<ul class="wb-warn" aria-live="polite"></ul></div>';
+      '<ul class="wb-warn" aria-live="polite"></ul><p class="wb-rot">للمساحة الأكبر اقلب الجهاز بالعرض</p></div>';
     var wrap = host.querySelector(".wb"), svg = host.querySelector(".wb-svg"), stage = host.querySelector(".wb-stage"), pop = host.querySelector(".wb-pop"), tool = host.querySelector(".wb-tool"), toastEl = host.querySelector(".wb-toast"), hint = host.querySelector(".wb-hint");
     hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها";
 

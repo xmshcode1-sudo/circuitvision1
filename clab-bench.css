@@ -1,15 +1,16 @@
 /* CircuitVision — the circuits-lab bench (clab-bench.js). Colours follow the photos of the real instruments. */
-.wb { border: 1px solid var(--line-soft, #d9dee7); border-radius: 16px; background: #f4f5f7; overflow: hidden; }
-.wb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; background: #fff; border-bottom: 1px solid var(--line-soft, #d9dee7); }
+.wb { border: 1px solid var(--line-soft, #d9dee7); border-radius: 16px; background: var(--surface, #fff); overflow: hidden; }
+.wb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; background: var(--surface, #fff); border-bottom: 1px solid var(--line-soft, #d9dee7); }
 .wb-hint { flex: 1 1 260px; font-size: 13px; color: var(--fg-2, #4a5568); line-height: 1.5; }
 .wb-acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.wb-b { font: inherit; font-size: 13.5px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line, #cfd6e0); background: #fff; color: var(--fg, #172033); cursor: pointer; touch-action: manipulation; }
+.wb-b { font: inherit; font-size: 13.5px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line, #cfd6e0); background: var(--surface-2, #f6f8fb); color: var(--fg, #172033); cursor: pointer; touch-action: manipulation; }
 .wb-b:disabled { opacity: .4; cursor: default; }
-.wb-b:active:not(:disabled) { background: #eef2f8; }
+.wb-b:active:not(:disabled) { background: var(--line-soft, #eef2f8); }
 .wb-zoom { display: inline-flex; gap: 2px; }
 .wb-zoom .wb-b { min-width: 40px; padding: 6px 0; font-size: 17px; line-height: 1; }
 .wb-full { background: var(--blue, #2463d6); border-color: transparent; color: #fff; font-weight: 600; }
 .wb-stage { position: relative; background: #dfe2e7; }
+.wb-b:disabled { opacity: .35; }
 .wb-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: default; }
 .wb-svg { direction: ltr; }
 .wb-svg text { direction: ltr; unicode-bidi: isolate; font-family: "Inter", "IBM Plex Sans", system-ui, sans-serif; pointer-events: none; }
@@ -180,3 +181,33 @@ html.wb-lock, html.wb-lock body { overflow: hidden; }
 .wb-fullhost .wb-bar { padding: 6px 8px; }
 .wb-fullhost .wb-acts { width: 100%; justify-content: flex-start; }
 .wb-mark { fill: rgba(255, 149, 0, .10); stroke: #ff9500; stroke-width: 3.2; pointer-events: none; }
+
+/* full screen: only what is needed to work, on one compact row */
+.lg-sec.wb-fullhost > h2, .wb-fullhost > .lg-out:empty { display: none !important; }
+.wb-fullhost { gap: 6px !important; padding: calc(env(safe-area-inset-top, 0px) + 6px) max(8px, env(safe-area-inset-right, 0px)) max(6px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) !important; background: var(--bg, #0b1220) !important; }
+.wb-fullhost .lg-bench-bar { flex-wrap: nowrap; overflow-x: auto; gap: 6px; scrollbar-width: none; }
+.wb-fullhost .lg-bench-bar::-webkit-scrollbar { display: none; }
+.wb-fullhost .lg-bench-bar label { flex: 1 1 160px; min-width: 130px; font-size: 0; gap: 0; }
+.wb-fullhost .lg-bench-bar label select { font-size: 14px; min-height: 38px; width: 100%; }
+.wb-fullhost .lg-bench-bar .btn { flex: none; white-space: nowrap; min-height: 38px; padding: 6px 12px; }
+.wb-fullhost .lg-bench-bar .btn .bi-s, .wb-fullhost .wb-b .bi-s { display: none !important; }
+.wb-fullhost .wb { border-radius: 12px; }
+.wb-fullhost .wb-bar { flex-wrap: nowrap; overflow-x: auto; padding: 6px; gap: 6px; scrollbar-width: none; }
+.wb-fullhost .wb-bar::-webkit-scrollbar { display: none; }
+.wb-fullhost .wb-acts { flex-wrap: nowrap; width: auto !important; }
+.wb-fullhost .wb-b { min-height: 38px; padding: 4px 10px; white-space: nowrap; }
+.wb-fullhost .wb-b .bi-s { display: none; }
+.wb-fullhost .wb-stage { background: #dfe2e7; }
+.wb-rot { display: none; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .wb-fullhost .wb-rot { display: block; text-align: center; font-size: 12.5px; color: var(--fg-3, #7584a6); padding: 4px 0 0; }
+}
+.wb-fullhost > *, .wb-fullhost .wb, .wb-fullhost .wb-bar, .wb-fullhost .wb-stage { min-width: 0; max-width: 100%; }
+.wb-fullhost { width: 100vw; max-width: 100vw; box-sizing: border-box; }
+.wb-fullhost .wb-stage { align-items: center; justify-content: center; }
+@media (max-height: 500px) {
+  .wb-fullhost .lg-bench-bar .btn, .wb-fullhost .wb-b, .wb-fullhost .lg-bench-bar label select { min-height: 32px; padding-top: 2px; padding-bottom: 2px; font-size: 13px; }
+  .wb-fullhost .wb-bar { padding: 4px; }
+}
+.lg-sec.wb-fullhost { display: flex !important; flex-direction: column; }
+.wb-fullhost .wb-full { order: -1; }
