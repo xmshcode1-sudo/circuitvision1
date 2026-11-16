@@ -10,6 +10,7 @@
   var NS = "http://www.w3.org/2000/svg";
   var COLS = 9, ROWS = 6, PX = 124, PY = 112, BX = 410, BY = 296;
   function tc(r, c) { return [BX + 82 + c * PX, BY + 76 + r * PY]; }
+  var LANES = [["", 0], [":a", -27], [":b", 27]];
   var SOCK = [[-27, -27], [0, -27], [27, -27], [-27, 0], [0, 0], [27, 0], [-27, 27], [0, 27], [27, 27]];
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function f1(x) { return Math.round(x * 10) / 10; }
@@ -80,7 +81,7 @@
       drawWarnings();
       if (has("sc")) host.querySelector(".cb-scr").innerHTML = '<svg viewBox="0 0 520 400" class="cb-scr-svg">' + scopeScreen(0, 0, 520, 400, true) + "</svg>";
       host.querySelector('[data-a="del"]').disabled = selLead < 0;
-      host.querySelector("#cb-hint").textContent = sel ? "اختر الطرف الثاني للسلك (أو اضغط نفس النقطة للإلغاء)." : selLead >= 0 ? "سلك محدد: احذفه من الزر." : "اضغط فتحة ثم فتحة ثانية لتوصيل سلك · اضغط الفراغ بين مربعين لتركيب قطعة · اضغط أي مقبض أو زر لضبطه.";
+      host.querySelector("#cb-hint").textContent = sel ? "اختر الطرف الثاني للسلك (أو اضغط نفس النقطة للإلغاء)." : selLead >= 0 ? "سلك محدد: احذفه من الزر." : "اضغط فتحة ثم فتحة ثانية لتوصيل سلك · اضغط الفراغ بين مربعين لتركيب قطعة (في كل فراغ ثلاث أماكن فوق بعض، فتقدر تركّب قطعتين أو ثلاث توازي) · اضغط أي مقبض أو زر لضبطه.";
       if (opts.onChange) opts.onChange(api);
     }
 
@@ -102,29 +103,33 @@
         for (var q = 0; q < 18; q++) { var id = "rail:" + k + ":" + q, x = BX + 44 + q * ((COLS * PX - 40) / 17); P[id] = [x, y];
           o('<g class="cb-pt cb-sk' + (sel === id ? " sel" : "") + '" data-p="' + id + '"><circle class="cb-hole" cx="' + f1(x) + '" cy="' + y + '" r="5.5"/><circle class="cb-hit" cx="' + f1(x) + '" cy="' + y + '" r="12"/></g>'); }
       }
-      // slots (gaps between tiles) and the parts in them
+      // slots (gaps between tiles): three lanes each (top / middle / bottom row of sockets), so parts can sit side by side in parallel
       for (r = 0; r < ROWS; r++) for (c = 0; c < COLS; c++) {
         var A = tc(r, c);
-        if (c < COLS - 1) slot("h:" + r + ":" + c, A[0] + PX / 2, A[1], true);
-        if (r < ROWS - 1) slot("v:" + r + ":" + c, A[0], A[1] + PY / 2, false);
+        LANES.forEach(function (ln) {
+          if (c < COLS - 1) slot("h:" + r + ":" + c + ln[0], A[0] + PX / 2, A[1] + ln[1], true);
+          if (r < ROWS - 1) slot("v:" + r + ":" + c + ln[0], A[0] + ln[1], A[1] + PY / 2, false);
+        });
       }
     }
     function slot(id, x, y, h) {
       var pc = state.parts[id];
-      if (!pc) { o('<g class="cb-slot" data-s="' + id + '"><rect class="cb-slot-hit" x="' + (h ? x - 20 : x - 34) + '" y="' + (h ? y - 34 : y - 15) + '" width="' + (h ? 40 : 68) + '" height="' + (h ? 68 : 30) + '" rx="6"/></g>'); return; }
+      if (!pc) { o('<g class="cb-slot" data-s="' + id + '"><rect class="cb-slot-hit" x="' + (h ? x - 22 : x - 11) + '" y="' + (h ? y - 11 : y - 16) + '" width="' + (h ? 44 : 22) + '" height="' + (h ? 22 : 32) + '" rx="5"/></g>'); return; }
       o('<g class="cb-part" data-s="' + id + '" transform="translate(' + x + ' ' + y + ')' + (h ? "" : " rotate(90)") + '">');
-      if (pc.t === "W") { rect(-46, -20, 92, 40, "cb-blk-w", 5); o('<line class="cb-bar-l" x1="-34" y1="0" x2="34" y2="0"/>'); }
+      if (pc.t === "W") { rect(-46, -10, 92, 20, "cb-blk-w", 4); o('<line class="cb-bar-l" x1="-36" y1="0" x2="36" y2="0"/>'); }
       else {
-        rect(-48, -24, 96, 48, "cb-blk", 6); rect(-44, -21, 88, 22, "cb-blk-top", 3);
+        rect(-48, -12, 96, 24, "cb-blk", 5); rect(-45, -9, 90, 18, "cb-blk-top", 3);
         if (pc.t === "R" && pc.bands) {
-          o('<line class="cb-lead-w" x1="-40" y1="-10" x2="40" y2="-10"/><rect class="cb-rbody" x="-24" y="-17" width="48" height="14" rx="6"/>');
-          pc.bands.forEach(function (b, i) { o('<rect x="' + (-17 + i * 9 + (i === 3 ? 5 : 0)) + '" y="-17" width="4" height="14" fill="' + b + '"/>'); });
-        } else if (pc.t === "R") { o('<rect class="cb-sym" x="-16" y="-15" width="32" height="10" fill="none"/><line class="cb-sym" x1="-34" y1="-10" x2="-16" y2="-10"/><line class="cb-sym" x1="16" y1="-10" x2="34" y2="-10"/>'); }
-        else if (pc.t === "L") { o('<path class="cb-sym" fill="none" d="M-34 -10h8q4 -10 8 0q4 -10 8 0q4 -10 8 0q4 -10 8 0h10"/>'); }
-        else if (pc.t === "C") { o('<path class="cb-sym" d="M-34 -10h30M-4 -18v16M4 -18v16M4 -10h30"/>'); }
-        text(pc.bands ? "" : (pc.t === "R" ? si(pc.v, "Ω") : pc.t === "L" ? si(pc.v, "H") : si(pc.v, "F")), 0, 17, "cb-blk-t");
+          o('<line class="cb-lead-w" x1="-40" y1="0" x2="40" y2="0"/><rect class="cb-rbody" x="-22" y="-6" width="44" height="12" rx="5"/>');
+          pc.bands.forEach(function (b, i) { o('<rect x="' + (-15 + i * 8 + (i === 3 ? 5 : 0)) + '" y="-6" width="4" height="12" fill="' + b + '"/>'); });
+        } else {
+          if (pc.t === "R") o('<path class="cb-sym" d="M-41 0h7M-34 -5h22v10h-22zM-12 0h7"/>');
+          else if (pc.t === "L") o('<path class="cb-sym" d="M-41 0h4q3.5 -9 7 0q3.5 -9 7 0q3.5 -9 7 0q3.5 -9 7 0h4"/>');
+          else if (pc.t === "C") o('<path class="cb-sym" d="M-41 0h16M-25 -7v14M-19 -7v14M-19 0h14"/>');
+          text(pc.t === "R" ? si(pc.v, "Ω") : pc.t === "L" ? si(pc.v, "H") : si(pc.v, "F"), 20, 4.5, "cb-blk-t");
+        }
       }
-      o('<rect class="cb-hit" x="-48" y="-24" width="96" height="48"/></g>');
+      o('<rect class="cb-hit" x="-48" y="-12" width="96" height="24"/></g>');
     }
 
     function drawPS(x, y) {
@@ -316,11 +321,20 @@
 
     function openPop(evt, html) {
       pop.innerHTML = '<button type="button" class="cb-pop-x" aria-label="إغلاق">×</button>' + html; pop.hidden = false;
-      var r = stage.getBoundingClientRect(), x = evt.clientX - r.left, y = evt.clientY - r.top, pw = Math.min(300, r.width - 16);
-      pop.style.width = pw + "px"; pop.style.left = Math.max(8, Math.min(r.width - pw - 8, x - pw / 2)) + "px"; pop.style.top = Math.max(8, Math.min(r.height - 60, y + 14)) + "px";
+      // fixed to the screen, so it is never cut off by the bench and its list always scrolls
+      var W = window.innerWidth, H = window.innerHeight, pw = Math.min(320, W - 24), x = evt.clientX, y = evt.clientY;
+      pop.style.width = pw + "px"; pop.style.left = Math.max(12, Math.min(W - pw - 12, x - pw / 2)) + "px";
+      pop.style.maxHeight = ""; pop.style.top = "0px";
+      var h = Math.min(pop.scrollHeight, H * 0.7), below = H - y - 26, above = y - 26, top;
+      if (h <= below || below >= above) { top = y + 14; pop.style.maxHeight = Math.max(160, below) + "px"; }
+      else { top = Math.max(12, y - 14 - h); pop.style.maxHeight = Math.max(160, Math.min(h, above)) + "px"; }
+      pop.style.top = Math.max(12, Math.min(top, H - 172)) + "px";
+      pop.scrollTop = 0; popY = window.scrollY;
       pop.querySelector(".cb-pop-x").onclick = closePop;
     }
     function closePop() { pop.hidden = true; pop.innerHTML = ""; }
+    var popY = 0;
+    window.addEventListener("scroll", function () { if (!pop.hidden && Math.abs(window.scrollY - popY) > 40) closePop(); }, { passive: true });
 
     function partMenu(slotId, evt) {
       var cur = state.parts[slotId], used = {};

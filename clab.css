@@ -23,7 +23,7 @@
 .cb-blk-w { fill: #f7f7f4; stroke: #b9b8b0; stroke-width: 1.5; }
 .cb-bar-l { stroke: #1d1d1d; stroke-width: 5; stroke-linecap: round; }
 .cb-sym { stroke: #111; stroke-width: 2; fill: none; }
-.cb-blk-t { font-size: 13px; font-weight: 700; fill: #1b2340; }
+.cb-blk-t { font-size: 12.5px; font-weight: 700; fill: #1b2340; }
 .cb-rbody { fill: #d9c49a; stroke: #a8915f; }
 .cb-lead-w { stroke: #9a9a9a; stroke-width: 2; }
 /* devices */
@@ -85,7 +85,7 @@
 .cb-plug.red { fill: #b92621; } .cb-plug.blue { fill: #1f4fae; }
 .cb-lead.fixed { stroke-width: 4; opacity: .9; }
 /* popover */
-.cb-pop { position: absolute; z-index: 5; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px; display: grid; gap: 10px; max-height: 70%; overflow: auto; }
+.cb-pop { position: fixed; z-index: 80; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px; display: grid; gap: 10px; max-height: 70vh; overflow: auto; }
 .cb-pop-x { position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line-soft); background: transparent; color: var(--fg-2); font-size: 17px; cursor: pointer; }
 .cb-items { display: grid; gap: 6px; }
 .cb-item { text-align: start; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--fg); border-radius: 9px; padding: 7px 10px; font: inherit; font-size: 14px; cursor: pointer; }
@@ -101,3 +101,8 @@
 .cb-warn li { font-size: 13.5px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line-soft); background: var(--surface-2); line-height: 1.6; }
 .cb-warn li.bad { border-color: var(--bad, #d64535); background: rgba(214, 69, 53, .08); }
 .cb-warn li.warn { border-color: #d9a400; background: rgba(217, 164, 0, .08); }
+/* corrector notes */
+.cl-fix { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.cl-fix li { font-size: 14px; line-height: 1.7; padding: 7px 11px; border-radius: 9px; border: 1px solid var(--line-soft); background: var(--surface-2); }
+.cl-fix li.bad { border-color: var(--bad, #d64535); background: rgba(214, 69, 53, .08); }
+.cl-fix li.info { border-color: #d9a400; background: rgba(217, 164, 0, .08); }

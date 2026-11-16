@@ -74,12 +74,15 @@
   function num(s) { s = String(s || "").trim().replace(/[٠-٩]/g, function (d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); }).replace(/[,،]/g, ".").replace(/−/g, "-"); return s === "" ? NaN : +s; }
 
   /* ---------- wiring check: the student's circuit must be the same graph as the solution's ---------- */
-  function core(state, inst) {
+  function core(state, inst, ov) {
+    ov = ov || {};
     var net = S.build(state, { only: inst, allSrc: true }), par = {};
     function f(k) { if (par[k] === undefined) par[k] = k; while (par[k] !== k) { par[k] = par[par[k]]; k = par[k]; } return k; }
     function u(a, b) { var x = f(a), y = f(b); if (x !== y) par[x] = y; }
     var els = [];
     net.els.forEach(function (e) {
+      if ((ov.open || {})[e.id]) return;
+      if ((ov.wire || {})[e.id]) { u(e.na, e.nb); return; }
       if (/\.sh$/.test(e.id) || e.id === "mn.meter") { u(e.na, e.nb); return; }          // ammeters (and the power meter) are wires
       if (/\.vin$|^sc\.|^fg\.gnd$|^fg\.r$/.test(e.id)) return;                        // voltmeters, scope, generator internals: not part of the circuit
       if (e.id === "fg") { els.push({ k: "FG", a: e.na, b: e.nb, pol: 1 }); return; }
@@ -121,15 +124,114 @@
     }
     return go(0);
   }
-  function wiringReport(e, L, state) {
-    var want = core(stateFor(L, {}, false), e.inst), got = core(state, e.inst);
-    if (iso(want, got)) return { ok: true };
-    function tally(list) { var t = {}; list.forEach(function (x) { var k = x.k === "R" ? CV.clabBench.si(x.v, "Ω") : x.k === "L" ? "ملف " + CV.clabBench.si(x.v, "H") : x.k === "C" ? "مكثف " + CV.clabBench.si(x.v, "F") : x.k === "PS" ? "قناة مصدر مستمر" : x.k === "FG" ? "مولد الإشارة" : x.k; t[k] = (t[k] || 0) + 1; }); return t; }
-    var a = tally(want), b = tally(got), miss = [], extra = [];
-    Object.keys(a).forEach(function (k) { if ((b[k] || 0) < a[k]) miss.push(k + (a[k] - (b[k] || 0) > 1 ? " ×" + (a[k] - (b[k] || 0)) : "")); });
-    Object.keys(b).forEach(function (k) { if ((a[k] || 0) < b[k]) extra.push(k); });
-    return { ok: false, miss: miss, extra: extra };
+  /* ---------- the corrector: compare the student's bench with the manual's circuit and say exactly what is off ---------- */
+  function partName(x) { var si = CV.clabBench.si; return x.k === "R" ? "مقاومة " + si(x.v, "Ω") : x.k === "L" ? "ملف " + si(x.v, "H") : x.k === "C" ? "مكثف " + si(x.v, "F") : x.k === "PS" ? "المصدر المستمر" : x.k === "FG" ? "مولد الإشارة" : x.k === "MN" ? "مصدر المتردد" : x.k; }
+  function relations(list) {   // which parts sit in parallel (same two nodes) or in series (share a node nothing else touches)
+    var deg = {}, rel = {};
+    list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; });
+    for (var i = 0; i < list.length; i++) for (var j = i + 1; j < list.length; j++) {
+      var x = list[i], y = list[j], nx = partName(x), ny = partName(y), pair = [nx, ny].sort().join(" | "), k = null;
+      if ((x.a === y.a && x.b === y.b) || (x.a === y.b && x.b === y.a)) k = "par";
+      else [x.a, x.b].forEach(function (n) { if ((n === y.a || n === y.b) && deg[n] === 2) k = "ser"; });
+      if (k) rel[k + "\u0001" + pair] = (rel[k + "\u0001" + pair] || 0) + 1;
+    }
+    return rel;
   }
+  function openEnds(list) { var deg = {}, out = []; list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; }); list.forEach(function (x) { if (x.k !== "PS" && x.k !== "FG" && x.k !== "MN" && (deg[x.a] === 1 || deg[x.b] === 1)) out.push(partName(x)); }); return out; }
+
+  var JACK = { d1: { A: "A" }, d2: { mA: "mA", "10A": "10A" } }, DNAME = { d1: "الملتيميتر الأصفر (Fluke)", d2: "الملتيميتر الأزرق (PeakTech)" };
+  function meters(state) {   // how each multimeter is wired: as an ammeter (A), a voltmeter (V), an ohmmeter (Ω), half wired, or not used
+    var out = {};
+    ["d1", "d2"].forEach(function (d) {
+      var t = {}; (state.leads || []).forEach(function (l) { l.forEach(function (p) { if (p.indexOf(d + ".") === 0) t[p.slice(3)] = 1; }); });
+      var cur = Object.keys(JACK[d]).filter(function (j) { return t[j]; })[0], n = Object.keys(t).length, mode = state.inst[d].mode;
+      if (!n) return;
+      if (n === 1) { out[d] = { role: "half", mode: mode }; return; }
+      if (cur && t.COM) out[d] = { role: "A", jack: cur, mode: mode };
+      else if (t.V && t.COM) out[d] = { role: mode === "ohm" ? "Ω" : "V", mode: mode };
+      else out[d] = { role: "odd", mode: mode };
+    });
+    return out;
+  }
+  function elementsWith(sol, what, val) {   // name the parts whose current (or voltage) equals the wanted meter reading
+    var si = CV.clabBench.si, names = [];
+    sol.net.els.forEach(function (x) {
+      if (x.k !== "R" && x.k !== "L" && x.k !== "C") return; if (x.box && !x.nom && !x.r) return; if (!x.piece && ["rb", "lb", "cb"].indexOf(x.id) < 0) return;
+      var v = what === "A" ? S.iElem(sol, x) : { dc: sol.dc.V[x.na].re - sol.dc.V[x.nb].re, ac: sol.ac ? S.sub(sol.ac.V[x.na], sol.ac.V[x.nb]) : null };
+      var m = Math.max(Math.abs(v.dc), v.ac ? S.mag(v.ac) * RMS : 0);
+      if (Math.abs(m - Math.abs(val)) <= Math.max(0.01 * Math.abs(val), what === "A" ? 2e-5 : 2e-3)) names.push(x.lb ? x.lb + " (" + si(x.nom || x.r, "Ω") + ")" : (x.id === "rb" ? "صندوق المقاومات" : x.id === "lb" ? "صندوق المحاثة" : x.id === "cb" ? "صندوق المكثفات" : partName({ k: x.k, v: x.k === "R" ? x.nom : x.k === "L" ? x.l : x.c })));
+    });
+    return names.slice(0, 3);
+  }
+  function wiringReport(e, L, state) {
+    var msgs = [], bad = false, si = CV.clabBench.si;
+    function say(lvl, t) { msgs.push({ lvl: lvl, t: t }); if (lvl === "bad") bad = true; }
+    // 2) the meters: are they wired the right way, and do they measure what the manual asks?
+    var sol = stateFor(L, {}, false), mw = meters(sol), mg = meters(state), ROLE = { A: "أميتر", V: "فولتميتر", "Ω": "أوميتر" };
+    if (e.inst.indexOf("mn") > -1) mg = {};
+    var want = core(stateFor(L, {}, false), e.inst), whole = iso(want, core(state, e.inst));
+    Object.keys(mg).forEach(function (d) {
+      var m = mg[d];
+      if (m.role === "half") say("bad", DNAME[d] + " موصول بسلك واحد بس: الجهاز يحتاج سلكين (COM ومدخل القياس).");
+      if (m.role === "odd") say("bad", DNAME[d] + " موصول بين مدخلين غلط: لازم واحد من السلكين في COM.");
+      if (m.role === "A") {
+        var o = {}; o[d + "." + m.jack + ".sh"] = 1;
+        if (!whole && iso(want, core(state, e.inst, { open: o }))) say("bad", DNAME[d] + " مستخدم أميتر لكنه موصول <b>توازي</b>: الأميتر مقاومته شبه صفر، فيقصر اللي بين طرفيه. افتح الدائرة في مكان القياس وحطّه <b>توالي</b>.");
+        if (!/^(a|ma)/.test(m.mode)) say("bad", "سلك " + DNAME[d] + " في مدخل التيار (" + m.jack + ") والمفتاح على غير التيار: حوّل المفتاح على A.");
+      }
+      if (m.role === "V") {
+        var wv = {}; wv[d + ".vin"] = 1;
+        if (!whole && iso(want, core(state, e.inst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
+      }
+    });
+    if (bad) return { ok: false, msgs: msgs };
+    // 1) the circuit itself (meters left out)
+    var got = core(state, e.inst);
+    if (!whole) {
+      var tally = function (list) { var t = {}; list.forEach(function (x) { var k = partName(x); t[k] = (t[k] || 0) + 1; }); return t; };
+      var a = tally(want), b = tally(got);
+      Object.keys(a).forEach(function (k) { var n = a[k] - (b[k] || 0); if (n > 0) say("bad", "ناقص: <b>" + esc(k) + "</b>" + (n > 1 ? " ×" + n : "") + "."); });
+      Object.keys(b).forEach(function (k) { var n = b[k] - (a[k] || 0); if (n > 0) say("bad", "زيادة (ما هي في الدائرة المطلوبة): <b>" + esc(k) + "</b>" + (n > 1 ? " ×" + n : "") + "."); });
+      var oe = openEnds(got).filter(function (n) { return openEnds(want).indexOf(n) < 0; });
+      oe.slice(0, 2).forEach(function (n) { say("bad", "طرف <b>" + esc(n) + "</b> مفتوح: ما هو موصول بأي شيء ثاني، فما يمر فيها تيار."); });
+      if (!msgs.length) {
+        var rw = relations(want), rg = relations(got), shown = 0;
+        Object.keys(rw).forEach(function (k) { if (shown > 2 || (rg[k] || 0) >= rw[k]) return; var q = k.split("\u0001"), pr = q[1].split(" | ");
+          say("bad", "المفروض <b>" + esc(pr[0]) + "</b> و<b>" + esc(pr[1]) + "</b> يكونون على " + (q[0] === "par" ? "التوازي (نفس النقطتين)" : "التوالي (طرف مشترك ما يتفرع)") + "، وفي توصيلك مو كذا."); shown++; });
+        if (!shown) say("bad", "القطع صحيحة، لكن الترتيب مختلف عن الرسمة: قارن كل عقدة في الرسمة بالمربع اللي يقابلها على اللوحة (كل مربع عقدة واحدة).");
+      }
+      return { ok: false, msgs: msgs };
+    }
+    if (e.inst.indexOf("mn") > -1) return { ok: true, msgs: msgs };
+    var need = {}, have = {};
+    Object.keys(mw).forEach(function (d) { need[mw[d].role] = (need[mw[d].role] || 0) + 1; });
+    Object.keys(mg).forEach(function (d) { have[mg[d].role] = (have[mg[d].role] || 0) + 1; });
+    Object.keys(need).forEach(function (r) { if (ROLE[r] && (have[r] || 0) < need[r]) say("bad", "ناقص <b>" + ROLE[r] + "</b>: هذي الخطوة تقيس " + (r === "A" ? "تيارًا، فركّب ملتيميتر توالي (سلك في A أو mA وسلك في COM)" : r === "V" ? "جهدًا، فركّب ملتيميتر توازي (سلك في V وسلك في COM)" : "مقاومة، فالمصدر مفصول والملتيميتر على Ω") + "."); });
+    if (bad) return { ok: false, msgs: msgs };
+    // 3) same settings as the manual, then compare what each meter would read
+    var ref = solveL(e, L, {}, false), test = { parts: JSON.parse(JSON.stringify(state.parts)), leads: JSON.parse(JSON.stringify(state.leads)), inst: JSON.parse(JSON.stringify(ref.state.inst)) };
+    var used = {};
+    Object.keys(mg).forEach(function (d) {
+      var m = mg[d], sd = Object.keys(mw).filter(function (x) { return mw[x].role === m.role && !used[x]; })[0]; if (!sd) return;
+      used[sd] = 1; test.inst[d].mode = ref.state.inst[sd].mode; test.inst[d].blown = {};
+      m.vs = sd;
+    });
+    var rr = S.read(test, { only: e.inst }), rs = S.read(JSON.parse(JSON.stringify(ref.state)), { only: e.inst }), ts = S.solve(ref.state, { only: e.inst });
+    Object.keys(mg).forEach(function (d) {
+      var m = mg[d]; if (!m.vs || m.role === "Ω") return;
+      var g = rr[d].val, w = rs[m.vs].val; if (!isFinite(g) || !isFinite(w)) return;
+      var tol = Math.max(0.03 * Math.abs(w), m.role === "A" ? 5e-5 : 0.02);
+      if (Math.abs(Math.abs(g) - Math.abs(w)) > tol) {
+        var who = elementsWith(ts, m.role, w);
+        say("bad", DNAME[d] + " موصول صح كـ" + ROLE[m.role] + "، لكن في مكان غير المطلوب" + (who.length ? ": المطلوب " + (m.role === "A" ? "التيار المار في " : "الجهد على ") + "<b>" + who.map(esc).join(" أو ") + "</b>" : "") + ".");
+      } else if (!rs[m.vs].ac && Math.abs(w) > tol && g * w < 0) say("info", DNAME[d] + " بيقرأ بالسالب: السلكان معكوسان (الأحمر على الطرف الموجب). ما يضر الجهاز، بس اعكسهم عشان تسجل القراءة صح.");
+      if (state.inst[d].mode !== ref.state.inst[m.vs].mode) say("info", "مفتاح " + DNAME[d] + " على وضع غير المطلوب لهذي الخطوة: المطلوب <b>" + esc(MODE[ref.state.inst[m.vs].mode] || ref.state.inst[m.vs].mode) + "</b>.");
+    });
+    // 4) the supply / generator settings the manual uses
+    if (ref.state.inst.ps && ref.state.inst.ps.on && !state.inst.ps.on) say("info", "التوصيل صح، والمصدر للحين مطفي: شغّل OUTPUT واضبط الجهد على المطلوب.");
+    return { ok: !bad, msgs: msgs };
+  }
+  var MODE = { vdc: "V⎓", vac: "V~", mv: "mV", ohm: "Ω", adc: "A⎓", aac: "A~", madc: "mA⎓", maac: "mA~", off: "OFF" };
 
   /* ---------- rendering ---------- */
   var root = $("#cl-root"), bench = null, cur = null;
@@ -140,6 +242,7 @@
     window.scrollTo(0, 0);
   }
   function showIndex() {
+    var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     document.title = "معمل الدوائر الكهربائية — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1>معمل الدوائر الكهربائية</h1>' +
       '<p>التجارب العشر في كتيب معمل القسم، على طاولة تشبه طاولة المعمل: لوحة التوصيل والقطع، مصدر الجهد بقناتين، ملتيميتران، مولد الإشارة، الأوسيلوسكوب، وصناديق المقاومات والمحاثة. تركّب الدائرة بنفسك وتقيس، والمنصة تتحقق من توصيلك وقراءاتك.</p>' +
@@ -153,6 +256,7 @@
     var nav = '<nav class="lg-tabs" aria-label="التجارب">' + EXP.map(function (x) { return '<a href="#' + x.id + '" class="' + (x === e ? "cur" : "") + '"' + (x === e ? ' aria-current="page"' : "") + '><span class="n">' + x.n + '</span><span>' + esc(x.title.split(" ").slice(0, 3).join(" ")) + '</span></a>'; }).join("") + '</nav>';
     var pre = e.prelab.map(function (t, k) { return taskView(e, t, k); }).join("");
     var procs = e.procs.map(function (p, k) { return procView(e, p, k); }).join("");
+    var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     root.innerHTML = nav +
       '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الأهداف</h2><ul>' + e.objective.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul></section>' +
@@ -162,11 +266,38 @@
       '<h2 class="lg-h">خطوات التجربة</h2>' + procs +
       '<section class="card lg-sec lg-bench" id="bench"><h2>طاولة المعمل</h2>' +
       '<div class="lg-bench-bar"><label>الدائرة: <select id="cl-lay" class="select">' + e.procs.map(function (p) { return (p.layouts || []).map(function (L) { return '<option value="' + p.id + "/" + L.id + '">' + esc(p.title.replace(/^الإجراء [0-9 ()تابع]*:\s*/, "")) + (p.layouts.length > 1 ? " · " + esc(L.name) : "") + '</option>'; }).join(""); }).join("") + '</select></label>' +
-      (e.inst.indexOf("mn") < 0 ? '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button>' : "") + '<button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button></div>' +
+      (e.inst.indexOf("mn") < 0 ? '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button>' : "") + '<button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button><button type="button" class="btn btn-ghost btn-sm" id="cl-ref-open">📐 الرسمة</button></div>' +
       '<div class="lg-out" id="cl-out" aria-live="polite"></div><div id="cl-bench"></div></section>' +
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     bench = CV.clabBench.mount($("#cl-bench"), { key: e.id, inst: e.inst, kit: e.kit });
     wire(e);
+  }
+  /* reference drawing of the selected circuit, pinned top-right like the logic lab; the student can hide it */
+  var REF_KEY = "cv-clab-ref-min";
+  function refPanel(e, open, quiet) {
+    var box = document.getElementById("lg-ref"), sel = $("#cl-lay"); if (!sel) return;
+    var v = sel.value.split("/"), k = -1, p = null, L = null;
+    e.procs.forEach(function (x, i) { if (x.id === v[0]) k = i; });
+    if (k >= 0) { p = e.procs[k]; L = (p.layouts || []).filter(function (x) { return x.id === v[1]; })[0]; }
+    var fp = null; for (var i = k; i >= 0 && !fp; i--) if (e.procs[i].fig) fp = e.procs[i];
+    if (!fp) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement("aside"); box.id = "lg-ref"; box.className = "lg-ref"; box.setAttribute("aria-label", "الرسمة المرجعية");
+      document.body.appendChild(box);
+      box.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-ref]"); if (!b) return;
+        var min = b.dataset.ref === "min"; box.classList.toggle("min", min);
+        try { localStorage.setItem(REF_KEY, min ? "1" : "0"); } catch (x) {}
+      });
+    }
+    var min; try { min = localStorage.getItem(REF_KEY) === "1"; } catch (x) { min = false; }
+    if (open) { min = false; try { localStorage.setItem(REF_KEY, "0"); } catch (x) {} }
+    if (quiet && !open) min = true;
+    box.classList.toggle("min", min);
+    box.innerHTML = '<button type="button" class="lg-ref-pill" data-ref="open" aria-label="أظهر الرسمة المرجعية">📐 الرسمة</button>' +
+      '<div class="lg-ref-card"><div class="lg-ref-h"><div><b>' + bd(esc(p.title)) + '</b>' + (L && p.layouts.length > 1 ? '<span>' + bd(esc(L.name)) + '</span>' : "") + '</div><button type="button" class="lg-ref-x" data-ref="min" aria-label="أخفِ الرسمة" title="أخفِ">×</button></div>' +
+      '<div class="lg-ref-b"><div class="lg-ref-fig">' + CV.draw.render(fp.fig, { aria: "مخطط " + fp.title }) + '</div>' +
+      '<p class="lg-ref-note">' + (fp === p ? "رسمة الدائرة من كتيب المعمل." : "رسمة الدائرة من «" + esc(fp.title) + "» في كتيب المعمل.") + '</p></div></div>';
   }
   function taskView(e, t, k) {
     var id = "pre" + k;
@@ -224,14 +355,17 @@
       $("[data-ct]", el).addEventListener("click", function () { checkTable(e, p, t, el); });
     });
     root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () {
-      var p = e.procs.filter(function (x) { return x.id === b.dataset.go; })[0]; $("#cl-lay").value = p.id + "/" + p.layouts[0].id; $("#cl-out").innerHTML = ""; $("#bench").scrollIntoView({ behavior: "smooth" }); }); });
+      var p = e.procs.filter(function (x) { return x.id === b.dataset.go; })[0]; $("#cl-lay").value = p.id + "/" + p.layouts[0].id; $("#cl-out").innerHTML = ""; refPanel(e, true); $("#bench").scrollIntoView({ behavior: "smooth" }); }); });
+    $("#cl-lay").addEventListener("change", function () { $("#cl-out").innerHTML = ""; refPanel(e, false); });
+    $("#cl-ref-open").addEventListener("click", function () { refPanel(e, true); });
+    refPanel(e, false, true);
     var ck = $("#cl-check"); if (ck) ck.addEventListener("click", function () {
       var v = $("#cl-lay").value.split("/"), p = e.procs.filter(function (x) { return x.id === v[0]; })[0], L = layoutOf(e, v[1], p), r = wiringReport(e, L, bench.state()), out = $("#cl-out");
-      if (r.ok) { out.className = "lg-out ok"; out.innerHTML = "✓ توصيلك مطابق للدائرة: " + esc(p.title) + (p.layouts.length > 1 ? " · " + esc(L.name) : "") + ". الحين شغّل المصدر وقِس."; mark(e.id, p.id + "w");
+      var list = r.msgs.map(function (m) { return '<li class="' + m.lvl + '">' + m.t + '</li>'; }).join("");
+      if (r.ok) { out.className = "lg-out ok"; out.innerHTML = "✓ توصيلك مطابق للدائرة: " + esc(p.title) + (p.layouts.length > 1 ? " · " + esc(L.name) : "") + "، والأجهزة في أماكنها. الحين شغّل المصدر وقِس." + (list ? '<ul class="cl-fix">' + list + "</ul>" : ""); mark(e.id, p.id + "w");
         var w = root.querySelector('#' + e.id + '-' + p.id + ' .cl-wok'); if (w) { w.classList.add("ok"); w.textContent = "✓ التوصيل صحيح"; } return; }
       out.className = "lg-out bad";
-      out.innerHTML = "التوصيل غير مطابق للدائرة المطلوبة." + (r.miss.length ? "<br>ناقص: " + r.miss.map(function (x) { return '<span class="ltr">' + esc(x) + "</span>"; }).join("، ") : "") + (r.extra.length ? "<br>زيادة أو في غير مكانها: " + r.extra.map(function (x) { return '<span class="ltr">' + esc(x) + "</span>"; }).join("، ") : "") +
-        (!r.miss.length && !r.extra.length ? "<br>القطع صحيحة، لكن طريقة التوصيل مختلفة: راجع أي طرف متصل بأي عقدة (كل مربع في اللوحة عقدة واحدة)." : "") + "<br><span class='muted small'>الأميتر يُحسب سلكًا، والفولتميتر والأوسيلوسكوب لا يدخلان في المقارنة.</span>";
+      out.innerHTML = "<b>فيه ملاحظات على التوصيل:</b><ul class=\"cl-fix\">" + list + "</ul><span class='muted small'>قارن مع الرسمة (📐 فوق يمين). كل مربع في اللوحة عقدة واحدة.</span>";
     });
     $("#cl-sol").addEventListener("click", function () {
       var v = $("#cl-lay").value.split("/"), p = e.procs.filter(function (x) { return x.id === v[0]; })[0], L = layoutOf(e, v[1], p), set = JSON.parse(JSON.stringify(L.set || {}));

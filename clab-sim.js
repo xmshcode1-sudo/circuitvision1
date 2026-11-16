@@ -101,7 +101,7 @@
     (state.leads || []).forEach(function (l) { union(tileOf(l[0]), tileOf(l[1])); });
     var parts = state.parts || {}, els = [];
     Object.keys(parts).forEach(function (slot) {
-      var pc = parts[slot], m = /^([hv]):(\d+):(\d+)$/.exec(slot); if (!m || !pc) return;
+      var pc = parts[slot], m = /^([hv]):(\d+):(\d+)(?::[ab])?$/.exec(slot); if (!m || !pc) return;
       var r = +m[2], c = +m[3], a = "t:" + r + ":" + c, b = m[1] === "h" ? "t:" + r + ":" + (c + 1) : "t:" + (r + 1) + ":" + c;
       if (pc.t === "W") union(a, b);
       else els.push({ k: pc.t, a: a, b: b, r: pc.t === "R" ? actual(pc) : 0, nom: pc.v, l: pc.t === "L" ? pc.v : 0, c: pc.t === "C" ? pc.v : 0, id: slot, piece: pc.id, lb: pc.lb });
