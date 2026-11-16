@@ -738,6 +738,8 @@
     "ابدأ بـ Lab#1": "Start with Lab#1",
     "الجهاز للتجريب الحر": "The trainer for free practice",
     "الشرح خطوة بخطوة": "Step-by-step explanation",
+    "شرح التجربة بالفيديو": "Video walkthrough of the experiment",
+    "نفس الطاولة اللي تحت: تركيب الدائرة قطعة قطعة وسلك سلك، ثم ضبط الأجهزة، ثم كل قراءة في الجدول والجهاز موصول في مكانه الصحيح.": "The same bench as below: the circuit built part by part and lead by lead, the instruments set, then every reading of the table with the meter connected where it belongs.",
     "حلّها بنفسك": "Solve it yourself",
     "المتطلبات": "Requirements",
     "الهدف": "Objective",

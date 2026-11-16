@@ -3,6 +3,7 @@
    schematic and tables (checked against the simulator), and the bench at the bottom with «تحقق من توصيلي» and «اعرض الحل». */
 (function () {
   "use strict";
+  var VIDEO = { 1: "3:58", 2: "3:36", 3: "3:14", 4: "2:33", 5: "2:58", 6: "4:16", 7: "3:46", 8: "3:03", 9: "3:11", 10: "1:57" };   // clab-lab<n>.mp4: explainer videos made from this page's own bench and solutions (tools/videos)
   var S = CV.clabSim, X = CV.clabExps, EXP = X.list, KEY = "cv-clab-progress";
   var $ = function (s, r) { return (r || document).querySelector(s); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -61,6 +62,7 @@
       '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الأهداف</h2><ul>' + e.objective.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>الأدوات</h2><ul>' + e.equipment.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul>' + (e.note ? '<p class="lg-note">' + bd(esc(e.note)) + '</p>' : "") + '</section></div>' +
+      (VIDEO[e.n] ? '<section class="card lg-sec lg-video"><h2>شرح التجربة بالفيديو <span class="muted small ltr">' + VIDEO[e.n] + '</span></h2><video controls playsinline preload="none" poster="clab-lab' + e.n + '.jpg" src="clab-lab' + e.n + '.mp4"></video><p class="muted small">نفس الطاولة اللي تحت: تركيب الدائرة قطعة قطعة وسلك سلك، ثم ضبط الأجهزة، ثم كل قراءة في الجدول والجهاز موصول في مكانه الصحيح.</p></section>' : '') +
       '<section class="card lg-sec"><h2>الخلفية باختصار</h2><ul class="lg-steps">' + e.theory.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul></section>' +
       '<h2 class="lg-h">التحضير (Pre-Lab)</h2>' + pre +
       '<h2 class="lg-h">خطوات التجربة</h2>' + procs +

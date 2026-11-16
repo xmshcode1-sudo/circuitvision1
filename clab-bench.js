@@ -47,7 +47,7 @@
     var inst = opts.inst || ["ps", "d1", "d2", "rb"], KEY = "cv-clab2-" + (opts.key || "free");
     var kit = (opts.kit || []).slice(), MAINS = inst.indexOf("mn") > -1, H = MAINS ? 560 : 950;
     var W = MAINS || ["rb", "lb", "cb", "sc"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
-    var state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
+    var marks = [], state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
     var vb = { x: 0, y: 0, w: W, h: H };
     function fresh() { return { parts: {}, leads: [], inst: S.defaults() }; }
     function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.inst) { var d = S.defaults(); Object.keys(d).forEach(function (k) { if (!s.inst[k]) s.inst[k] = d[k]; }); return s; } } catch (e) {} return null; }
@@ -402,6 +402,12 @@
         if (has("cb")) drawDecade("cb", 1206, by, "CAPACITANCE DECADE BOX", ["×1 µF", "×0.1 µF"], "C = " + si(S.cbValue(I), "F"));
       }
       drawLeads();
+      marks.forEach(function (m) {   // orange rings used by the explainer videos (api.mark)
+        var q = m.p && P[m.p], g = m.s && slotGeom(m.s);
+        if (q) o('<circle class="wb-mark" cx="' + q[0] + '" cy="' + q[1] + '" r="' + (m.r || 17) + '"/>');
+        else if (g) o('<rect class="wb-mark" x="' + (g.x - (g.h ? 36 : 22)) + '" y="' + (g.y - (g.h ? 22 : 36)) + '" width="' + (g.h ? 72 : 44) + '" height="' + (g.h ? 44 : 72) + '" rx="10"/>');
+        else if (m.box) o('<rect class="wb-mark" x="' + m.box[0] + '" y="' + m.box[1] + '" width="' + m.box[2] + '" height="' + m.box[3] + '" rx="12"/>');
+      });
       o('<g class="wb-ghost"></g>');
       svg.innerHTML = out.join("");
       drawWarnings(); placeTool();
@@ -640,6 +646,12 @@
       setKit: function (k) { kit = k.slice(); render(); },
       reset: function () { state = fresh(); commit(); },
       refresh: render,
+      /* used by the video generator (tools/videos): rings around points / slots / boxes, a fixed view, geometry */
+      mark: function (list) { marks = list || []; render(); },
+      view: function (x, y, w, h) { svg.setAttribute("viewBox", r2(x) + " " + r2(y) + " " + r2(w) + " " + r2(h)); },
+      size: function () { return { W: W, H: H }; },
+      point: function (id) { return P[id] ? P[id].slice() : null; },
+      slot: function (id) { var g = slotGeom(id); return g ? { x: g.x, y: g.y, h: g.h } : null; },
       destroy: function () { document.removeEventListener("keydown", onKey); document.documentElement.classList.remove("wb-lock"); if (opts.fullEl) opts.fullEl.classList.remove("wb-fullhost"); host.innerHTML = ""; }
     };
     function deepSet(t, s) { Object.keys(s).forEach(function (k) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k])) { t[k] = t[k] || {}; deepSet(t[k], s[k]); } else t[k] = s[k]; }); }

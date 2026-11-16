@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>CircuitVision · video studio (Circuits 1 lab)</title>
+<!-- Renders one 1920×1080 frame of an explainer video. Driven by tools/videos/render.py: window.show(scene, meta). Not part of the site. -->
+<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../clab-bench.css">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050914; }
+  body, body * { font-family: "DejaVu Sans", sans-serif !important; }
+  .wb-svg text { font-family: "Inter", "DejaVu Sans", sans-serif !important; }
+  #frame { position: relative; width: 1920px; height: 1080px; background: #050914; color: #e9eef7; }
+  #hdr-r { position: absolute; top: 20px; right: 28px; font-size: 22px; color: #9aa6bb; direction: rtl; }
+  #hdr-r b { color: #ff8a1f; font-weight: 700; }
+  #hdr-l { position: absolute; top: 20px; left: 28px; font-size: 21px; color: #9aa6bb; }
+  #dev { position: absolute; left: 28px; top: 70px; width: 1300px; height: 975px; border-radius: 22px; background: #121927; box-shadow: inset 0 0 0 1px #1e2738; overflow: hidden; }
+  #bench { position: absolute; inset: 0; }
+  #bench .wb { border: 0; border-radius: 0; background: transparent; height: 100%; }
+  #bench .wb-bar, #bench .wb-warn, #bench .wb-pop, #bench .wb-tool, #bench .wb-toast { display: none !important; }
+  #bench .wb-stage { background: transparent; height: 100%; }
+  #bench .wb-svg { width: 1300px; height: 975px; }
+  #side { position: absolute; left: 1352px; top: 70px; width: 540px; height: 975px; direction: rtl; display: flex; flex-direction: column; gap: 16px; }
+  .t { border-right: 6px solid #ff8a1f; padding-right: 18px; font-size: 33px; font-weight: 700; line-height: 1.32; color: #fff; }
+  .sub { font-size: 30px; font-weight: 700; color: #ff9f43; direction: ltr; text-align: right; unicode-bidi: plaintext; }
+  .ln { font-size: 22px; line-height: 1.6; color: #c3cbda; }
+  .ln p { margin: 0 0 6px; }
+  .note { font-size: 20px; color: #8f9bb0; }
+  .fig { background: #fff; border-radius: 14px; padding: 10px; max-height: 300px; display: flex; justify-content: center; }
+  .fig svg { max-width: 100%; max-height: 280px; height: auto; }
+  ol.steps { margin: 0; padding: 0 26px 0 0; font-size: 19.5px; line-height: 1.55; color: #c3cbda; }
+  ol.steps li { margin-bottom: 6px; }
+  .tb-t { font-size: 18px; color: #8f9bb0; margin-bottom: 6px; }
+  table.tb { border-collapse: collapse; width: 100%; font-size: 19px; direction: rtl; }
+  table.tb th { background: #1d3f91; color: #dbe6ff; font-weight: 700; padding: 8px 8px; border: 1px solid #2a3f6e; }
+  table.tb td { padding: 7px 8px; border: 1px solid #22304b; color: #dbe3f0; text-align: center; font-family: "DejaVu Sans Mono", monospace !important; direction: ltr; }
+  table.tb td.l { text-align: right; direction: rtl; font-family: "DejaVu Sans", sans-serif !important; color: #c3cbda; }
+  table.tb tr.on td { background: #1d3f91; color: #fff; }
+  table.tb tr.on td.v { color: #ff9f43; font-weight: 700; }
+  table.tb.small { font-size: 16px; } table.tb.small td, table.tb.small th { padding: 5px 6px; }
+  #prog { position: absolute; left: 0; bottom: 0; height: 8px; background: #ff8a1f; }
+  #card { position: absolute; inset: 0; display: none; background: radial-gradient(1100px 700px at 70% 22%, #11307a 0%, #0a1a45 38%, #050914 78%); text-align: center; direction: rtl; }
+  #card .eb { position: absolute; top: 420px; width: 100%; font-size: 26px; color: #ff9f43; }
+  #card .ti { position: absolute; top: 470px; width: 100%; font-size: 56px; font-weight: 700; color: #fff; }
+  #card .en { position: absolute; top: 560px; width: 100%; font-size: 25px; color: #9fb0d0; direction: ltr; }
+  #card .ls { position: absolute; top: 625px; width: 100%; font-size: 25px; line-height: 1.75; color: #dfe6f3; }
+  #card .ft { position: absolute; bottom: 48px; width: 100%; font-size: 22px; color: #7b88a6; direction: ltr; }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="hdr-r"><b>CircuitVision</b> · معمل الدوائر الكهربائية EE2010</div>
+  <div id="hdr-l"></div>
+  <div id="dev"><div id="bench"></div></div>
+  <div id="side"></div>
+  <div id="card"><div class="eb"></div><div class="ti"></div><div class="en"></div><div class="ls"></div><div class="ft">CircuitVision · circuitvision1.vercel.app</div></div>
+  <div id="prog"></div>
+</div>
+<script>window.CV_CONFIG = {}; try { localStorage.clear(); } catch (e) {}</script>
+<script src="../../draw.js"></script>
+<script src="../../ac.js"></script>
+<script src="../../clab-sim.js"></script>
+<script src="../../clab-bench.js"></script>
+<script src="../../clab-exps.js"></script>
+<script>
+(function () {
+  "use strict";
+  var bench = null, benchKey = "";
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var PW = 1300, PH = 975;
+  var RECT = { ps: [484, 16, 560, 246], fg: [16, 16, 452, 246], sc: [1060, 16, 524, 246], d1: [16, 282, 190, 356], d2: [214, 282, 190, 356], board: [420, 282, 770, 650], mn: [16, 16, 560, 520] };
+  function boxOfPoint(id) {
+    var k = id.split(".")[0];
+    if (RECT[k]) return RECT[k];
+    if (/^(rb|lb|cb)$/.test(k)) { var j = bench.point(k + ".a"); return j ? [j[0] - 334, j[1] - 80, 378, 200] : null; }
+    if (k === "lamp") return [600, 40, 600, 220];
+    var q = bench.point(id); return q ? [q[0] - 30, q[1] - 30, 60, 60] : null;
+  }
+  function union(a, b) { if (!a) return b; if (!b) return a; var x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]); return [x, y, Math.max(a[0] + a[2], b[0] + b[2]) - x, Math.max(a[1] + a[3], b[1] + b[3]) - y]; }
+  function viewFor(scene) {
+    var sz = bench.size(), W = sz.W, H = sz.H, r = null, f = scene.focus;
+    if (scene.inst.indexOf("mn") > -1) {   // Lab 10: the whole bench to set up, the power meter close up for each reading
+      (scene.marks || []).forEach(function (m) { if (m.box) r = union(r, m.box); });
+      if (!r) r = [0, 0, W, H];
+    } else if (f === "all") r = [0, 0, W, H];
+    else {
+      if (f === "board" || f === "leads" || f === "meters") {   // the part of the board the circuit uses
+        var c = null;
+        Object.keys(scene.state.parts).forEach(function (sl) { var g = bench.slot(sl); if (g) c = union(c, [g.x - 60, g.y - 60, 120, 120]); });
+        scene.state.leads.forEach(function (l) { l.forEach(function (pt) { if (/^t:|^rail:/.test(pt)) { var q = bench.point(pt); if (q) c = union(c, [q[0] - 50, q[1] - 50, 100, 100]); } }); });
+        r = c || (scene.state.leads.length ? null : RECT.board);   // leads only to instruments: show the whole bench
+      }
+      if (f === "scope") r = union(r, RECT.sc);
+      (scene.marks || []).forEach(function (m) {
+        if (m.p) r = union(r, boxOfPoint(m.p));
+        else if (m.s) { var g = bench.slot(m.s); if (g) r = union(r, [g.x - 40, g.y - 40, 80, 80]); }
+        else if (m.box) r = union(r, m.box);
+      });
+      if (!r) r = [0, 0, W, H];
+    }
+    var pad = 26; r = [r[0] - pad, r[1] - pad, r[2] + 2 * pad, r[3] + 2 * pad];
+    var w = Math.max(r[2], 820), h = Math.max(r[3], w * PH / PW); w = Math.max(w, h * PW / PH);
+    var x = r[0] + r[2] / 2 - w / 2, y = r[1] + r[3] / 2 - h / 2;
+    if (w <= W) x = Math.max(0, Math.min(W - w, x)); else x = (W - w) / 2;
+    if (h <= H) y = Math.max(0, Math.min(H - h, y)); else y = (H - h) / 2;
+    return [x, y, w, h];
+  }
+  function tableHtml(t) {
+    if (!t) return "";
+    var n = t.rows.length, hl = -1; t.rows.forEach(function (r, k) { if (r.on) hl = k; });
+    var from = 0, to = n, MAX = 11;
+    if (n > MAX) { from = Math.max(0, Math.min(n - MAX, (hl < 0 ? 0 : hl) - 5)); to = from + MAX; }
+    var ncol = t.head.length, h = '<div class="tb-t">' + esc(t.title) + (n > MAX ? " · الصفوف " + (from + 1) + "–" + to + " من " + n : "") + '</div><table class="tb' + (n > 7 || ncol > 4 ? " small" : "") + '"><tr>' + t.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr>";
+    for (var k = from; k < to; k++) {
+      var r = t.rows[k], cells = [];
+      for (var c = 1; c < ncol; c++) cells.push(r.cells[c - 1] === undefined ? "·" : r.cells[c - 1]);
+      h += '<tr class="' + (r.on ? "on" : "") + '"><td class="l">' + esc(r.label) + (r.unit && t.kind !== "pf" && t.kind !== "pair" && r.label.indexOf("(") < 0 ? ' <span style="color:#7f8aa3">(' + esc(r.unit) + ')</span>' : "") + "</td>" + cells.map(function (v) { return '<td class="v">' + esc(v) + "</td>"; }).join("") + "</tr>";
+    }
+    return h + "</table>";
+  }
+  window.show = function (scene, meta) {
+    document.getElementById("hdr-l").textContent = "التجربة " + meta.n;
+    document.getElementById("prog").style.width = (meta.progress * 100).toFixed(2) + "%";
+    var card = document.getElementById("card");
+    if (scene.kind === "card") {
+      card.style.display = "block";
+      card.querySelector(".eb").textContent = scene.eyebrow; card.querySelector(".ti").textContent = scene.title; card.querySelector(".en").textContent = scene.en || "";
+      card.querySelector(".ls").innerHTML = (scene.lines || []).map(function (l) { return "<div>" + esc(l) + "</div>"; }).join("");
+      return true;
+    }
+    card.style.display = "none";
+    var key = meta.id + "|" + scene.inst.join(",");
+    if (!bench || key !== benchKey) {
+      if (bench) bench.destroy();
+      try { localStorage.clear(); } catch (e) {}
+      var e = CV.clabExps.list.filter(function (x) { return x.id === meta.id; })[0];
+      bench = CV.clabBench.mount(document.getElementById("bench"), { key: "video-" + meta.id, inst: scene.inst, kit: e.kit });
+      benchKey = key;
+    }
+    bench.load({ parts: scene.state.parts, leads: scene.state.leads, set: scene.state.inst });
+    bench.mark(scene.marks || []);
+    var v = viewFor(scene); bench.view(v[0], v[1], v[2], v[3]);
+    var p = scene.panel || {}, h = "";
+    if (p.title) h += '<div class="t">' + esc(p.title) + "</div>";
+    if (p.sub) h += '<div class="sub">' + esc(p.sub) + "</div>";
+    if (p.lines && p.lines.length) h += '<div class="ln">' + p.lines.map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("") + "</div>";
+    if (p.fig) h += '<div class="fig">' + CV.draw.render(p.fig, { aria: p.title }) + "</div>";
+    if (p.steps) h += '<ol class="steps">' + p.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>";
+    if (p.note) h += '<div class="note">' + esc(p.note) + "</div>";
+    if (p.table) h += "<div>" + tableHtml(p.table) + "</div>";
+    document.getElementById("side").innerHTML = h;
+    return true;
+  };
+})();
+</script>
+</body>
+</html>

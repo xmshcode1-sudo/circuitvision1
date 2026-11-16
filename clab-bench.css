@@ -179,3 +179,4 @@ html.wb-lock, html.wb-lock body { overflow: hidden; }
 .wb-fullhost .wb-hint { display: none; }
 .wb-fullhost .wb-bar { padding: 6px 8px; }
 .wb-fullhost .wb-acts { width: 100%; justify-content: flex-start; }
+.wb-mark { fill: rgba(255, 149, 0, .10); stroke: #ff9500; stroke-width: 3.2; pointer-events: none; }
