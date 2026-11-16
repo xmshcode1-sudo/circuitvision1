@@ -110,6 +110,7 @@
     }).join("");
     var tasks = e.tasks.map(function (t, k) { return taskView(e, t, k); }).join("");
     var builds = e.tasks.filter(function (t) { return t.type === "build" || t.type === "seq"; });
+    var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     root.innerHTML = nav +
       '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1 class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الهدف</h2><ul>' + e.objective.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + '</ul></section>' +
@@ -119,7 +120,7 @@
       '<h2 class="lg-h">حلّها بنفسك</h2><p class="muted">هذي جداول وأسئلة التجربة من الورقة. أكمل كل واحد ثم اضغط «تحقق». تمارين التوصيل تحلّها على الجهاز تحت.</p>' + tasks +
       '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2>' +
       (builds.length ? '<div class="lg-bench-bar"><label>التمرين: <select id="lg-task" class="select">' + builds.map(function (t) { return '<option value="' + t.id + '">' + esc(t.title) + '</option>'; }).join("") + '</select></label>' +
-        '<button type="button" class="btn btn-primary btn-sm" id="lg-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="lg-sol">اعرض الحل على الجهاز</button><button type="button" class="btn btn-ghost btn-sm" id="lg-new">لوحة فارغة</button></div><div id="lg-task-note" class="lg-note"></div><div id="lg-out" class="lg-out" aria-live="polite"></div>' : "") +
+        '<button type="button" class="btn btn-primary btn-sm" id="lg-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="lg-sol">اعرض الحل على الجهاز</button><button type="button" class="btn btn-ghost btn-sm" id="lg-new">لوحة فارغة</button><button type="button" class="btn btn-ghost btn-sm" id="lg-ref-open">الرسمة المرجعية</button></div><div id="lg-task-note" class="lg-note"></div><div id="lg-out" class="lg-out" aria-live="polite"></div>' : "") +
       '<div id="lg-tr"></div></section>' +
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ Lab#' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">Lab#' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     trainer = CV.trainer.mount($("#lg-tr"), { key: e.id });
@@ -182,7 +183,7 @@
           if (ok) mark(e.id, t.id, 1);
         });
       });
-      var go = $("[data-go]", el); if (go) go.addEventListener("click", function () { $("#lg-task").value = t.id; showTaskNote(); $("#bench").scrollIntoView({ behavior: "smooth" }); });
+      var go = $("[data-go]", el); if (go) go.addEventListener("click", function () { $("#lg-task").value = t.id; showTaskNote(); refPanel(e, t, true); $("#bench").scrollIntoView({ behavior: "smooth" }); });
       var ck = $("[data-check]", el); if (ck) ck.addEventListener("click", function () { check(e, t, el); });
       el.querySelectorAll("[data-k]").forEach(function (b) { b.addEventListener("click", function () { var x = $("[data-x]", el), p = x.selectionStart == null ? x.value.length : x.selectionStart; x.value = x.value.slice(0, p) + b.dataset.k + x.value.slice(x.selectionEnd == null ? p : x.selectionEnd); x.focus(); try { x.setSelectionRange(p + 1, p + 1); } catch (er) {} }); });
     });
@@ -190,7 +191,8 @@
       b.addEventListener("click", function () { var p = e.parts.filter(function (x) { return x.id === b.dataset.demo; })[0]; load(p.demo); $("#bench").scrollIntoView({ behavior: "smooth" }); });
     });
     var sel = $("#lg-task"); if (!sel) return;
-    sel.addEventListener("change", showTaskNote); showTaskNote();
+    sel.addEventListener("change", function () { showTaskNote(); refPanel(e, curTask(), false); }); showTaskNote(); refPanel(e, curTask(), false, true);
+    var rb = $("#lg-ref-open"); if (rb) rb.addEventListener("click", function () { refPanel(e, curTask(), true); });
     $("#lg-check").addEventListener("click", function () { var t = curTask(); boardCheck(e, t); });
     var solBtn = $("#lg-sol");
     solBtn.addEventListener("click", function () {
@@ -200,6 +202,30 @@
       var t = curTask(); load(t.sol); $("#lg-out").className = "lg-out"; $("#lg-out").innerHTML = "<b>هذا حلّ واحد صحيح، وفيه خطوات التوصيل:</b>" + wiringList(t.sol) + "<p class='muted small'>جرّب المفاتيح وراقب الـ LED، ثم امسح اللوحة وحاول توصيلها بنفسك.</p>";
     });
     $("#lg-new").addEventListener("click", function () { trainer.reset(); $("#lg-out").innerHTML = ""; });
+  }
+  /* ---------- reference drawing: a small panel pinned top-right while the student wires (the sheet's figure, no answers) ---------- */
+  var REF_KEY = "cv-logic-ref-min";
+  function refPanel(e, t, open, quiet) {
+    var box = document.getElementById("lg-ref"), fig = t && CV.logicFigs ? CV.logicFigs.get(e.id, t) : null;
+    if (!fig) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement("aside"); box.id = "lg-ref"; box.className = "lg-ref"; box.setAttribute("aria-label", "الرسمة المرجعية");
+      document.body.appendChild(box);
+      box.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-ref]"); if (!b) return;
+        var min = b.dataset.ref === "min"; box.classList.toggle("min", min);
+        try { localStorage.setItem(REF_KEY, min ? "1" : "0"); } catch (x) {}
+      });
+    }
+    var min; try { min = localStorage.getItem(REF_KEY) === "1"; } catch (x) { min = false; }
+    if (open) { min = false; try { localStorage.setItem(REF_KEY, "0"); } catch (x) {} }
+    if (quiet && !open) min = true;
+    box.classList.toggle("min", min);
+    box.innerHTML = '<button type="button" class="lg-ref-pill" data-ref="open" aria-label="أظهر الرسمة المرجعية">📐 الرسمة</button>' +
+      '<div class="lg-ref-card"><div class="lg-ref-h"><div><b>' + esc(fig.title) + '</b><span>' + bd(t.title) + '</span></div><button type="button" class="lg-ref-x" data-ref="min" aria-label="أخفِ الرسمة" title="أخفِ">×</button></div>' +
+      '<div class="lg-ref-b">' + (fig.svg ? '<div class="lg-ref-fig">' + fig.svg + '</div>' : "") +
+      fig.chips.map(function (id) { var c = CV.chips.get(id); return '<details class="lg-ref-ic"' + (fig.svg ? "" : " open") + '><summary>أرجل <span class="ltr">' + id + '</span>' + (c ? ' · ' + esc(c.ar) : "") + '</summary>' + CV.logicFigs.pinout(id) + '</details>'; }).join("") +
+      '<p class="lg-ref-note">مرجع من ورقة التجربة، بدون الحل.</p></div></div>';
   }
   function curTask() { var id = $("#lg-task").value; return cur.tasks.filter(function (x) { return x.id === id; })[0]; }
   function showTaskNote() { var t = curTask(); if (!t) return; $("#lg-task-note").innerHTML = bd(t.note || ""); $("#lg-out").innerHTML = ""; }
