@@ -97,7 +97,7 @@
     { id: "courses",    ar: "المقررات والدروس",       en: "Courses",                 step: 2, status: "build", href: "lesson.html" },
     { id: "feedback",   ar: "التغذية الراجعة الذكية", en: "Smart Feedback",          step: 2, status: "ok" },
     { id: "generator",  ar: "مولّد التمارين",          en: "Circuit Generator",       step: 2, status: "ok",    href: "practice.html" },
-    { id: "lab",        ar: "المعمل الذكي",           en: "Smart Virtual Lab",       step: 3, status: "build", href: "lab.html" },
+    { id: "lab",        ar: "معمل الدوائر",           en: "Circuits Lab",       step: 3, status: "build", href: "lab.html" },
     { id: "bank",       ar: "بنك الأسئلة",            en: "Question Bank",           step: 4, status: "build", href: "bank.html" },
     { id: "tutor",      ar: "المعلم الذكي",           en: "AI Tutor",                step: 5, status: "build", href: "tutor.html" },
     { id: "challenges", ar: "التحديات الهندسية",      en: "Engineering Challenges",  step: 5, status: "build", href: "challenges.html" },

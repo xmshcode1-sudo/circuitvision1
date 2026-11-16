@@ -188,14 +188,11 @@
 <script src="c1-sinusoidal.js"></script>
 <script src="c1-power.js"></script>
 <script src="summaries.js"></script><script src="visuals.js"></script>
-<script src="labsim.js"></script>
-<script src="experiments.js"></script>
 <script>
   function labCard(L) {
-    var X = CV.labExperiments, x = X && X.list[L.id], st = x && CV.store.labExp(L.id), lk = 'style="color:var(--glow);text-decoration:underline"';
-    if (x) return '<div class="pending"><span class="ic">' + CV.shell.icon("lab") + '</span><p><b>تجربة المعمل: ' + x.title + (st && st.completedAt ? ' ✓' : '') + '</b>' + x.intro + ' <a href="lab.html#exp-' + L.id + '" ' + lk + '>' + (st && st.completedAt ? "أعد التجربة في المعمل الذكي" : "ابدأ التجربة الموجّهة (" + x.steps.length + " خطوات)") + '</a></p></div>';
-    var why = X && X.unavailable[L.id];
-    return '<div class="pending"><span class="ic">' + CV.shell.icon("lab") + '</span><p><b>تجربة المعمل: ' + L.lab.title + '</b>' + L.lab.desc + ' ' + (why ? "لا توجد تجربة موجّهة لهذا الدرس: " + why : "هذه التجربة الموجّهة لم تُجهّز بعد.") + ' يمكنك بناء دوائرك وقياسها بنفسك في <a href="lab.html" ' + lk + '>المعمل الذكي</a>.</p></div>';
+    var n = CV.cloud && CV.cloud.LAB_OF[L.id], lk = 'style="color:var(--glow);text-decoration:underline"';
+    if (n) return '<div class="pending"><span class="ic">' + CV.shell.icon("lab") + '</span><p><b>معمل الدوائر: التجربة ' + n + '</b>نفس تجربة معمل الجامعة على طاولة واقعية (لوحة توصيل، مزوّد جهد، ملتيميتر، مولّد إشارة، راسم إشارة): تبني الدائرة بنفسك، تقيس، وتعبّئ الجداول. <a href="lab.html#exp' + n + '" ' + lk + '>افتح التجربة ' + n + ' في المعمل</a></p></div>';
+    return '<div class="pending"><span class="ic">' + CV.shell.icon("lab") + '</span><p><b>معمل الدوائر</b>لا توجد تجربة في دليل المعمل لهذا الدرس. يمكنك تصفّح تجارب <a href="lab.html" ' + lk + '>معمل الدوائر</a> العشر.</p></div>';
   }
 (function () {
   "use strict";

@@ -72,7 +72,7 @@
   function pageNeeds() {
     var c = PAGE_COURSE[PAGE], h = decodeURIComponent(location.hash.slice(1));
     if (!c) return null;
-    if (PAGE === "lab.html" && /^exp-/.test(h) && api.freeLesson(h.slice(4))) return null;
+    if (PAGE === "lab.html" && /^exp\d+$/.test(h) && api.labFree(+h.slice(3))) return null;
     if (PAGE === "academy.html" && /^c\d-/.test(h) && api.freeLesson(h)) return null;
     return c;
   }
@@ -207,7 +207,13 @@
       if (!c || !c.is_paid) return true;
       return !!api.sub(id);
     },
-    freeLesson: function (lessonId) { return /-1$/.test(lessonId); },   // the first lesson of every chapter is the free sample
+    freeLesson: function (lessonId) { return /-1$/.test(lessonId); },
+    /* lesson id -> Circuits 1 bench experiment (lab.html#expN), following the university lab manual */
+    LAB_OF: { "c1-elements-1": 1, "c1-elements-2": 1, "c1-elements-3": 2, "c1-resistive-3": 3, "c1-resistive-4": 3, "c1-resistive-5": 3,
+      "c1-techniques-1": 4, "c1-techniques-2": 4, "c1-techniques-3": 4, "c1-techniques-4": 5, "c1-techniques-5": 5, "c1-techniques-6": 5,
+      "c1-techniques-9": 6, "c1-techniques-10": 6, "c1-techniques-11": 6, "c1-power-6": 6, "c1-techniques-12": 7,
+      "c1-sinusoidal-1": 8, "c1-sinusoidal-2": 8, "c1-sinusoidal-3": 8, "c1-sinusoidal-9": 8, "c1-sinusoidal-4": 9, "c1-sinusoidal-6": 9, "c1-power-7": 10 },
+    labFree: function (n) { for (var k in api.LAB_OF) if (api.LAB_OF[k] === n && api.freeLesson(k)) return true; return false; },   // the first lesson of every chapter is the free sample
     canLesson: function (lessonId) { return api.freeLesson(lessonId) || api.can("circuits-1"); },
     price: function (id) { var c = api.course(id); return c ? (c.price_halalas / 100).toFixed(2) : "9.99"; },
     freeNote: function (id) { return id === "logic-design" ? "تجربة Lab#1 مجانية كاملة." : "الدرس الأول من كل فصل مجاني لتجربة المنصة."; },

@@ -1,0 +1,103 @@
+/* CircuitVision — Circuits 1 lab bench (lab.html) */
+.cb-wrap { display: grid; gap: 8px; min-width: 0; }
+.cb-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.cb-hint { font-size: 13px; color: var(--fg-3); }
+.cb-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.cb-stage { position: relative; border-radius: 14px; overflow: hidden; background: #d9dde2; border: 1px solid var(--line); }
+.cb-svg { display: block; width: 100%; height: auto; direction: ltr; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.cb-svg text { font-family: "IBM Plex Sans Arabic", system-ui, sans-serif; }
+.cb-hit { fill: transparent; cursor: pointer; }
+/* board */
+.cb-board { fill: #ecebe4; stroke: #c9c6b9; stroke-width: 2; }
+.cb-brd-t { font-size: 11px; fill: #8b887c; letter-spacing: .5px; }
+.cb-tl { fill: none; stroke: #2b2b2b; stroke-width: 2.2; }
+.cb-hole { fill: #1d1d1d; }
+.cb-sk:hover .cb-hole, .cb-pt.sel .cb-hole { fill: #2f7bff; }
+.cb-pt.sel .cb-hit { fill: rgba(47, 123, 255, .25); }
+.cb-rail { stroke: #2b2b2b; stroke-width: 3; }
+.cb-slot-hit { fill: transparent; cursor: pointer; }
+.cb-slot:hover .cb-slot-hit { fill: rgba(47, 123, 255, .14); stroke: rgba(47, 123, 255, .5); stroke-dasharray: 4 3; }
+.cb-part { cursor: pointer; }
+.cb-blk { fill: rgba(160, 172, 214, .55); stroke: #7d8ab8; stroke-width: 1.5; }
+.cb-blk-top { fill: #fff; stroke: #c9cbd6; }
+.cb-blk-w { fill: #f7f7f4; stroke: #b9b8b0; stroke-width: 1.5; }
+.cb-bar-l { stroke: #1d1d1d; stroke-width: 5; stroke-linecap: round; }
+.cb-sym { stroke: #111; stroke-width: 2; fill: none; }
+.cb-blk-t { font-size: 13px; font-weight: 700; fill: #1b2340; }
+.cb-rbody { fill: #d9c49a; stroke: #a8915f; }
+.cb-lead-w { stroke: #9a9a9a; stroke-width: 2; }
+/* devices */
+.cb-dev { fill: #eef0f2; stroke: #aeb4bc; stroke-width: 2; }
+.cb-ps { fill: #f3f4f5; } .cb-fg { fill: #efe6c9; stroke: #c8b98a; } .cb-sc { fill: #f2f3f0; } .cb-mn { fill: #f2efe6; }
+.cb-fluke { fill: #f2b51c; stroke: #c48e0a; } .cb-peak { fill: #2f74c9; stroke: #1f5aa3; } .cb-dec { fill: #233f9e; stroke: #182d75; }
+.cb-dec + text, .cb-dec ~ .cb-dev-t { fill: #fff; }
+.cb-dev-t { font-size: 12px; font-weight: 600; fill: #3d4654; letter-spacing: .3px; }
+.cb-dark { fill: #5b4a17; }
+.cb-face { fill: #9fb0c2; opacity: .45; }
+.cb-disp { fill: #111; stroke: #333; }
+.cb-seg { font-family: "JetBrains Mono", ui-monospace, monospace !important; font-size: 30px; font-weight: 700; }
+.cb-seg.g { fill: #5cf07a; } .cb-seg.r { fill: #ff4b3a; } .cb-seg.lcd { fill: #1c2414; font-size: 34px; }
+.cb-segu { font-size: 13px; fill: #9fb3a3; } .cb-segu.r { fill: #ff9a8e; }
+.cb-tiny { font-size: 11px; fill: #3d4654; } .cb-w { fill: #fff !important; }
+.cb-knob-d { font-size: 16px; font-weight: 700; fill: #1d2a44; font-family: "JetBrains Mono", ui-monospace, monospace !important; pointer-events: none; } .cb-dim { opacity: .45; } .cb-badt { fill: #b3261e; font-weight: 700; }
+.cb-lbl { font-size: 12px; font-weight: 700; fill: #2b3442; }
+.cb-val { font-size: 12px; fill: #1d2a44; font-family: "JetBrains Mono", ui-monospace, monospace !important; }
+.cb-val.big { font-size: 18px; fill: #fff; font-weight: 700; }
+.cb-dec .cb-lbl, .cb-dec ~ .cb-lbl { fill: #fff; }
+.cb-knob { fill: #fbfbfb; stroke: #b7bcc3; stroke-width: 2; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.cb-knob-l { stroke: #555; stroke-width: 3; stroke-linecap: round; }
+.cb-ctl { cursor: pointer; }
+.cb-ctl:hover .cb-knob, .cb-ctl:hover .cb-btn { stroke: #2f7bff; }
+.cb-btn { fill: #dfe3e8; stroke: #9aa3ae; stroke-width: 1.5; }
+.cb-btn.on { fill: #ffd9d4; stroke: #d64535; } .cb-btn.on-y { fill: #fff0a6; stroke: #c9a400; } .cb-btn.on-c { fill: #c9f3ff; stroke: #1e9fc4; }
+.cb-btn-t { font-size: 12px; font-weight: 700; fill: #2b3442; }
+.cb-led { fill: #50555c; } .cb-led.on-r { fill: #ff3b2f; } .cb-led.on-g { fill: #38d45b; }
+.cb-jk { stroke-width: 2.5; } .cb-red { fill: #d8312b; stroke: #9e1d18; } .cb-blue { fill: #2a63d4; stroke: #1b4396; } .cb-yel { fill: #f0cf1f; stroke: #b39500; }
+.cb-blk.cb-jk, .cb-jk.cb-blk { fill: #222; stroke: #000; } .cb-cyan { fill: #22b9d6; stroke: #11809a; }
+.cb-jh { fill: #0b0b0b; }
+.cb-pt:hover .cb-jk { stroke: #2f7bff; stroke-width: 4; }
+/* multimeters */
+.cb-dmm-face { fill: #2d3036; }
+.cb-lcd { fill: #b9c6a2; stroke: #7f8c6a; }
+.cb-lcd-u { font-size: 14px; font-weight: 700; fill: #1c2414; }
+.cb-dial { fill: #1d1f23; stroke: #444; stroke-width: 3; }
+.cb-dial-t { font-size: 11px; fill: #c8ccd3; font-weight: 600; } .cb-dial-t.on { fill: #ffd34d; }
+.cb-dial-p { stroke: #f0f0f0; stroke-width: 6; stroke-linecap: round; }
+.cb-fluke .cb-tiny, .cb-peak ~ .cb-tiny { fill: #fff; }
+/* scope */
+.cb-scr-bg { fill: #0a1622; stroke: #2c4458; }
+.cb-grid { stroke: rgba(255, 255, 255, .13); stroke-width: 1; stroke-dasharray: 2 4; } .cb-grid.c { stroke: rgba(255, 255, 255, .3); stroke-dasharray: none; }
+.cb-tr1 { fill: none; stroke: #ffe14a; stroke-width: 2; } .cb-tr2 { fill: none; stroke: #3fd6ff; stroke-width: 2; } .cb-trm { fill: none; stroke: #ff5aa8; stroke-width: 2; }
+.cb-cur { stroke: #c78bff; stroke-width: 1.5; stroke-dasharray: 5 3; }
+.cb-scr-t { font-size: 10px; fill: #9fb3c8; font-family: "JetBrains Mono", ui-monospace, monospace !important; }
+.cb-scr-t.big { font-size: 14px; } .cb-scr-t.y { fill: #ffe14a; } .cb-scr-t.c { fill: #3fd6ff; } .cb-scr-t.m { fill: #e0c9ff; }
+.cb-scope-big { display: grid; gap: 6px; max-width: 560px; }
+.cb-scr-svg { display: block; width: 100%; height: auto; border-radius: 10px; direction: ltr; }
+/* mains + lamp */
+.cb-pm { fill: #1b2a1f; stroke: #3b5240; }
+.cb-tube { fill: #e6ebef; stroke: #b5bdc4; } .cb-tube.lit { fill: #f4fbff; stroke: #9fd7ff; filter: drop-shadow(0 0 10px #bfe6ff); }
+/* leads */
+.cb-lead, .cb-lead-sh, .cb-lead-hit { fill: none; stroke-linecap: round; }
+.cb-lead-sh { stroke: rgba(0, 0, 0, .25); stroke-width: 7; transform: translate(0, 3px); }
+.cb-lead { stroke-width: 4.5; } .cb-lead.red { stroke: #d8312b; } .cb-lead.blue { stroke: #2a63d4; }
+.cb-lead-hit { stroke: transparent; stroke-width: 16; cursor: pointer; }
+.cb-lead-g.sel .cb-lead { stroke-width: 7; stroke-dasharray: 10 5; }
+.cb-plug.red { fill: #b92621; } .cb-plug.blue { fill: #1f4fae; }
+.cb-lead.fixed { stroke-width: 4; opacity: .9; }
+/* popover */
+.cb-pop { position: absolute; z-index: 5; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px; display: grid; gap: 10px; max-height: 70%; overflow: auto; }
+.cb-pop-x { position: absolute; top: 6px; left: 6px; width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line-soft); background: transparent; color: var(--fg-2); font-size: 17px; cursor: pointer; }
+.cb-items { display: grid; gap: 6px; }
+.cb-item { text-align: start; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--fg); border-radius: 9px; padding: 7px 10px; font: inherit; font-size: 14px; cursor: pointer; }
+.cb-item.cur { border-color: var(--blue); background: var(--blue-soft); }
+.cb-item[disabled] { opacity: .45; cursor: not-allowed; } .cb-item small { color: var(--fg-3); }
+.cb-sl { display: grid; gap: 6px; font-size: 13.5px; }
+.cb-sl-row { display: flex; gap: 6px; align-items: center; }
+.cb-sl input[type="range"] { flex: 1; min-width: 0; }
+.cb-sl input[type="number"] { width: 110px; }
+.cb-pre { display: flex; flex-wrap: wrap; gap: 6px; }
+/* warnings */
+.cb-warn { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cb-warn li { font-size: 13.5px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line-soft); background: var(--surface-2); line-height: 1.6; }
+.cb-warn li.bad { border-color: var(--bad, #d64535); background: rgba(214, 69, 53, .08); }
+.cb-warn li.warn { border-color: #d9a400; background: rgba(217, 164, 0, .08); }

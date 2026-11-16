@@ -210,7 +210,7 @@
     var t = TOOLS[p.tool];
     root.innerHTML = '<nav class="crumbs"><a href="#">الهندسة في الواقع</a><span>/</span><span>' + p.ar + '</span></nav>' +
       '<header class="rw-one card"><div class="rw-pic big">' + ILL[p.id]() + '</div><div><h1>' + p.ar + '</h1><span class="ltr en">' + p.en + '</span><p>' + p.what + '</p>' +
-      '<div class="rw-links">' + p.lessons.map(function (l) { return '<a class="chip chip-src" href="lesson.html#' + l + '">درس: ' + lessonName(l) + '</a>'; }).join("") + (p.lab ? '<a class="chip chip-build" href="lab.html#ex-' + p.lab + '">جرّبه في المعمل</a>' : "") + '</div></div></header>' +
+      '<div class="rw-links">' + p.lessons.map(function (l) { return '<a class="chip chip-src" href="lesson.html#' + l + '">درس: ' + lessonName(l) + '</a>'; }).join("") + (p.lab === "max-power" ? '<a class="chip chip-build" href="lab.html#exp6">جرّبه في معمل الدوائر (التجربة 6)</a>' : "") + '</div></div></header>' +
       '<div class="rw-cols"><section class="card rw-sec"><h2>كيف تتعرف عليه</h2><ul class="ticks">' + p.identify.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card rw-sec"><h2>كيف تقيسه</h2><ul class="ticks">' + p.measure.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul></section></div>' +
       '<section class="card rw-sec"><h2>أعطال شائعة</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>العَرَض</th><th>السبب المحتمل</th><th>ماذا تفعل</th></tr></thead><tbody>' + p.faults.map(function (f) { return "<tr><td>" + f[0] + "</td><td>" + f[1] + "</td><td>" + f[2] + "</td></tr>"; }).join("") + '</tbody></table></div></section>' +
