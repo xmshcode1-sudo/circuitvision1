@@ -419,12 +419,22 @@
 
     /* ---------- pointer handling ---------- */
     function pt(evt) { var m = svg.getScreenCTM(); if (!m) return [0, 0]; var p = svg.createSVGPoint(); p.x = evt.clientX; p.y = evt.clientY; p = p.matrixTransform(m.inverse()); return [p.x, p.y]; }
+    function px(n) { var r = svg.getBoundingClientRect(); return n * vb.w / Math.max(1, r.width); }   // n screen pixels in drawing units
     function nearestPoint(q, max, skip) { var best = null, bd = max; Object.keys(P).forEach(function (id) { if (id === skip) return; var d = Math.hypot(P[id][0] - q[0], P[id][1] - q[1]); if (d < bd) { bd = d; best = id; } }); return best; }
     function nearestSlot(q, max) { var all = allSlots(), best = null, bd = max; Object.keys(all).forEach(function (id) { if (state.parts[id]) return; var g = all[id], d = Math.hypot(g.x - q[0], g.y - q[1]); if (d < bd) { bd = d; best = id; } }); return best; }
     function onBoard(q) { return q[0] > BX - 10 && q[0] < BX + BW + 10 && q[1] > BY - 10 && q[1] < BY + BH - 100; }
     function ghost(html) { var g = svg.querySelector(".wb-ghost"); if (g) g.innerHTML = html; }
     var pointers = {}, pinch = null;
-    function setVB() { vb.w = clamp(vb.w, W / 5, W); vb.h = vb.w * H / W; vb.x = clamp(vb.x, 0, W - vb.w); vb.y = clamp(vb.y, 0, H - vb.h); svg.setAttribute("viewBox", r2(vb.x) + " " + r2(vb.y) + " " + r2(vb.w) + " " + r2(vb.h)); placeTool(); }
+    var asp = null;   // height/width of the view; in full screen it follows the screen so the bench fills it (drag the desk to see the rest)
+    function fitFull() {
+      if (!wrap.classList.contains("full")) { asp = null; vb = { x: 0, y: 0, w: W, h: H }; setVB(); return; }
+      var r = svg.getBoundingClientRect(); if (r.width < 10 || r.height < 10) return;
+      asp = r.height / r.width;
+      if (asp <= H / W) vb = { x: 0, y: 0, w: W, h: W * asp };                       // wide screen: full width, drag up and down
+      else { var w = H / asp; vb = { x: MAINS ? 0 : clamp(BX + BW / 2 - w / 2 - 120, 0, W - w), y: 0, w: w, h: H }; }   // tall screen: full height, starts at the board
+      setVB();
+    }
+    function setVB() { var A = asp || H / W; vb.w = clamp(vb.w, W / 5, Math.min(W, H / A)); vb.h = vb.w * A; vb.x = clamp(vb.x, 0, W - vb.w); vb.y = clamp(vb.y, 0, H - vb.h); svg.setAttribute("viewBox", r2(vb.x) + " " + r2(vb.y) + " " + r2(vb.w) + " " + r2(vb.h)); placeTool(); }
     function zoomAt(q, f) { var nw = clamp(vb.w * f, W / 5, W), k = nw / vb.w; vb.x = q[0] - (q[0] - vb.x) * k; vb.y = q[1] - (q[1] - vb.y) * k; vb.w = nw; setVB(); }
 
     svg.addEventListener("pointerdown", function (evt) {
@@ -442,7 +452,7 @@
       else if ((el = t.closest("[data-t]"))) { var it = TRAY[+el.dataset.t]; if (it && !it.gone) { drag.k = "tray"; drag.pc = it.pc; } else drag.k = "none"; }
       else if ((el = t.closest("[data-p]"))) { drag.k = "lead"; drag.from = el.dataset.p; }
       else if ((el = t.closest("[data-l]"))) { drag.k = "leadsel"; drag.i = +el.dataset.l; }
-      else { var np = nearestPoint(q, 13); if (np) { drag.k = "lead"; drag.from = np; } else { drag.k = "pan"; drag.vb0 = { x: vb.x, y: vb.y }; } }
+      else { var np = nearestPoint(q, Math.max(13, px(22))); if (np) { drag.k = "lead"; drag.from = np; } else { drag.k = "pan"; drag.vb0 = { x: vb.x, y: vb.y }; } }
       evt.preventDefault();
     });
     svg.addEventListener("pointermove", function (evt) {
@@ -454,11 +464,11 @@
       if (!drag.moved && Math.hypot(dxp, dyp) < 7) return;
       drag.moved = true;
       if (drag.k === "lead" || drag.k === "replug") {
-        var from = drag.k === "lead" ? drag.from : state.leads[drag.i][1 - drag.e], tgt = nearestPoint(q, 26, from), a2 = P[from], b2 = tgt ? P[tgt] : q, col = drag.k === "lead" ? (ptKind(from) || "red") : leadColor(state.leads[drag.i], drag.i);
+        var from = drag.k === "lead" ? drag.from : state.leads[drag.i][1 - drag.e], tgt = nearestPoint(q, Math.max(26, px(34)), from), a2 = P[from], b2 = tgt ? P[tgt] : q, col = drag.k === "lead" ? (ptKind(from) || "red") : leadColor(state.leads[drag.i], drag.i);
         drag.tgt = tgt;
-        ghost('<g class="wb-lead c-' + col + ' live"><path class="wb-lead-o" d="' + leadPath(a2, b2) + '"/><path class="wb-lead-c" d="' + leadPath(a2, b2) + '"/><circle class="wb-plug" cx="' + r2(b2[0]) + '" cy="' + r2(b2[1]) + '" r="8.2"/></g>' + (tgt ? '<circle class="wb-target" cx="' + b2[0] + '" cy="' + b2[1] + '" r="15"/>' : ""));
+        ghost('<g class="wb-lead c-' + col + ' live"><path class="wb-lead-o" d="' + leadPath(a2, b2) + '"/><path class="wb-lead-c" d="' + leadPath(a2, b2) + '"/><circle class="wb-plug" cx="' + r2(b2[0]) + '" cy="' + r2(b2[1]) + '" r="8.2"/></g>' + (tgt ? '<circle class="wb-target" cx="' + b2[0] + '" cy="' + b2[1] + '" r="' + r2(Math.max(15, px(18))) + '"/>' : ""));
       } else if (drag.k === "part" || drag.k === "tray") {
-        var pc = drag.k === "part" ? state.parts[drag.id] : drag.pc, sl = onBoard(q) ? nearestSlot(q, 60) : null, g = sl ? allSlots()[sl] : { x: q[0], y: q[1], h: true };
+        var pc = drag.k === "part" ? state.parts[drag.id] : drag.pc, sl = onBoard(q) ? nearestSlot(q, Math.max(60, px(44))) : null, g = sl ? allSlots()[sl] : { x: q[0], y: q[1], h: true };
         if (drag.k === "part" && !sl && onBoard(q)) { var own = allSlots()[drag.id]; if (Math.hypot(own.x - q[0], own.y - q[1]) < 60) { sl = drag.id; g = own; } }
         drag.slot = sl;
         ghost((sl ? '<rect class="wb-target" x="' + (g.x - (g.h ? 32 : 18)) + '" y="' + (g.y - (g.h ? 18 : 32)) + '" width="' + (g.h ? 64 : 36) + '" height="' + (g.h ? 36 : 64) + '" rx="6"/>' : "") + partSvg(pc, g, "drag"));
@@ -510,7 +520,9 @@
       if (c === "sc.t") return { get: function () { return TDIV.indexOf(I.sc.td); }, set: function (v) { I.sc.td = TDIV[v]; }, min: 0, max: TDIV.length - 1, step: 1, px: 0.04, show: function (v) { return si(TDIV[v], "s") + "/div"; }, title: "SEC/DIV" };
       if ((m = /^sc\.(c[12])\.pos$/.exec(c))) return { get: function () { return I.sc[m[1]].pos || 0; }, set: function (v) { I.sc[m[1]].pos = v; }, min: -4, max: 4, step: 0.1, px: 0.03, unit: "div", title: "VERTICAL POSITION" };
       if (c === "sc.hpos") return { get: function () { return I.sc.hpos || 0; }, set: function (v) { I.sc.hpos = v; }, min: -6, max: 6, step: 0.1, px: 0.04, unit: "div", title: "HORIZONTAL POSITION" };
-      if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) return { get: function () { return I[m[1]].d[+m[2]]; }, set: function (v) { I[m[1]].d[+m[2]] = v; }, min: 0, max: 9, step: 1, px: 0.035, title: { rb: "صندوق المقاومات", lb: "صندوق المحاثة", cb: "صندوق المكثفات" }[m[1]] };
+      if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) { var DL = { rb: ["×1 kΩ", "×100 Ω", "×10 Ω", "×1 Ω"], lb: ["×10 mH", "×1 mH", "×0.1 mH"], cb: ["×1 µF", "×0.1 µF"] }[m[1]];
+        return { get: function () { return I[m[1]].d[+m[2]]; }, set: function (v) { I[m[1]].d[+m[2]] = v; }, min: 0, max: 9, step: 1, px: 0.035, title: { rb: "صندوق المقاومات", lb: "صندوق المحاثة", cb: "صندوق المكثفات" }[m[1]], tag: DL[+m[2]],
+          extra: function () { return m[1] === "rb" ? "R = " + si(S.rbValue(I), "Ω") : m[1] === "lb" ? "L = " + si(S.lbValue(I), "H") : "C = " + si(S.cbValue(I), "F"); } }; }
       if ((m = /^(d[12])\.dial$/.exec(c))) { var dl = DIAL[m[1]]; return { get: function () { return Math.max(0, dl.map(function (x) { return x[0]; }).indexOf(I[m[1]].mode)); }, set: function (v) { I[m[1]].mode = dl[v][0]; delete hold[m[1]]; }, min: 0, max: dl.length - 1, step: 1, px: 0.025, show: function (v) { return dl[v][1] + " · " + DIAL_AR[dl[v][0]]; }, title: DNAME[m[1]] }; }
       return null;
     }
@@ -559,15 +571,15 @@
     function openSpec(c, s, evt) {
       function shown() { var v = s.get(); return s.show ? s.show(v) : (s.log ? si(v, s.unit) : (s.step < 1 ? v.toFixed(s.step < 0.1 ? 2 : 1) : v) + (s.unit ? " " + s.unit : "")); }
       var big = s.log ? null : s.step * (s.max - s.min > 50 * s.step ? 10 : 1);
-      pop.innerHTML = '<div class="wb-pop-h"><b>' + esc(s.title || "") + '</b><button type="button" class="wb-pop-x" aria-label="أغلق">✕</button></div>' +
-        '<div class="wb-pop-v no-bi" dir="ltr">' + esc(shown()) + '</div>' +
+      pop.innerHTML = '<div class="wb-pop-h"><b>' + esc(s.title || "") + (s.tag ? ' <span class="wb-pop-tag" dir="ltr">' + esc(s.tag) + '</span>' : "") + '</b><button type="button" class="wb-pop-x" aria-label="أغلق">✕</button></div>' +
+        '<div class="wb-pop-v no-bi" dir="ltr"><span>' + esc(shown()) + '</span>' + (s.extra ? '<small>' + esc(s.extra()) + '</small>' : "") + '</div>' +
         '<div class="wb-pop-r no-bi">' + (big && big !== s.step ? '<button type="button" data-d="' + -big + '">−−</button>' : "") + '<button type="button" data-d="' + (s.log ? "/" : -s.step) + '">−</button><button type="button" data-d="' + (s.log ? "*" : s.step) + '">＋</button>' + (big && big !== s.step ? '<button type="button" data-d="' + big + '">＋＋</button>' : "") + '</div>' +
         (s.log ? "" : '<input class="wb-pop-s" type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + s.get() + '">') +
         (s.presets ? '<div class="wb-pop-p no-bi" dir="ltr">' + s.presets.map(function (p) { return '<button type="button" data-set="' + p + '">' + esc(si(p, s.unit)) + '</button>'; }).join("") + '</div>' : "") +
         (s.note ? '<p class="wb-pop-n">' + esc(s.note) + '</p>' : "");
       placeBox(pop, evt);
       var first = true;
-      function apply(v) { if (first) { snap(); first = false; } v = s.log ? clamp(+v.toPrecision(3), s.min, s.max) : Math.round(quant(s, v) * 1e6) / 1e6; s.set(v); commit(); pop.querySelector(".wb-pop-v").textContent = shown(); var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.value = v; }
+      function apply(v) { if (first) { snap(); first = false; } v = s.log ? clamp(+v.toPrecision(3), s.min, s.max) : Math.round(quant(s, v) * 1e6) / 1e6; s.set(v); commit(); pop.querySelector(".wb-pop-v span").textContent = shown(); if (s.extra) pop.querySelector(".wb-pop-v small").textContent = s.extra(); var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.value = v; }
       pop.querySelectorAll("[data-d]").forEach(function (b) { b.onclick = function () { var d = b.dataset.d, v = s.get(); apply(d === "*" ? v * 1.1 : d === "/" ? v / 1.1 : v + +d); }; });
       pop.querySelectorAll("[data-set]").forEach(function (b) { b.onclick = function () { apply(+b.dataset.set); }; });
       var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.oninput = function () { apply(+sl.value); };
@@ -627,11 +639,13 @@
       if (a === "clear") { snap(); var keep = state.inst; state = fresh(); state.inst = keep; sel = null; commit(); }
       if (a === "zi") zoomAt([vb.x + vb.w / 2, vb.y + vb.h / 2], 1 / 1.3);
       if (a === "zo") zoomAt([vb.x + vb.w / 2, vb.y + vb.h / 2], 1.3);
-      if (a === "fit") { vb = { x: 0, y: 0, w: W, h: H }; setVB(); }
-      if (a === "full") { var on = wrap.classList.toggle("full"); wrap.classList.toggle("solo", !opts.fullEl); if (opts.fullEl) opts.fullEl.classList.toggle("wb-fullhost", on); document.documentElement.classList.toggle("wb-lock", on); b.textContent = on ? "خروج من ملء الشاشة" : "ملء الشاشة"; if (opts.onFull) opts.onFull(on); setTimeout(placeTool, 50); }
+      if (a === "fit") fitFull();
+      if (a === "full") { var on = wrap.classList.toggle("full"); wrap.classList.toggle("solo", !opts.fullEl); if (opts.fullEl) opts.fullEl.classList.toggle("wb-fullhost", on); document.documentElement.classList.toggle("wb-lock", on); b.textContent = on ? "خروج من ملء الشاشة" : "ملء الشاشة"; if (opts.onFull) opts.onFull(on); setTimeout(function () { fitFull(); placeTool(); }, 60); }
     });
     function onKey(e) { if (e.key === "Escape" && wrap.classList.contains("full")) wrap.querySelector('[data-a="full"]').click(); if ((e.key === "Delete" || e.key === "Backspace") && sel && sel.k !== "pt" && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || "")) { e.preventDefault(); var b = tool.querySelector('[data-t="del"]'); if (b) b.click(); } }
     document.addEventListener("keydown", onKey);
+    function onResize() { if (wrap.classList.contains("full")) setTimeout(fitFull, 120); }
+    window.addEventListener("resize", onResize);
 
     var api = {
       state: function () { return state; },
@@ -652,7 +666,7 @@
       size: function () { return { W: W, H: H }; },
       point: function (id) { return P[id] ? P[id].slice() : null; },
       slot: function (id) { var g = slotGeom(id); return g ? { x: g.x, y: g.y, h: g.h } : null; },
-      destroy: function () { document.removeEventListener("keydown", onKey); document.documentElement.classList.remove("wb-lock"); if (opts.fullEl) opts.fullEl.classList.remove("wb-fullhost"); host.innerHTML = ""; }
+      destroy: function () { document.removeEventListener("keydown", onKey); window.removeEventListener("resize", onResize); document.documentElement.classList.remove("wb-lock"); if (opts.fullEl) opts.fullEl.classList.remove("wb-fullhost"); host.innerHTML = ""; }
     };
     function deepSet(t, s) { Object.keys(s).forEach(function (k) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k])) { t[k] = t[k] || {}; deepSet(t[k], s[k]); } else t[k] = s[k]; }); }
     render();
