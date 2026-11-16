@@ -1,0 +1,7 @@
+{
+  "name": "circuitvision",
+  "private": true,
+  "scripts": {
+    "test": "node tests/clab-solutions.test.js && node tests/clab-mistakes.test.js && node tests/clab-values.test.js"
+  }
+}

@@ -146,7 +146,7 @@
     var html = '<div class="cv-acc">' + (api.subscriptionsOn() ? '<a class="nv' + (PAGE === "pay.html" ? ' active' : '') + '" href="pay.html">' + ic("pay") + '<span class="lbl">اشتراكاتي</span></a>' : '') +
       (access && access.admin ? '<a class="nv' + (PAGE === "admin.html" ? ' active' : '') + '" href="admin.html">' + ic("admin") + '<span class="lbl">لوحة الإدارة</span></a>' : '') +
       '<button type="button" class="nv" id="cv-signout">' + ic("logout") + '<span class="lbl">تسجيل الخروج</span><span class="soon cv-who">' + esc(api.name()) + '</span></button></div>';
-    var sw = nav.querySelector(".lang-sw");
+    var sw = nav.querySelector(".lang-box") || nav.querySelector(".lang-sw");
     if (sw) sw.insertAdjacentHTML("beforebegin", html); else nav.insertAdjacentHTML("beforeend", html);
     document.getElementById("cv-signout").addEventListener("click", function () { api.signOut().then(function () { location.replace("login.html"); }); });
   }

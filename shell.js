@@ -39,10 +39,14 @@
     if (opts.onSettings) html += '<button class="nv" type="button" id="open-settings">' + svg("settings") + '<span class="lbl">الإعدادات</span></button>';
     else html += '<a class="nv" href="dashboard.html#prefs">' + svg("settings") + '<span class="lbl">الإعدادات</span></a>';
     var lang = CV.bi ? CV.bi.mode() : "ar";
-    html += '<div class="lang-sw no-bi" role="group" aria-label="اللغة الأولى · First language"><button type="button" data-lang="ar" aria-pressed="' + (lang === "ar") + '">العربية أولًا</button><button type="button" data-lang="en" aria-pressed="' + (lang === "en") + '" lang="en">English first</button></div>';
+    var solo = CV.bi && CV.bi.second() === "solo";
+    html += '<div class="lang-box no-bi" role="group" aria-label="اللغة · Language"><div class="lang-ttl">اللغة · Language</div>' +
+      '<div class="lang-sw"><button type="button" data-lang="ar" aria-pressed="' + (lang === "ar") + '">العربية</button><button type="button" data-lang="en" aria-pressed="' + (lang === "en") + '" lang="en">English</button></div>' +
+      '<label class="lang-sub"><input type="checkbox" id="lang-both"' + (solo ? "" : " checked") + '><span>' + (lang === "ar" ? "الترجمة الإنجليزية تحتها بخط صغير" : "Arabic underneath, in small type") + '</span></label></div>';
     html += '<button type="button" class="kb-open" id="kb-open"><kbd>?</kbd> اختصارات لوحة المفاتيح</button>';
     document.getElementById("nav").innerHTML = html;
     document.getElementById("kb-open").addEventListener("click", function () { help(byId); });
+    var lb = document.getElementById("lang-both"); if (lb) lb.addEventListener("change", function () { if (CV.bi) CV.bi.setSecond(lb.checked ? "both" : "solo"); });
     document.querySelectorAll("#nav [data-lang]").forEach(function (b) { b.addEventListener("click", function () { if (CV.bi && b.dataset.lang !== CV.bi.mode()) CV.bi.set(b.dataset.lang); }); });
     if (opts.onSettings) document.getElementById("open-settings").addEventListener("click", opts.onSettings);
 

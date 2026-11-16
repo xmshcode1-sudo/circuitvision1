@@ -106,3 +106,7 @@
 .cl-fix li { font-size: 14px; line-height: 1.7; padding: 7px 11px; border-radius: 9px; border: 1px solid var(--line-soft); background: var(--surface-2); }
 .cl-fix li.bad { border-color: var(--bad, #d64535); background: rgba(214, 69, 53, .08); }
 .cl-fix li.info { border-color: #d9a400; background: rgba(217, 164, 0, .08); }
+/* results tables: the %-error column is filled automatically, so give it room and a calm background */
+.cl-t th { white-space: nowrap; }
+.cl-t td.cl-e, .cl-t td.cl-p { min-width: 84px; text-align: center; font-variant-numeric: tabular-nums; background: var(--bg-2, #f3f5f9); border: 1px solid var(--line-soft, #e1e6ee); }
+.cl-t td.cl-e:empty::before { content: "—"; color: var(--fg-3, #8a93a3); }

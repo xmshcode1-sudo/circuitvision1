@@ -1,0 +1,181 @@
+/* CircuitVision — the circuits-lab bench (clab-bench.js). Colours follow the photos of the real instruments. */
+.wb { border: 1px solid var(--line-soft, #d9dee7); border-radius: 16px; background: #f4f5f7; overflow: hidden; }
+.wb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; background: #fff; border-bottom: 1px solid var(--line-soft, #d9dee7); }
+.wb-hint { flex: 1 1 260px; font-size: 13px; color: var(--fg-2, #4a5568); line-height: 1.5; }
+.wb-acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.wb-b { font: inherit; font-size: 13.5px; min-height: 40px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line, #cfd6e0); background: #fff; color: var(--fg, #172033); cursor: pointer; touch-action: manipulation; }
+.wb-b:disabled { opacity: .4; cursor: default; }
+.wb-b:active:not(:disabled) { background: #eef2f8; }
+.wb-zoom { display: inline-flex; gap: 2px; }
+.wb-zoom .wb-b { min-width: 40px; padding: 6px 0; font-size: 17px; line-height: 1; }
+.wb-full { background: var(--blue, #2463d6); border-color: transparent; color: #fff; font-weight: 600; }
+.wb-stage { position: relative; background: #dfe2e7; }
+.wb-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: default; }
+.wb-svg { direction: ltr; }
+.wb-svg text { direction: ltr; unicode-bidi: isolate; font-family: "Inter", "IBM Plex Sans", system-ui, sans-serif; pointer-events: none; }
+.wb.full.solo { position: fixed; inset: 0; z-index: 900; border-radius: 0; }
+.wb.full { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.wb.full .wb-stage { flex: 1; min-height: 0; display: flex; }
+.wb.full .wb-svg { height: 100%; }
+.wb.full .wb-warn { max-height: 20vh; overflow: auto; flex: none; }
+.wb-fullhost { position: fixed !important; inset: 0; z-index: 900; margin: 0 !important; border-radius: 0 !important; display: flex; flex-direction: column; gap: 6px; padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px 8px !important; background: var(--surface, #fff); overflow: hidden; }
+.wb-fullhost > h2 { display: none; }
+.wb-fullhost > #cl-bench { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.wb-fullhost > .lg-out { max-height: 26vh; overflow: auto; flex: none; margin: 0; }
+html.wb-lock .lg-ref { z-index: 950; top: calc(env(safe-area-inset-top, 0px) + 128px); }
+html.wb-lock, html.wb-lock body { overflow: hidden; }
+
+.wb-desk { fill: url(#wb-desk); }
+.wb-shelf { fill: #c9cdd4; }
+.wb-sh { fill: rgba(20, 30, 50, .18); }
+.wb-hit { fill: transparent; stroke: none; }
+.wb-ctl, .wb-pt, .wb-part, .wb-tr, .wb-lead { cursor: pointer; }
+.wb-lbl { font-size: 10.5px; font-weight: 600; fill: #3a4250; letter-spacing: .03em; }
+.wb-lbl-d { font-size: 11px; font-weight: 700; fill: #f1f3f6; letter-spacing: .06em; }
+.wb-val { font-size: 10.5px; fill: #2a3240; font-variant-numeric: tabular-nums; }
+.wb-tiny { font-size: 7.6px; fill: #4b5563; letter-spacing: .04em; }
+.wb-tiny-l { font-size: 7px; fill: #e8eaed; letter-spacing: .03em; }
+.wb-brand { font-size: 13px; font-weight: 800; fill: #1f2937; letter-spacing: .05em; }
+
+/* jacks */
+.wb-jk { stroke: rgba(0, 0, 0, .35); stroke-width: 1; }
+.wb-jr { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 1.2; }
+.wb-jh { fill: #14161a; }
+.wb-red { fill: #d92d20; } .wb-blue { fill: #1f5fd0; } .wb-black { fill: #2b2f36; } .wb-yellow { fill: #f2c200; }
+.wb-pt:hover .wb-jk, .wb-pt:hover .wb-so { stroke: #0b84ff; stroke-width: 2; }
+
+/* knobs, keys, leds */
+.wb-knob-sh { fill: rgba(0, 0, 0, .22); }
+.wb-knob { stroke: rgba(0, 0, 0, .28); stroke-width: 1; }
+.wb-knob.white { fill: #f7f7f5; } .wb-knob.cream { fill: #f3ecd4; } .wb-knob.grey { fill: #9aa2ad; }
+.wb-knob-top { fill: rgba(255, 255, 255, .55); stroke: rgba(0, 0, 0, .08); }
+.wb-knob-l { stroke: #1d232c; stroke-width: 2.4; stroke-linecap: round; }
+.wb-btn { fill: #dfe3e8; stroke: #8a929e; stroke-width: 1; }
+.wb-btn.in { fill: #b9c2cd; }
+.wb-btn.push { fill: #c6ccd4; stroke: #6b7480; } .wb-btn.push.in { fill: #8f99a6; }
+.wb-btn.rocker { fill: #2b2f36; } .wb-btn.rocker.in { fill: #d92d20; }
+.wb-btn.key { fill: #f6efd6; stroke: #a89c6a; } .wb-btn.key.in { fill: #c9e7c2; stroke: #4b8a3c; }
+.wb-btn.soon { opacity: .55; }
+.wb-btn.sckey { fill: #f4f6f8; stroke: #9aa3ad; } .wb-btn.sckey.in { fill: #bfe3ff; stroke: #2a7fd0; }
+.wb-btn.flkey { fill: #5d6570; stroke: #2a2f36; } .wb-btn.flkey.in { fill: #2b8cff; } .wb-btn.flkey.yel { fill: #f5b800; }
+.wb-btn.pkkey { fill: #2f7de0; stroke: #174a94; } .wb-btn.pkkey.in { fill: #0b3d8a; }
+.wb-btn.mnkey { fill: #d92d20; stroke: #7a1710; } .wb-btn.mnkey.in { fill: #2ea043; stroke: #17602a; }
+.wb-btn-t { font-size: 8.4px; font-weight: 700; fill: #1f2937; }
+.wb-btn.rocker + .wb-btn-t, .wb-btn.flkey + .wb-btn-t, .wb-btn.pkkey + .wb-btn-t, .wb-btn.mnkey + .wb-btn-t { fill: #fff; }
+.wb-btn.flkey + .wb-btn-t { font-size: 6.4px; }
+.wb-led { fill: #5b616b; stroke: rgba(0, 0, 0, .3); stroke-width: .6; }
+.wb-led.on.red { fill: #ff3b30; filter: drop-shadow(0 0 3px #ff3b30); }
+.wb-led.on.green { fill: #30d158; filter: drop-shadow(0 0 3px #30d158); }
+
+/* supply */
+.wb-case { fill: #f4f4f1; stroke: #b9bcc0; stroke-width: 1; }
+.wb-disp { fill: #0b0d0f; stroke: #2a2d31; stroke-width: 1.5; }
+.wb-disp-t { font-size: 12px; font-weight: 700; fill: #d7dbe0; }
+.wb-disp-s { font-size: 8px; fill: #c3c8cf; letter-spacing: .05em; }
+.wb-disp-r { font-size: 10px; font-weight: 700; fill: #ff6b61; }
+.wb-panel { fill: #9aa7ba; stroke: #7f8da2; stroke-width: 1; }
+.wb-pan-t { font-size: 8.5px; font-weight: 700; fill: #26303d; letter-spacing: .12em; }
+
+/* function generator */
+.wb-fgcase { fill: #d8d2bb; stroke: #a9a286; } .wb-fgface { fill: #f0e3ad; stroke: #cbb96f; }
+.wb-pintek { font-size: 15px; font-weight: 900; fill: #c81e1e; letter-spacing: .02em; }
+.wb-fgout { fill: #e6d795; stroke: #bfae62; }
+
+/* oscilloscope */
+.wb-sccase { fill: #f1f1ee; stroke: #b9bcc0; } .wb-scbez { fill: #2b7fd9; } .wb-scscr { fill: #050608; }
+.wb-scpan { fill: #53a6e6; stroke: #2d7fc4; }
+.wb-grid { stroke: #5b6672; stroke-width: .5; stroke-dasharray: 1.5 3; } .wb-grid.mid { stroke: #8e9aa6; stroke-dasharray: 1 2; }
+.wb-wave { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.wb-cur { stroke: #c77dff; stroke-width: .9; stroke-dasharray: 3 2; }
+.wb-sct { font-size: 8.6px; fill: #e9edf2; font-family: ui-monospace, "SF Mono", Menlo, monospace !important; }
+.wb-pt-brand { font-size: 11px; font-weight: 800; fill: #1f5fa8; font-style: italic; }
+
+/* multimeters */
+.wb-fluke { fill: #f7b500; stroke: #b98600; } .wb-fluke-in { fill: #3b3f45; stroke: #23262a; }
+.wb-peak { fill: #1f6fd6; stroke: #144e9c; } .wb-peak-in { fill: #e9ecef; stroke: #b8bfc8; }
+.wb-fl-logo { fill: #f7b500; } .wb-fl-logo-t { font-size: 9px; font-weight: 900; fill: #1b1d20; }
+.wb-pk-logo { font-size: 11px; font-weight: 800; fill: #1b4f9c; font-style: italic; }
+.wb-lcd { fill: #c6cfbe; stroke: #6f7868; stroke-width: 1.2; }
+.wb-lcd-t { font-size: 26px; font-weight: 700; fill: #1a2016; font-family: ui-monospace, Menlo, monospace !important; }
+.wb-lcd-u { font-size: 12px; font-weight: 700; fill: #1a2016; } .wb-lcd-s { font-size: 7.5px; font-weight: 700; fill: #2c3526; }
+.wb-dial { fill: #1d2025; stroke: #0c0d0f; stroke-width: 2; } .wb-dial.pk { fill: #f2f3f5; stroke: #aab1bb; }
+.wb-dial-g { fill: #2e3238; stroke: #55595f; } .wb-dial-g.pk { fill: #fff; stroke: #9aa3ad; }
+.wb-dial-m { stroke: #fff; stroke-width: 3; stroke-linecap: round; } .wb-dial-g.pk + .wb-dial-m { stroke: #d92d20; }
+.wb-dial-t { font-size: 10.5px; font-weight: 700; fill: #d5d9de; }
+.wb-peak-in ~ g .wb-dial-t, .wb-dial-t.pkt { fill: #26303d; }
+.wb-dial-t.on { fill: #ffd60a; font-size: 12px; } .wb-dial-t.off { fill: #ff8a80; }
+
+/* decade boxes */
+.wb-dec { fill: #e9e3cf; stroke: #b8b095; } .wb-dec-in { fill: #1f58c2; stroke: #153f8e; }
+.wb-dec-t { font-size: 10px; font-weight: 700; fill: #fff; letter-spacing: .08em; }
+.wb-dec .wb-pk-logo, .wb-dec-in ~ .wb-pk-logo { fill: #fff; }
+.wb-dec-n { font-size: 7.6px; fill: #cfe0ff; } .wb-dec-n.on { fill: #ffd60a; font-weight: 800; font-size: 9.5px; }
+.wb-dec-l { font-size: 9.5px; font-weight: 700; fill: #fff; }
+.wb-dec-v { font-size: 11px; font-weight: 700; fill: #ffe9a8; font-variant-numeric: tabular-nums; }
+
+/* plug-in board */
+.wb-board-sh { fill: rgba(20, 30, 50, .22); }
+.wb-board { fill: #ecebe3; stroke: #bdbbae; stroke-width: 1.5; }
+.wb-trace { fill: none; stroke: #2b2e33; stroke-width: 1.7; stroke-linejoin: round; }
+.wb-so { fill: #3a3e45; stroke: #15171a; stroke-width: .7; } .wb-so-in { fill: #08090a; }
+.wb-part .wb-pin { fill: #c9ced6; stroke: #7d848f; stroke-width: .8; }
+.wb-blk-sh { fill: rgba(40, 50, 120, .28); }
+.wb-blk { fill: rgba(150, 160, 235, .58); stroke: #6b74c9; stroke-width: 1; }
+.wb-plate { fill: #fbfbfa; stroke: #c9ccd2; stroke-width: .6; }
+.wb-sym { fill: none; stroke: #15181d; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.wb-pv { font-size: 7.4px; font-weight: 700; fill: #15181d; }
+.wb-brg-sh { fill: rgba(0, 0, 0, .22); } .wb-brg { fill: #fafaf8; stroke: #b9bcc2; stroke-width: 1; } .wb-brg-l { stroke: #15181d; stroke-width: 2.6; stroke-linecap: round; }
+.wb-part.sel .wb-blk, .wb-part.sel .wb-brg { stroke: #0b84ff; stroke-width: 2.6; }
+.wb-part.drag { opacity: .85; pointer-events: none; }
+.wb-target { fill: rgba(11, 132, 255, .16); stroke: #0b84ff; stroke-width: 2; stroke-dasharray: 4 3; pointer-events: none; }
+.wb-target.on { stroke-dasharray: none; }
+.wb-ghost { pointer-events: none; }
+
+/* drawer */
+.wb-tray { fill: #5c6470; stroke: #3d444e; } .wb-tray-in { fill: #7a828e; stroke: #4c535d; }
+.wb-tr-t { font-size: 10px; font-weight: 700; fill: #fff; }
+.wb-tr.gone { opacity: .28; cursor: default; }
+
+/* leads */
+.wb-lead-o { fill: none; stroke: rgba(0, 0, 0, .28); stroke-width: 7.4; stroke-linecap: round; }
+.wb-lead-c { fill: none; stroke-width: 5; stroke-linecap: round; }
+.wb-lead-hit { fill: none; stroke: transparent; stroke-width: 20; stroke-linecap: round; }
+.wb-plug { stroke: rgba(0, 0, 0, .4); stroke-width: 1; } .wb-plug-in { fill: rgba(255, 255, 255, .5); }
+.c-red .wb-lead-c { stroke: #e0281c; } .c-red .wb-plug { fill: #c01f15; }
+.c-blue .wb-lead-c { stroke: #1e6fe0; } .c-blue .wb-plug { fill: #1657b8; }
+.c-black .wb-lead-c { stroke: #23262b; } .c-black .wb-plug { fill: #23262b; }
+.c-green .wb-lead-c { stroke: #2aa148; } .c-green .wb-plug { fill: #1f7f37; }
+.wb-lead.sel .wb-lead-o { stroke: #ffd60a; stroke-width: 10; }
+.wb-lead.live { opacity: .9; }
+.wb-fixed { fill: none; stroke: #c01f15; stroke-width: 5; stroke-linecap: round; opacity: .85; } .wb-fixed.n { stroke: #1657b8; }
+
+/* lab 10 */
+.wb-mn { fill: #f0e6c6; stroke: #b9ad84; } .wb-mn-top { fill: #1f58c2; }
+.wb-pm { fill: #f7f7f5; stroke: #b9bcc0; } .wb-pm-lcd { fill: #b9d06a; stroke: #20252b; stroke-width: 3; } .wb-pm-u { font-size: 12px; font-weight: 800; fill: #10240f; } .wb-pm-k { fill: #f2d21b; stroke: #8a7a10; }
+.wb-lamp-b { fill: #f3f3f1; stroke: #b9bcc0; } .wb-lamp { fill: #e9ecef; stroke: #b3b9c1; } .wb-lamp.on { fill: #fffef2; stroke: #f5e9a8; filter: drop-shadow(0 0 10px #fff7c2); } .wb-lamp-cap { fill: #d5d9de; stroke: #9aa3ad; }
+
+/* overlays */
+.wb-pop, .wb-tool { position: absolute; z-index: 5; background: #fff; border: 1px solid #cfd6e0; border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 23, 42, .22); }
+.wb-pop { padding: 12px; width: min(300px, 92%); }
+.wb-pop-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+.wb-pop-x { border: 0; background: #eef1f5; border-radius: 10px; width: 36px; height: 36px; font-size: 15px; cursor: pointer; }
+.wb-pop-v { font-size: 26px; font-weight: 700; text-align: center; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.wb-pop-r, .wb-pop-p { display: flex; gap: 6px; flex-wrap: wrap; }
+.wb-pop-r button { flex: 1; min-height: 48px; font-size: 20px; border-radius: 12px; border: 1px solid #cfd6e0; background: #f6f8fb; cursor: pointer; touch-action: manipulation; }
+.wb-pop-p { margin-top: 8px; } .wb-pop-p button { flex: 1 1 60px; min-height: 40px; border-radius: 10px; border: 1px solid #cfd6e0; background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+.wb-pop-p button.on { background: #2463d6; color: #fff; border-color: transparent; }
+.wb-pop-s { width: 100%; margin-top: 12px; height: 32px; }
+.wb-pop-n { font-size: 12.5px; color: #5b6472; margin: 8px 0 0; line-height: 1.5; }
+.wb-tool { display: flex; gap: 4px; padding: 4px; white-space: nowrap; }
+.wb-tool button { font: inherit; font-size: 13.5px; min-height: 40px; padding: 4px 12px; border-radius: 10px; border: 0; background: #f1f4f8; cursor: pointer; touch-action: manipulation; }
+.wb-tool button.bad { background: #fde8e6; color: #b42318; }
+.wb-toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(23, 32, 51, .92); color: #fff; padding: 9px 16px; border-radius: 999px; font-size: 13.5px; z-index: 6; max-width: 90%; text-align: center; }
+.wb-warn { list-style: none; margin: 0; padding: 0; background: #fff; }
+.wb-warn li { padding: 10px 14px; font-size: 14px; line-height: 1.6; border-top: 1px solid #e6eaf0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.wb-warn li.bad { background: #fef3f2; color: #912018; } .wb-warn li.warn { background: #fffaeb; color: #7a4a00; } .wb-warn li.info { background: #eff8ff; color: #175cd3; }
+@media (max-width: 720px) { .wb-hint { font-size: 12px; flex-basis: 100%; } .wb-b { font-size: 12.5px; padding: 6px 9px; } }
+.wb-fullhost h2 { display: none; }
+.wb-fullhost .lg-bench-bar { margin: 0; gap: 6px; }
+.wb-fullhost .wb-hint { display: none; }
+.wb-fullhost .wb-bar { padding: 6px 8px; }
+.wb-fullhost .wb-acts { width: 100%; justify-content: flex-start; }

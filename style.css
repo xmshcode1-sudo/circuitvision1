@@ -520,7 +520,7 @@ p { margin: 0; }
 h1 > .bi-s, h1 .bi-w > .bi-s { font-size: .42em !important; margin-top: 6px; line-height: 1.5; }
 h2 > .bi-s, h2 .bi-w > .bi-s, h3 > .bi-s { font-size: .62em !important; }
 .btn .bi-s, .tl .bi-s, .chip .bi-s, .nv .bi-s, button .bi-s, .pill .bi-s, .tag .bi-s { font-size: .74em !important; color: inherit !important; opacity: .62; }
-.lang-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 10px; padding: 4px; border-radius: 10px; border: 1px solid var(--line-soft); }
+.lang-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 10px; border: 1px solid var(--line-soft); }
 .lang-sw button { font: inherit; font-size: 12.5px; padding: 6px 4px; border-radius: 7px; border: 0; background: transparent; color: var(--fg-2); cursor: pointer; }
 .lang-sw button[aria-pressed="true"] { background: var(--blue-soft); color: var(--glow); font-weight: 600; }
 /* English-first is left-to-right: the floating calculator moves to the other corner, away from the sidebar */
@@ -677,3 +677,15 @@ select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
 .cv-acc { display: grid; gap: 2px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 .cv-acc .cv-who { max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lock-tag { font-size: 11px; color: var(--orange); }
+
+/* language box: first language + optional small second line */
+.lang-box { margin-top: 12px; padding: 10px; border-radius: 12px; border: 1px solid var(--line-soft); }
+.lang-ttl { font-size: 11.5px; color: var(--fg-3); margin-bottom: 6px; letter-spacing: .02em; }
+.lang-box .lang-sw { border: 0; padding: 0; background: var(--bg-2, transparent); }
+.lang-sw button { min-height: 36px; }
+.lang-sub { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--fg-2); cursor: pointer; line-height: 1.4; }
+.lang-sub input { width: 18px; height: 18px; flex: none; accent-color: var(--blue, #2463d6); }
+html.bi-solo .bi-s { display: none !important; }
+/* pinned reference drawing: top-right of the work area, clear of the sidebar (which sits on the right in Arabic) */
+@media (min-width: 901px) { html[dir="rtl"] .lg-ref, html:not([dir]) .lg-ref { right: calc(268px + 14px); } }
+html.wb-lock .lg-ref { right: calc(env(safe-area-inset-right, 0px) + 14px) !important; }

@@ -74,7 +74,7 @@
     d1: { name: "Fluke 115", jacks: { A: { shunt: 0.03, fuse: 11 } }, modes: ["off", "vac", "vdc", "mv", "ohm", "aac", "adc"] },
     d2: { name: "PeakTech 2000", jacks: { "10A": { shunt: 0.01, fuse: 10 }, mA: { shunt: 1.0, fuse: 0.2 } }, modes: ["off", "vdc", "vac", "ohm", "madc", "maac", "adc", "aac"] }
   };
-  function ps0() { return { on: false, m: { v: 0, i: 0.5 }, s: { v: 0, i: 0.5 } }; }
+  function ps0() { return { on: false, mode: "normal", m: { v: 0, i: 0.5 }, s: { v: 0, i: 0.5 } }; }
   function defaults() {
     return {
       ps: ps0(), fg: { on: false, f: 1000, vpp: 0 },
@@ -109,13 +109,22 @@
     var use = opt.only || null;
     function on(k) { return !use || use.indexOf(k) > -1; }
     // supply: channels m and s
-    if (on("ps")) ["m", "s"].forEach(function (ch) {
-      union("ps." + ch + ".e", "earth");
-      if ((inst.ps.on || opt.allSrc) && !opt.dead) els.push({ k: "V", a: "ps." + ch + "+", b: "ps." + ch + "-", dc: inst.ps[ch].v, id: "ps." + ch, ilim: inst.ps[ch].i, src: "ps" });
-    });
+    /* tracking switch of the dual supply: NORMAL = two independent channels; SERIES = slave(+) is tied inside the case to master(−)
+       and the slave follows the master's voltage knob; PARALLEL = the two outputs are tied together, the master knobs rule and the
+       available current doubles. */
+    if (on("ps")) {
+      var pmode = inst.ps.mode || "normal", live = (inst.ps.on || opt.allSrc) && !opt.dead;
+      union("ps.m.e", "earth"); union("ps.s.e", "earth");
+      if (pmode === "series") union("ps.s+", "ps.m-");
+      if (pmode === "parallel") { union("ps.s+", "ps.m+"); union("ps.s-", "ps.m-"); }
+      if (live) {
+        els.push({ k: "V", a: "ps.m+", b: "ps.m-", dc: inst.ps.m.v, id: "ps.m", ilim: pmode === "parallel" ? 2 * inst.ps.m.i : inst.ps.m.i, src: "ps" });
+        if (pmode !== "parallel") els.push({ k: "V", a: "ps.s+", b: "ps.s-", dc: pmode === "series" ? inst.ps.m.v : inst.ps.s.v, id: "ps.s", ilim: pmode === "series" ? inst.ps.m.i : inst.ps.s.i, src: "ps" });
+      }
+    }
     if (on("fg")) {
       els.push({ k: "R", a: "fg.com", b: "earth", r: 0.01, id: "fg.gnd" });
-      if ((inst.fg.on || opt.allSrc) && !opt.dead) { els.push({ k: "V", a: "fg.int", b: "fg.com", ac: inst.fg.vpp / 2, f: inst.fg.f, id: "fg", src: "fg" }); els.push({ k: "R", a: "fg.int", b: "fg.out", r: 50, id: "fg.r" }); }
+      if ((inst.fg.on || opt.allSrc) && !opt.dead) { var fge = { k: "V", a: "fg.int", b: "fg.com", ac: inst.fg.vpp / 2, f: inst.fg.f, id: "fg", src: "fg" }; if (inst.fg.off) { fge.dc = inst.fg.off; fge.ilim = 1; } els.push(fge); els.push({ k: "R", a: "fg.int", b: "fg.out", r: 50, id: "fg.r" }); }
     }
     if (on("mn") && inst.mn) {   // mains panel with its power meter; output L/N, the lamp hard-wired after it
       if ((inst.mn.on || opt.allSrc) && !opt.dead) els.push({ k: "V", a: "mn.Li", b: "mn.N", ac: 220 * Math.SQRT2, f: 60, id: "mn", src: "mn" });
@@ -302,7 +311,12 @@
     return { v: Vr, i: Ir, p: P, q: S.im, pf: pf };
   }
 
+  function si(v, u) {
+    var a = Math.abs(v), p = a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "k"] : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e-3, "m"] : a >= 1e-6 ? [1e-6, "µ"] : [1e-9, "n"];
+    var n = v / p[0]; return (Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(2).replace(/\.?0+$/, "")) + " " + p[1] + u;
+  }
   CV.clabSim = {
+    si: si,
     cx: cx, add: add, sub: sub, mul: mul, div: div, mag: mag, ang: ang,
     solveMNA: solveMNA, build: build, solve: solve, read: read, vNode: vNode, vBetween: vBetween, iElem: iElem, elById: elById,
     ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP,

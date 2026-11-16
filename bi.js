@@ -12,6 +12,10 @@
   var html = document.documentElement;
   if (mode === "en") { html.setAttribute("dir", "ltr"); html.setAttribute("lang", "en"); }
   html.classList.add("bi-" + mode);
+  /* second line: "both" shows the other language under each text in small type; "solo" shows the first language only */
+  var second = "both";
+  try { second = localStorage.getItem("cv.lang2") === "solo" ? "solo" : "both"; } catch (e) {}
+  if (second === "solo") html.classList.add("bi-solo");
 
   var dict = {}, pats = [];
   var AR = /[؀-ۿ]/;
@@ -157,6 +161,9 @@
   CV.bi = {
     mode: function () { return mode; },
     set: function (m) { try { localStorage.setItem("cv.lang", m); } catch (e) {} location.reload(); },
+    second: function () { return second; },
+    /* the subtitle line is only hidden or shown, so no reload is needed */
+    setSecond: function (v) { second = v === "solo" ? "solo" : "both"; try { localStorage.setItem("cv.lang2", second); } catch (e) {} html.classList.toggle("bi-solo", second === "solo"); },
     add: function (o) { for (var k in o) dict[norm(k)] = o[k]; },
     pattern: function (re, rep) { pats.push([re, rep]); },
     tr: function (t) { return look(norm(t)); },
