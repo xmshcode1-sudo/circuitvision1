@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>CircuitVision · video studio (lessons)</title>
+<!-- One 1920×1080 frame of a lesson video, in the same frame as the lab videos (tools/videos/studio.html):
+     header, the drawing panel on the left, the explanation column on the right, an orange progress bar.
+     Driven by tools/videos/lesson-render.py: window.show(id, i, progress). Not part of the site. -->
+<link rel="stylesheet" href="../../sig.css">
+<link rel="stylesheet" href="../../lg.css">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050914; }
+  body, body * { font-family: "DejaVu Sans", sans-serif !important; }
+  :root { --fg: #e9eef7; --fg-2: #c3cbda; --fg-3: #8f9bb0; --line-soft: #26324a; --surface-2: #1a2336; --bg-2: #121927; --glow: #7fb2ff; }
+  #frame { position: relative; width: 1920px; height: 1080px; background: #050914; color: #e9eef7; }
+  #hdr-r { position: absolute; top: 20px; right: 28px; font-size: 22px; color: #9aa6bb; }
+  #hdr-r b { color: #ff8a1f; font-weight: 700; }
+  #hdr-l { position: absolute; top: 20px; left: 28px; font-size: 21px; color: #9aa6bb; }
+  #dev { position: absolute; left: 28px; top: 70px; width: 1300px; height: 975px; border-radius: 22px; background: #121927; box-shadow: inset 0 0 0 1px #1e2738; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #vis { width: 1220px; max-height: 860px; display: flex; align-items: center; justify-content: center; direction: ltr; }
+  #vis > svg, #vis .lgk-w svg, #vis .lgc, #vis .lgk { width: 100% !important; max-width: none !important; height: auto; max-height: 840px; }
+  #vis .lgk-w { width: 820px; } #vis .lgk-legend { font-size: 30px; gap: 12px 22px; margin-top: 14px; }
+  #vis .lgrow { gap: 40px; width: 100%; } #vis .lgrow > * { flex: 1 1 0; min-width: 0; }
+  #vis .lgt { font-size: 34px; } #vis .lgt td, #vis .lgt th { padding: 8px 22px; } #vis .lgt.sm { font-size: 27px; } #vis .lgt.sm td, #vis .lgt.sm th { padding: 5px 14px; }
+  #vis .lgt th { background: #1d3f91; color: #dbe6ff; border-color: #2a3f6e; } #vis .lgt td { border-color: #22304b; }
+  #vis .lgt tr.on td { background: #1d3f91; color: #fff; } #vis .lgt tr.on td.v { color: #ff9f43; }
+  #vis .sp-ln { stroke-width: 2.6; } #vis .sp-t { font-size: 12px; } #vis .sp-l { font-size: 13px; }
+  #cap { margin-top: 18px; font-size: 24px; color: #8f9bb0; text-align: center; max-width: 1180px; direction: rtl; }
+  .bd { width: 1160px; display: grid; gap: 22px; direction: rtl; }
+  .bd-i { font-size: 34px; line-height: 1.6; color: #8f9bb0; padding: 16px 24px; border-radius: 16px; background: #0d1422; border: 1px solid #1e2738; }
+  .bd-i.now { color: #fff; border-color: #ff8a1f; box-shadow: 0 0 0 1px #ff8a1f inset; }
+  .bd-i p { margin: 0; } .bd-i .n { display: inline-block; min-width: 46px; color: #ff8a1f; font-weight: 700; }
+  .eqb .eq { font-size: 34px; }
+  .eq { font-family: "DejaVu Sans Mono", monospace !important; direction: ltr; text-align: center; background: #0d1422; border: 1px solid #1e2738; border-radius: 14px; padding: 14px 20px; color: #e9eef7; margin: 0; }
+  .eq-n { display: block; font-size: .62em; color: #8f9bb0; margin-top: 6px; direction: rtl; font-family: "DejaVu Sans", sans-serif !important; }
+  .eq-i { font-family: "DejaVu Sans Mono", monospace !important; color: #7fb2ff; direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  #side { position: absolute; left: 1352px; top: 70px; width: 540px; height: 975px; display: flex; flex-direction: column; gap: 18px; overflow: hidden; }
+  .t { border-right: 6px solid #ff8a1f; padding-right: 18px; font-size: 33px; font-weight: 700; line-height: 1.32; color: #fff; }
+  .sub { font-size: 26px; font-weight: 700; color: #ff9f43; }
+  .ln { font-size: 25px; line-height: 1.62; color: #c3cbda; }
+  .ln { overflow-wrap: anywhere; } .ln .eq-i { display: inline; } .ln p { margin: 0 0 8px; } .ln b { color: #fff; }
+  .ln .eq { font-size: 21px; padding: 8px 10px; margin: 8px 0; }
+  ol.steps { margin: 0; padding: 0 30px 0 0; display: grid; gap: 12px; } ol.steps li { color: #8f9bb0; } ol.steps li.now { color: #fff; } ol.steps li::marker { color: #ff8a1f; }
+  ul.ticks { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; } ul.ticks li { padding-right: 34px; position: relative; } ul.ticks li::before { content: "✓"; position: absolute; right: 0; color: #23a26d; }
+  #prog { position: absolute; left: 0; bottom: 0; height: 8px; background: #ff8a1f; }
+  #card { position: absolute; inset: 0; display: none; background: radial-gradient(1100px 700px at 70% 22%, #11307a 0%, #0a1a45 38%, #050914 78%); text-align: center; }
+  #card .eb { position: absolute; top: 380px; width: 100%; font-size: 26px; color: #ff9f43; }
+  #card .ti { position: absolute; top: 430px; width: 100%; font-size: 56px; font-weight: 700; color: #fff; padding: 0 120px; box-sizing: border-box; line-height: 1.3; }
+  #card .en { position: absolute; top: 590px; width: 100%; font-size: 25px; color: #9fb0d0; direction: ltr; }
+  #card .ls { position: absolute; top: 650px; width: 100%; font-size: 25px; line-height: 1.75; color: #dfe6f3; }
+  #card .ft { position: absolute; bottom: 48px; width: 100%; font-size: 22px; color: #7b88a6; direction: ltr; }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="hdr-r"><b>CircuitVision</b> · <span id="crs"></span></div>
+  <div id="hdr-l"></div>
+  <div id="dev"><div id="vis"></div><div id="cap"></div></div>
+  <div id="side"></div>
+  <div id="card"><div class="eb"></div><div class="ti"></div><div class="en"></div><div class="ls"></div><div class="ft">CircuitVision · circuitvision1.vercel.app</div></div>
+  <div id="prog"></div>
+</div>
+<script src="../../sig-plot.js"></script>
+<script src="../../lg-draw.js"></script>
+<script src="../../ss-build.js"></script>
+<script src="../../ss-ch1.js"></script><script src="../../ss-ch2.js"></script><script src="../../ss-ch3.js"></script><script src="../../ss-ch4.js"></script><script src="../../ss-ch5.js"></script><script src="../../ss-ch6.js"></script><script src="../../ss-ch7.js"></script>
+<script src="../../ld-ch1.js"></script><script src="../../ld-ch2.js"></script><script src="../../ld-ch3.js"></script><script src="../../ld-ch4.js"></script><script src="../../ld-ch5.js"></script>
+<script>
+(function () {
+  var CV = window.CV, $ = function (id) { return document.getElementById(id); };
+  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111" };
+  function fit(el, min) { var fs = parseFloat(getComputedStyle(el).fontSize); while (el.scrollHeight > el.clientHeight + 2 && fs > min) { fs -= 1; el.style.fontSize = fs + "px"; } }
+  window.show = function (id, i, prog) {
+    var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");
+    $("crs").textContent = NAME[L.course] || "";
+    $("hdr-l").textContent = (all[0].eyebrow || "").split(" · ").slice(1).join(" · ");
+    $("prog").style.width = (prog * 100).toFixed(2) + "%";
+    if (s.kind === "card") {
+      card.style.display = "block";
+      card.querySelector(".eb").textContent = s.eyebrow; card.querySelector(".ti").textContent = s.title; card.querySelector(".en").textContent = s.en;
+      card.querySelector(".ls").innerHTML = (s.lines || []).map(function (l) { return "<div>" + l + "</div>"; }).join("");
+      return;
+    }
+    card.style.display = "none";
+    var vis = $("vis"); vis.innerHTML = s.vis || ""; $("cap").innerHTML = s.cap || "";
+    vis.style.direction = /class=.bd/.test(s.vis || "") ? "rtl" : "ltr";
+    var side = $("side");
+    side.innerHTML = '<div class="t">' + s.title + '</div>' + (s.sub ? '<div class="sub">' + s.sub + '</div>' : '') + '<div class="ln">' + (s.text || "") + '</div>';
+    var ln = side.querySelector(".ln"); ln.style.fontSize = ""; ln.style.height = (975 - ln.offsetTop - 10) + "px"; ln.style.overflow = "hidden"; fit(ln, 15);
+    var tb = vis.querySelector(".lgt"); if (tb) { var f = parseFloat(getComputedStyle(tb).fontSize); while ((vis.scrollHeight > 880 || vis.scrollWidth > 1240) && f > 14) { f -= 1; vis.querySelectorAll(".lgt").forEach(function (t) { t.style.fontSize = f + "px"; }); } }
+    var bd = vis.querySelector(".bd"); if (bd) { vis.style.maxHeight = "880px"; var k = 1; while (vis.scrollHeight > 900 && k > 0.5) { k -= 0.05; bd.style.fontSize = ""; bd.querySelectorAll(".bd-i, .eq").forEach(function (e) { e.style.fontSize = (34 * k) + "px"; }); } }
+  };
+  window.list = function () { return Object.keys(CV.ssVideo).map(function (id) { return { id: id, scenes: CV.ssVideo[id].map(function (s) { return s.dur; }), still: CV.ssVideo[id].map(function (s) { return !!s.still; }) }; }); };
+})();
+</script>
+</body>
+</html>

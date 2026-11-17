@@ -6,21 +6,23 @@ var fs = require("fs"), path = require("path"), vm = require("vm");
 var root = path.join(__dirname, "..");
 var win = { CV: {} }; win.window = win;
 var ctx = vm.createContext({ window: win, globalThis: win, console: console, Math: Math, JSON: JSON });
-["curriculum.js", "sig-plot.js", "ss-build.js", "feedback.js", "ss-ch1.js", "ss-ch2.js", "ss-ch3.js", "ss-ch4.js", "ss-ch5.js", "ss-ch6.js", "ss-ch7.js"].forEach(function (f) {
+["curriculum.js", "sig-plot.js", "lg-draw.js", "ss-build.js", "feedback.js", "ss-ch1.js", "ss-ch2.js", "ss-ch3.js", "ss-ch4.js", "ss-ch5.js", "ss-ch6.js", "ss-ch7.js", "ld-ch1.js", "ld-ch2.js", "ld-ch3.js", "ld-ch4.js", "ld-ch5.js"].forEach(function (f) {
   try { vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f }); } catch (e) { if (f !== "feedback.js") throw e; }
 });
 var CV = win.CV, fails = 0, n = 0;
 function ok(c, msg) { n++; if (!c) { fails++; console.log("FAIL", msg); } }
 function close(a, b, r) { return Math.abs(a - b) <= (r || 1e-6) * Math.max(1, Math.abs(b)); }
 
-var course = CV.courses.filter(function (c) { return c.id === "signals-systems"; })[0];
-ok(course && course.chapters.length === 7, "7 chapters");
-var ids = [];
-course.chapters.forEach(function (ch) { ch.lessons.forEach(function (l) { ids.push(l.id); ok(l.published, l.id + " published"); }); });
+var ids = [], NCH = { "signals-systems": 7, "logic-design": 5 };
+Object.keys(NCH).forEach(function (cid) {
+  var course = CV.courses.filter(function (c) { return c.id === cid; })[0];
+  ok(course && course.chapters.length === NCH[cid], cid + " chapters");
+  course.chapters.forEach(function (ch) { ch.lessons.forEach(function (l) { ids.push(l.id); ok(l.published, l.id + " published"); ok(CV.lessons[l.id] && CV.lessons[l.id].course === cid, l.id + " course"); }); });
+});
 ids.forEach(function (id) {
   var L = CV.lessons[id];
   ok(!!L, id + " exists"); if (!L) return;
-  ok(L.course === "signals-systems" && L.video === id + ".mp4", id + " video name " + L.video);
+  ok(L.video === id + ".mp4", id + " video name " + L.video);
   ["concept", "laws", "example"].forEach(function (s) { ok(L.sections.some(function (x) { return x.id === s; }), id + " has " + s); });
   ok(L.objectives.length >= 2, id + " objectives");
   ok(L.quiz.length >= 3, id + " quiz size");
@@ -48,7 +50,7 @@ ids.forEach(function (id) {
   ok(V && V.length > 6, id + " video scenes");
   V.forEach(function (sc, i) { ok(sc.dur > 0 && sc.dur < 20, id + " scene " + i + " duration"); });
 });
-ok(ids.length === 39, "39 lessons (" + ids.length + ")");
+ok(ids.length === 39 + 26, "65 lessons (" + ids.length + ")");
 
 /* ---- numeric checks of the worked results ---- */
 function conv(x, h) { var y = {}; Object.keys(x).forEach(function (a) { Object.keys(h).forEach(function (b) { y[+a + +b] = (y[+a + +b] || 0) + x[a] * h[b]; }); }); return y; }
@@ -107,5 +109,52 @@ inv([1], [1, -0.75, 0.125], 8).forEach(function (v, n) { ok(close(v, 2 * Math.po
 ok(Math.floor(9 / 2) === 4, "Nmax = 4");
 ok(close(2 * Math.sin(PI / 2) / (PI / 1e-3), 2e-3 / PI), "ZOH at ws/2");
 
-console.log("Signals lessons: " + (n - fails) + "/" + n + " checks passed (" + ids.length + " lessons)");
+/* ---- Logic Design: every K-map group set equals its function; state tables; numbers ---- */
+var G = CV.lg;
+(CV.ldKmaps || []).forEach(function (k, i) {
+  var n = k.vars.length, f = {}, on = {}; k.ones.forEach(function (m) { on[m] = 1; });
+  var cover = {}; k.groups.forEach(function (g) { var t = G.termOf(k.vars, g), mt = G.minterms(t, k.vars);
+    ok(mt.length === g.length && g.every(function (c) { return mt.indexOf(c) >= 0; }), "kmap " + i + " group " + JSON.stringify(g) + " is a rectangle (" + t + ")"); mt.forEach(function (m) { cover[m] = 1; }); });
+  for (var m = 0; m < (1 << n); m++) { var dc = k.dc.indexOf(m) >= 0; if (!dc) ok(!!cover[m] === !!on[m], "kmap " + i + " (" + k.vars.join("") + ") minterm " + m + " covered=" + !!cover[m] + " one=" + !!on[m]); }
+});
+ok((CV.ldKmaps || []).length >= 15, "kmaps checked: " + (CV.ldKmaps || []).length);
+function same(a, b, vars) { return JSON.stringify(G.minterms(a, vars)) === JSON.stringify(G.minterms(b, vars)); }
+var XYZ = ["x", "y", "z"], ABC = ["A", "B", "C"], ABCD = ["A", "B", "C", "D"], ABx = ["A", "B", "x"];
+ok(same("x'y'z + x'yz + xy'", "x'z + xy'", XYZ), "F2 simplification");
+ok(same("xy + x'z + yz", "xy + x'z", XYZ), "consensus");
+ok(same("(x'yz' + x'y'z)'", "(x + y' + z)(x + y + z')", XYZ), "complement F1");
+ok(same("(x(y'z' + yz))'", "x' + (y + z)(y' + z')", XYZ), "complement F2");
+ok(JSON.stringify(G.minterms("xy + x'z", XYZ)) === "[1,3,6,7]", "xy+x'z = Σ(1,3,6,7) ⇒ Π(0,2,4,5)");
+ok(same("A'C + A'B + AB'C + BC", "C + A'B", ABC), "C + A'B");
+ok(JSON.stringify(G.minterms("A'B'C' + B'CD' + A'BCD' + AB'C'", ABCD)) === "[0,1,2,6,8,9,10]", "ch3 4-var example minterms");
+ok(same("A'B'C' + B'CD' + A'BCD' + AB'C'", "B'D' + B'C' + A'CD'", ABCD), "ch3 4-var example");
+ok(same("(AB + CD + BD')'", "B'D' + B'C' + A'C'D", ABCD), "POS example F'");
+ok(same("(A' + B')(C' + D')(B' + D)", "B'D' + B'C' + A'C'D", ABCD), "POS example");
+ok(same("(AB+AC+BC)'(A+B+C)+ABC", "A⊕B⊕C", ABC), "analysis example = sum");
+ok(same("x'y'z' + xyz'", "(x + y')(x' + y)z'", XYZ) && same("(x'y + xy' + z)'", "x'y'z' + xyz'", XYZ), "two-level forms example");
+ok(JSON.stringify(G.minterms("A⊕B⊕C", ABC)) === "[1,2,4,7]", "odd function");
+ok(same("D2 + D3", "D2 + D3", ["D2", "D3"]), "parser multi-char");
+// sequential tables from the lecture
+var sq = CV.ldSeq.seq;
+var t1 = sq(ABx, ["Ax+Bx", "A'x"], ["(A+B)x'"]).map(function (r) { return r.next.join("") + r.out.join(""); }).join(" ");
+ok(t1 === "000 010 001 110 001 100 001 100", "Ax+Bx state table " + t1);
+var tjk = sq(ABx, ["B·A' + (B·x')'·A", "x'·B' + (A⊕x)'·B"]).map(function (r) { return r.next.join(""); }).join(" ");
+ok(tjk === "01 00 11 10 11 10 00 11", "JK analysis table " + tjk);
+ok(same("B·A' + (B·x')'·A", "A'B + AB' + Ax", ABx) && same("x'·B' + (A⊕x)'·B", "B'x' + ABx + A'Bx'", ABx), "JK state equations");
+var tt = sq(ABx, ["(B·x)⊕A", "x⊕B"], ["AB"]).map(function (r) { return r.next.join(""); }).join(" ");
+ok(tt === "00 01 01 10 10 11 11 00", "T analysis table " + tt);
+// detector (Moore) and JK design from the lecture state tables
+ok(JSON.stringify(G.minterms("Ax+Bx", ABx)) === "[3,5,7]" && JSON.stringify(G.minterms("Ax+B'x", ABx)) === "[1,5,7]", "sequence detector D equations");
+(function () { var next = { 0: "00", 1: "01", 2: "10", 3: "01", 4: "10", 5: "11", 6: "11", 7: "00" };
+  for (var k = 0; k < 8; k++) { var e = G.env(ABx, k), A = e.A, B = e.B, x = e.x, JA = B & (1 - x), KA = B & x, JB = x, KB = 1 - (A ^ x);
+    var nA = (JA & (1 - A)) | ((1 - KA) & A), nB = (JB & (1 - B)) | ((1 - KB) & B); ok("" + nA + nB === next[k], "JK design row " + k); } })();
+// numbers (chapter 1)
+var N = CV.ldNum.toDec;
+ok(Math.abs(N("1101.101", 2) - 13.625) < 1e-9 && Math.abs(N("572.6", 8) - 378.75) < 1e-9 && Math.abs(N("2A.8", 16) - 42.5) < 1e-9 && Math.abs(N("341.24", 5) - 96.56) < 1e-9, "base-R to decimal");
+ok(parseInt("10110001101011", 2).toString(8) === "26153" && parseInt("10110001101011", 2).toString(16) === "2c6b" && parseInt("111100000110", 2).toString(16) === "f06", "octal/hex grouping");
+ok(parseInt("110111011", 2) === parseInt("673", 8) && parseInt("001100000110", 2) === 0x306, "octal/hex to binary");
+ok((13 * 11).toString(2) === "10001111" && 72532 + 96750 === 169282 && 100000 - 30718 === 69282, "arithmetic / complements");
+ok(((0b1010100 + 0b0111101) & 0x7f) === 0b0010001 && 0b1000011 + 0b0101100 === 0b1101111, "X−Y, Y−X");
+ok(((256 - 6 + 13) & 255) === 7 && ((6 + 256 - 13) & 255) === 0b11111001 && ((256 - 6 + 256 - 13) & 255) === 0b11101101, "signed sums");
+console.log("Signals + Logic lessons: " + (n - fails) + "/" + n + " checks passed (" + ids.length + " lessons)");
 if (fails) process.exit(1);

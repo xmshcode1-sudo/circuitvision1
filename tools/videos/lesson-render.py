@@ -1,12 +1,12 @@
-"""CircuitVision — render the Signals and Systems lesson videos (ss-<lesson>.mp4 + .jpg poster) from the same lesson data
-   the page shows (CV.ssVideo, built by ss-build.js). Run a server on 8765 from the repository root, then:
-   python3 tools/videos/ss-render.py [lesson ids …]   (no ids = all lessons). Writes ss-video-durations.js too."""
+"""CircuitVision — render the lesson videos of Signals and Systems (ss-*) and Logic Design (ld-*) from the lesson data
+   (CV.ssVideo, built by ss-build.js) in the lab-video frame (tools/videos/lesson-studio.html). Server on 8765 from the repository root, then:
+   python3 tools/videos/lesson-render.py [lesson ids or prefixes …]   (no ids = all). Updates ss-video-durations.js."""
 import sys, os, json, asyncio, subprocess
 import numpy as np
 from PIL import Image
 from playwright.async_api import async_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-URL = "http://localhost:8765/tools/videos/ss-studio.html"
+URL = "http://localhost:8765/tools/videos/lesson-studio.html"
 FPS, FADE = 30, 0.3
 
 def encode(files, out):
@@ -34,14 +34,13 @@ async def main(ids):
         allv = await pg.evaluate("window.list()")
         durs = {}
         for v in allv:
-            if ids and v["id"] not in ids: continue
+            if ids and not any(v["id"] == x or v["id"].startswith(x) for x in ids): continue
             out = "/tmp/ss-frames/" + v["id"]; os.makedirs(out, exist_ok=True)
             total = sum(v["scenes"]); t = 0; files = []
-            stills = await pg.evaluate("(id) => CV.ssVideo[id].map(s => !!s.still)", v["id"])
+            stills = v["still"]
             for i, d in enumerate(v["scenes"]):
                 await pg.evaluate("([id, i, p]) => window.show(id, i, p)", [v["id"], i, t / total])
                 f = os.path.join(out, "%03d.png" % i); await pg.screenshot(path=f); files.append((f, d, stills[i])); t += d
-            mp4 = os.path.join(ROOT, "ss-" + v["id"][3:] + ".mp4") if v["id"].startswith("ss-") else os.path.join(ROOT, v["id"] + ".mp4")
             mp4 = os.path.join(ROOT, v["id"] + ".mp4")
             encode(files, mp4)
             Image.open(files[0][0]).convert("RGB").resize((960, 540)).save(mp4[:-4] + ".jpg", quality=82)
@@ -55,6 +54,6 @@ async def main(ids):
             txt = open(pth).read(); old = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
         except Exception: pass
         old.update(durs)
-        open(pth, "w").write("/* Durations of the Signals and Systems lesson videos (written by tools/videos/ss-render.py). */\n(function () { var D = " + json.dumps(old, sort_keys=True) + "; var L = window.CV && window.CV.lessons; if (L) for (var k in D) if (L[k]) L[k].videoDur = D[k]; })();\n")
+        open(pth, "w").write("/* Durations of the lesson videos (written by tools/videos/lesson-render.py). */\n(function () { var D = " + json.dumps(old, sort_keys=True) + "; var L = window.CV && window.CV.lessons; if (L) for (var k in D) if (L[k]) L[k].videoDur = D[k]; })();\n")
 
 asyncio.run(main(sys.argv[1:]))

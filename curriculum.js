@@ -7,7 +7,7 @@
   "use strict";
 
   /* Chapters whose lessons are written and tested. Add a chapter id here when its lesson file is done. */
-  var PUBLISHED = { "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
+  var PUBLISHED = { "ld-ch1": true, "ld-ch2": true, "ld-ch3": true, "ld-ch4": true, "ld-ch5": true, "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
 
   function ch(id, ar, en, topics) {
     return {
@@ -79,8 +79,22 @@
     },
     /* Courses with a place reserved on the platform. Their chapters are added only from the department's course
        description when the founder provides it, so nothing here is guessed. */
-    { id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "next", planned: true, thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 6 تجارب عملية مع جهاز IC Trainer",
-      level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] },
+    {
+      id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "ld", thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 6 تجارب عملية مع جهاز IC Trainer",
+      level: "EE 2111 · من محاضرات المقرر: الأعداد الثنائية، الجبر البولياني، خرائط كارنو، الدوائر التوافقية والتتابعية",
+      chapters: [
+        ch("ld-ch1", "الأنظمة الرقمية والأعداد الثنائية", "Digital Systems and Binary Numbers", [
+          "Information Representation and Number Systems", "Decimal to Base-R Conversion, Octal and Hexadecimal", "Binary Arithmetic and Complements", "Signed Binary Numbers", "Binary Codes: BCD, Gray, ASCII and Parity"]),
+        ch("ld-ch2", "الجبر البولياني والبوابات المنطقية", "Boolean Algebra and Logic Gates", [
+          "Postulates and Basic Theorems of Boolean Algebra", "Boolean Functions: Truth Tables, Simplification and Complement", "Canonical Forms: Minterms and Maxterms", "Standard Forms and Digital Logic Gates"]),
+        ch("ld-ch3", "تبسيط الدوال على مستوى البوابات", "Gate-Level Minimization", [
+          "The Map Method: Two- and Three-Variable K-Maps", "Four-Variable K-Map and Prime Implicants", "Product-of-Sums Simplification and Don't-Care Conditions", "NAND and NOR Implementation", "Other Two-Level Implementations, Exclusive-OR and Parity"]),
+        ch("ld-ch4", "الدوائر التوافقية", "Combinational Circuits", [
+          "Combinational Circuits: Analysis and Design Procedure", "Half Adder and Full Adder", "Binary Adder, Carry Lookahead and Binary Subtractor", "Decimal (BCD) Adder, Binary Multiplier and Magnitude Comparator", "Decoders and Encoders", "Multiplexers, Demultiplexers and Three-State Gates"]),
+        ch("ld-ch5", "المنطق التتابعي المتزامن", "Synchronous Sequential Logic", [
+          "Sequential Circuits and Latches", "Flip-Flops: D, JK and T", "Analysis of Clocked Sequential Circuits", "Analysis with JK and T Flip-Flops", "State Reduction and Assignment", "Design Procedure of Synchronous Sequential Circuits"])
+      ]
+    },
     {
       id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "ss", thumb: "signals",
       level: "EE 3010 · من محاضرات المقرر: الإشارات والنظم، نظم LTI، فورييه، لابلاس، Z، وأخذ العيّنات",
@@ -110,6 +124,7 @@
   /* Groups on the dashboard. */
   var groups = [
     { id: "core", ar: "مقررات الدوائر", note: "الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه." },
+    { id: "ld", ar: "التصميم المنطقي", note: "دروس EE 2111 من محاضرات المقرر، ولكل درس مقطع شرح وتمرين واختبار قصير، ومعه معمل الـ Trainer." },
     { id: "ss", ar: "تحليل الإشارات والنظم", note: "دروس EE 3010 من محاضرات المقرر، ولكل درس مقطع شرح وتمرين واختبار قصير." },
     { id: "next", ar: "مقررات قادمة", note: "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر." }
   ];

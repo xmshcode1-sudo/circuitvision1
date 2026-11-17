@@ -289,6 +289,7 @@
         '<p class="meta">' + c.level + ' · ' + c.chapters.length + ' فصول · ' + c.chapters.reduce(function (a, x) { return a + x.lessons.length; }, 0) + ' موضوعًا</p>' +
         '<div class="prog-row"><span>التقدم</span><b>' + (p.pct === null ? "لم يبدأ" : p.pct + "%") + '</b></div><div class="bar"><span style="width:' + (p.pct || 0) + '%"></span></div>' +
         '<button class="btn btn-ghost btn-sm toggle" type="button" aria-expanded="false" aria-controls="ch-' + c.id + '">عرض الفصول</button>' +
+        (c.lab ? '<a class="btn btn-ghost btn-sm" href="' + c.lab + '">' + c.labNote + ' ←</a>' : '') +
         '<ol class="chapters" id="ch-' + c.id + '" hidden>' + chs + '</ol></div>';
       wrap.appendChild(el);
     });
