@@ -46,7 +46,7 @@
     opts = opts || {};
     var inst = opts.inst || ["ps", "d1", "d2", "rb"], KEY = "cv-clab2-" + (opts.key || "free");
     var kit = (opts.kit || []).slice(), MAINS = inst.indexOf("mn") > -1, H = MAINS ? 560 : 950;
-    var W = MAINS || ["rb", "lb", "cb", "sc"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
+    var W = MAINS || ["rb", "lb", "cb", "sc", "va", "cc", "tp", "wm"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
     var marks = [], state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
     var vb = { x: 0, y: 0, w: W, h: H };
     function fresh() { return { parts: {}, leads: [], inst: S.defaults() }; }
@@ -191,7 +191,7 @@
       text("RANGE (Hz)", x + 300, y + 52, "wb-tiny");
       [1, 10, 100, 1e3, 1e4, 1e5].forEach(function (d, k) { var act = f >= d && f < d * 10; button("fg.rng:" + d, x + 186 + k * 41, y + 58, 36, 20, d >= 1000 ? d / 1000 + "k" : "" + d, "key" + (act ? " in" : "")); });
       text("FUNCTION", x + 240, y + 100, "wb-tiny");
-      button("fg.w:sin", x + 186, y + 106, 36, 20, "∿", "key in"); button("fg.w:tri", x + 227, y + 106, 36, 20, "⋀", "key soon"); button("fg.w:sq", x + 268, y + 106, 36, 20, "⊓", "key soon");
+      var wv = fg.w || "sin"; button("fg.w:sin", x + 186, y + 106, 36, 20, "∿", "key" + (wv === "sin" ? " in" : "")); button("fg.w:tri", x + 227, y + 106, 36, 20, "⋀", "key soon"); button("fg.w:sq", x + 268, y + 106, 36, 20, "⊓", "key" + (wv === "sq" ? " in" : ""));
       knob("fg.f", x + 112, y + 186, 30, "FREQUENCY", undefined, "cream", -140 + 280 * (Math.log10(f / Math.pow(10, Math.floor(Math.log10(Math.max(f, 1)))))));
       knob("fg.off", x + 216, y + 190, 18, "OFFSET", (fg.off || 0).toFixed(1) + " V", "cream", (fg.off || 0) * 14);
       knob("fg.a", x + 300, y + 190, 18, "AMPL", fg.vpp.toFixed(1) + " Vpp", "cream", -140 + 280 * fg.vpp / 20);
@@ -229,7 +229,7 @@
       var w = d.w, T = sc.td * NX, cols = { c1: "#ff453a", c2: "#ffd60a" }, cy = sy + sh / 2;
       /* trigger: CH1 (or CH2 when CH1 is flat) crosses its mean going up at the centre of the screen */
       var trg = S.mag(d.c1.ac) > 1e-6 && d.c1.on ? d.c1 : d.c2, ph0 = S.mag(trg.ac) > 1e-9 ? -Math.PI / 2 - S.ang(trg.ac) : 0;
-      function val(ch, t) { return ch.dc + (w ? S.mag(ch.ac) * Math.cos(w * t + S.ang(ch.ac) + ph0) : 0); }
+      function val(ch, t) { if (ch.h) { var y = ch.dc; for (var k = 0; k < ch.h.length; k++) { var x = ch.h[k], n = 2 * k + 1, m = S.mag(x); if (m > 1e-9) y += m * Math.cos(n * (w * t + ph0) + S.ang(x)); } return y; } return ch.dc + (w ? S.mag(ch.ac) * Math.cos(w * t + S.ang(ch.ac) + ph0) : 0); }
       function trace(fn, col) {
         var pts = [], n = 240, k, t, yv;
         for (k = 0; k <= n; k++) { t = (k / n - 0.5 - (sc.hpos || 0) / NX) * T; yv = cy - fn(t); pts.push(r2(sx + k * sw / n) + "," + r2(clamp(yv, sy + 1, sy + sh - 1))); }
@@ -254,7 +254,7 @@
       }
       if (sc.meas && !sc.xy) {
         var m = [];
-        ["c1", "c2"].forEach(function (c, k) { var ch = d[c]; if (!ch.on) return; var a = S.mag(ch.ac); m.push("CH" + (k + 1) + " Vpp " + si(2 * a, "V").replace(" ", "") + "  Vavg " + si(ch.dc, "V").replace(" ", "")); });
+        ["c1", "c2"].forEach(function (c, k) { var ch = d[c]; if (!ch.on) return; var a = S.mag(ch.ac); if (ch.h && w) { var mx = -1e9, mn = 1e9; for (var q = 0; q < 400; q++) { var yv = val(ch, q / 400 * 2 * Math.PI / w); mx = Math.max(mx, yv); mn = Math.min(mn, yv); } a = (mx - mn) / 2; } m.push("CH" + (k + 1) + " Vpp " + si(2 * a, "V").replace(" ", "") + "  Vavg " + si(ch.dc, "V").replace(" ", "")); });
         if (d.f) m.push("Freq " + si(d.f, "Hz").replace(" ", ""));
         m.forEach(function (t, k) { s += '<text class="wb-sct" x="' + (sx + sw - 6) + '" y="' + (sy + 14 + k * 13) + '" text-anchor="end">' + esc(t) + '</text>'; });
       }
@@ -314,6 +314,44 @@
       jack(k + ".a", x + w - 44, y + 80, "red", "", 0); jack(k + ".b", x + w - 44, y + 136, "blue", "", 0);
     }
 
+    function rbLabels(n) { return ["×10 kΩ", "×1 kΩ", "×100 Ω", "×10 Ω", "×1 Ω"].slice(5 - n); }
+    /* ---------- Circuits 2: variac, coupled coils, three-phase supply, wattmeter ---------- */
+    function box(x, y, title, sub) { var w = 378, h = 200; rect(x + 3, y + 5, w, h, "wb-sh", 10); rect(x, y, w, h, "wb-case", 10); text(title, x + 18, y + 26, "wb-lbl", "start"); if (sub) text(sub, x + w - 16, y + 26, "wb-tiny", "end"); }
+    function drawVariac(x, y) {
+      var va = I.va; box(x, y, "VARIAC · محول متغير", "0–30 V rms · 60 Hz");
+      o('<circle cx="' + (x + 118) + '" cy="' + (y + 110) + '" r="58" fill="#f4f1e8" stroke="#8a8f98" stroke-width="2"/>');
+      for (var k = 0; k <= 6; k++) { var a = (-140 + 280 * k / 6) * Math.PI / 180; text("" + k * 5, x + 118 + Math.sin(a) * 46, y + 114 - Math.cos(a) * 46, "wb-tiny"); }
+      knob("va.v", x + 118, y + 110, 26, "", undefined, "grey", -140 + 280 * va.v / 30);
+      text(va.v.toFixed(1) + " V", x + 118, y + 186, "wb-val");
+      button("va.on", x + 214, y + 62, 46, 26, va.on ? "ON" : "OFF", "mnkey" + (va.on ? " in" : "")); led(x + 274, y + 75, va.on, "red");
+      jack("va.L", x + 236, y + 146, "red", "L", 28); jack("va.N", x + 316, y + 146, "blue", "N", 28);
+    }
+    function drawCoils(x, y) {
+      box(x, y, "COUPLED COILS · ملفان على قلب حديدي", "1000 / 500 TURNS");
+      rect(x + 120, y + 52, 140, 112, "wb-core", 6); rect(x + 146, y + 76, 88, 64, "wb-core-in", 3);
+      for (var k = 0; k < 6; k++) { o('<rect x="' + (x + 110) + '" y="' + (y + 64 + k * 15) + '" width="40" height="11" rx="5" fill="#b8672a" stroke="#7a3f12"/>'); o('<rect x="' + (x + 230) + '" y="' + (y + 72 + k * 13) + '" width="40" height="9" rx="4" fill="#b8672a" stroke="#7a3f12"/>'); }
+      text("N1 = 1000", x + 130, y + 186, "wb-tiny"); text("N2 = 500", x + 250, y + 186, "wb-tiny");
+      jack("cc.1", x + 52, y + 76, "red", "", 0); jack("cc.1'", x + 52, y + 146, "black", "", 0);
+      text("1 ●", x + 26, y + 80, "wb-lbl"); text("1'", x + 26, y + 150, "wb-lbl");
+      jack("cc.A", x + 326, y + 76, "red", "", 0); jack("cc.B", x + 326, y + 146, "black", "", 0);
+      text("A", x + 352, y + 80, "wb-lbl"); text("B", x + 352, y + 150, "wb-lbl");
+    }
+    function drawTP(x, y) {
+      var tp = I.tp; box(x, y, "3-PHASE SUPPLY · ثلاثي الطور", "Y 220/127 V · 60 Hz · ABC");
+      button("tp.on", x + 22, y + 52, 52, 28, tp.on ? "ON" : "OFF", "mnkey" + (tp.on ? " in" : "")); led(x + 92, y + 66, tp.on, "red");
+      [["A", "red"], ["B", "yellow"], ["C", "blue"], ["N", "black"]].forEach(function (q, k) { jack("tp." + q[0], x + 60 + k * 82, y + 136, q[1] === "yellow" ? "red" : q[1], q[0], 30); });
+      text("VAN = 127 V ∠0° · VBN ∠−120° · VCN ∠+120°", x + 189, y + 104, "wb-tiny");
+    }
+    function drawWM(x, y) {
+      var w = R.wm, tot = I.wm.tot; box(x, y, "WATTMETER · واتميتر", "");
+      rect(x + 20, y + 40, 190, 64, "wb-lcd", 4);
+      var val = w ? (tot ? w.tot : w.p) : 0, txt = Math.abs(val) >= 1000 ? val.toFixed(0) : Math.abs(val) >= 100 ? val.toFixed(1) : val.toFixed(2);
+      o(seg7(txt, x + 176, y + 52, 34, "#1a2016", "")); text("W", x + 200, y + 96, "wb-lcd-u", "end"); if (tot) text("Σ 3φ", x + 30, y + 56, "wb-lcd-s", "start");
+      button("wm.tot", x + 224, y + 56, 64, 26, "Σ 3φ", "pkkey" + (tot ? " in" : ""));
+      text("CURRENT · تيار", x + 92, y + 130, "wb-tiny"); text("VOLTAGE · جهد", x + 270, y + 130, "wb-tiny");
+      jack("wm.I", x + 60, y + 160, "red", "I", 0); jack("wm.I'", x + 124, y + 160, "black", "I'", 0); jack("wm.V", x + 238, y + 160, "red", "V", 0); jack("wm.V'", x + 302, y + 160, "black", "V'", 0);
+      text("I", x + 60, y + 192, "wb-lbl"); text("I'", x + 124, y + 192, "wb-lbl"); text("V", x + 238, y + 192, "wb-lbl"); text("V'", x + 302, y + 192, "wb-lbl");
+    }
     /* ---------- Lab 10: mains panel, power meter, fluorescent lamp ---------- */
     function drawMains() {
       var x = 16, y = 16, mn = I.mn, m = R.mn, on = mn.on;
@@ -341,9 +379,9 @@
 
     /* ---------- leads ---------- */
     function ptKind(p) {
-      if (/\.(m|s)\+$|\.V$|\.A$|\.10A$|\.mA$|fg\.out|sc\.[12]$|\.a$|mn\.L/.test(p)) return "red";
-      if (/sc\.[12]g|fg\.com|\.COM$/.test(p)) return "black";
-      if (/\.(m|s)-$|\.b$|mn\.N/.test(p)) return "blue";
+      if (/\.(m|s)\+$|\.V$|\.A$|\.10A$|\.mA$|fg\.out|sc\.[12]$|\.a$|mn\.L|va\.L|cc\.1$|tp\.[ABC]$|wm\.I$/.test(p)) return "red";
+      if (/sc\.[12]g|fg\.com|\.COM$|tp\.N|wm\.[IV]'|cc\.1'|cc\.B/.test(p)) return "black";
+      if (/\.(m|s)-$|\.b$|mn\.N|va\.N/.test(p)) return "blue";
       if (/\.e$/.test(p)) return "green";
       return "";
     }
@@ -370,7 +408,7 @@
       leadAlert: function (w) { return ["warn", "في " + DNAME[w.d] + " سلك في مدخل التيار (A أو mA) والمفتاح على غير التيار. مدخل التيار مقاومته شبه صفر: لو لمست به جهدًا تعمل قصرًا."]; },
       ohmLive: function () { return ["warn", "لا تقيس المقاومة والدائرة موصولة بمصدر شغال: القراءة غلط وقد تتلف الجهاز. افصل المصدر أو أطفئه أولًا."]; },
       noJack: function () { return ["info", "المفتاح على التيار، لكن ما فيه سلك في مدخل A أو mA."]; },
-      hot: function (w) { return ["warn", "المقاومة " + si(w.nom, "Ω") + " تسخن: قدرتها " + w.p.toFixed(2) + " W وهي مصممة لـ 2 W. خفّض الجهد."]; },
+      hot: function (w) { return ["warn", "المقاومة " + si(w.nom, "Ω") + " تسخن: قدرتها " + w.p.toFixed(2) + " W وهي مصممة لـ " + w.pmax + " W. خفّض الجهد."]; },
       earth: function (w) { return ["bad", "تيار يمر في أرضي " + (w.id === "fg.gnd" ? "مولد الإشارة" : "الأوسيلوسكوب") + ": المشبك الأسود على عقدة غير عقدة الأرضي (الطرف الأسود للمولد). كل المشابك السوداء لازم تكون على نفس العقدة."]; }
     };
     function drawWarnings() {
@@ -397,9 +435,14 @@
         if (has("d1")) drawDMM("d1", 16, 282); if (has("d2")) drawDMM("d2", 214, 282);
         drawTray(); drawBoard();
         var by = 282;
-        if (has("rb")) { drawDecade("rb", 1206, by, "RESISTANCE DECADE BOX", ["×1 kΩ", "×100 Ω", "×10 Ω", "×1 Ω"], "R = " + si(S.rbValue(I), "Ω")); by += 214; }
+        if (has("rb")) { drawDecade("rb", 1206, by, "RESISTANCE DECADE BOX", rbLabels(I.rb.d.length), "R = " + si(S.rbValue(I), "Ω")); by += 214; }
         if (has("lb")) { drawDecade("lb", 1206, by, "LAB INDUCTANCE DECADE BOX", ["×10 mH", "×1 mH", "×0.1 mH"], "L = " + si(S.lbValue(I), "H")); by += 214; }
-        if (has("cb")) drawDecade("cb", 1206, by, "CAPACITANCE DECADE BOX", ["×1 µF", "×0.1 µF"], "C = " + si(S.cbValue(I), "F"));
+        if (has("cb")) { drawDecade("cb", 1206, by, "CAPACITANCE DECADE BOX", ["×1 µF", "×0.1 µF"], "C = " + si(S.cbValue(I), "F")); by += 214; }
+        if (has("va")) { drawVariac(1206, by); by += 214; }
+        if (has("cc")) { drawCoils(1206, by); by += 214; }
+        var shelf = !has("fg") && !has("ps") && !has("sc");   // an empty top shelf: the three-phase supply and the wattmeter go there
+        if (has("tp")) { if (shelf) drawTP(420, 40); else { drawTP(1206, by); by += 214; } }
+        if (has("wm")) { if (shelf) drawWM(830, 40); else { drawWM(1206, by); by += 214; } }
       }
       drawLeads();
       marks.forEach(function (m) {   // orange rings used by the explainer videos (api.mark)
@@ -520,7 +563,8 @@
       if (c === "sc.t") return { get: function () { return TDIV.indexOf(I.sc.td); }, set: function (v) { I.sc.td = TDIV[v]; }, min: 0, max: TDIV.length - 1, step: 1, px: 0.04, show: function (v) { return si(TDIV[v], "s") + "/div"; }, title: "SEC/DIV" };
       if ((m = /^sc\.(c[12])\.pos$/.exec(c))) return { get: function () { return I.sc[m[1]].pos || 0; }, set: function (v) { I.sc[m[1]].pos = v; }, min: -4, max: 4, step: 0.1, px: 0.03, unit: "div", title: "VERTICAL POSITION" };
       if (c === "sc.hpos") return { get: function () { return I.sc.hpos || 0; }, set: function (v) { I.sc.hpos = v; }, min: -6, max: 6, step: 0.1, px: 0.04, unit: "div", title: "HORIZONTAL POSITION" };
-      if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) { var DL = { rb: ["×1 kΩ", "×100 Ω", "×10 Ω", "×1 Ω"], lb: ["×10 mH", "×1 mH", "×0.1 mH"], cb: ["×1 µF", "×0.1 µF"] }[m[1]];
+      if (c === "va.v") return { get: function () { return I.va.v; }, set: function (v) { I.va.v = v; }, min: 0, max: 30, step: 0.1, px: 0.05, unit: "V rms", title: "VARIAC · جهد الخرج (60 Hz)" };
+      if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) { var DL = { rb: rbLabels(I.rb.d.length), lb: ["×10 mH", "×1 mH", "×0.1 mH"], cb: ["×1 µF", "×0.1 µF"] }[m[1]];
         return { get: function () { return I[m[1]].d[+m[2]]; }, set: function (v) { I[m[1]].d[+m[2]] = v; }, min: 0, max: 9, step: 1, px: 0.035, title: { rb: "صندوق المقاومات", lb: "صندوق المحاثة", cb: "صندوق المكثفات" }[m[1]], tag: DL[+m[2]],
           extra: function () { return m[1] === "rb" ? "R = " + si(S.rbValue(I), "Ω") : m[1] === "lb" ? "L = " + si(S.lbValue(I), "H") : "C = " + si(S.cbValue(I), "F"); } }; }
       if ((m = /^(d[12])\.dial$/.exec(c))) { var dl = DIAL[m[1]]; return { get: function () { return Math.max(0, dl.map(function (x) { return x[0]; }).indexOf(I[m[1]].mode)); }, set: function (v) { I[m[1]].mode = dl[v][0]; delete hold[m[1]]; }, min: 0, max: dl.length - 1, step: 1, px: 0.025, show: function (v) { return dl[v][1] + " · " + DIAL_AR[dl[v][0]]; }, title: DNAME[m[1]] }; }
@@ -542,8 +586,11 @@
       if (c === "fg.on") { snap(); I.fg.on = !I.fg.on; return commit(); }
       if (c === "mn.on") { snap(); I.mn.on = !I.mn.on; return commit(); }
       if ((m = /^fg\.rng:(\d+)$/.exec(c))) { snap(); var mant = I.fg.f / Math.pow(10, Math.floor(Math.log10(I.fg.f))); I.fg.f = +(mant * +m[1]).toPrecision(3); return commit(); }
-      if (c === "fg.w:sin") return;
-      if (/^fg\.w:/.test(c)) return toast("الموجة المثلثة والمربعة: قيد الإعداد. الموجة الجيبية شغالة.");
+      if (c === "fg.w:sin" || c === "fg.w:sq") { snap(); I.fg.w = c.slice(5); return commit(); }
+      if (/^fg\.w:/.test(c)) return toast("الموجة المثلثة: قيد الإعداد. الجيبية والمربعة شغالتان.");
+      if (c === "va.on") { snap(); I.va.on = !I.va.on; return commit(); }
+      if (c === "tp.on") { snap(); I.tp.on = !I.tp.on; return commit(); }
+      if (c === "wm.tot") { I.wm.tot = !I.wm.tot; return commit(); }
       if ((m = /\.soon:(.+)$/.exec(c))) return toast("زر " + m[1] + ": قيد الإعداد");
       if ((m = /^(d[12])\.hold$/.exec(c))) { if (hold[m[1]]) delete hold[m[1]]; else hold[m[1]] = R[m[1]]; return render(); }
       if ((m = /^(d[12])\.mode:(\w+)$/.exec(c))) { snap(); I[m[1]].mode = m[2]; delete hold[m[1]]; return commit(); }

@@ -61,6 +61,19 @@
   var COIL = { R1dc: 11.6, R2dc: 3.1, L1: 0.42, L2: 0.105, k: 0.92, f: 60, dot2: "B" };
   COIL.M = COIL.k * sqrt(COIL.L1 * COIL.L2); COIL.R1 = COIL.R1dc * 1.15; COIL.R2 = COIL.R2dc * 1.15;
 
+  /* ---------- the bench (clab-bench.js): component blocks, and ready circuits for «اعرض الحل» and the wiring check ---------- */
+  var PIECES = {
+    C47n: { t: "C", v: 0.047e-6, name: "0.047 µF" }, C1n: { t: "C", v: 1e-9, name: "1 nF" }, C10n: { t: "C", v: 10e-9, name: "10 nF" }, C10nb: { t: "C", v: 10e-9, name: "10 nF", n: "2" }, C100n: { t: "C", v: 0.1e-6, name: "0.1 µF" },
+    L10m: { t: "L", v: 10e-3, name: "10 mH" }, L17m: { t: "L", v: 17.5e-3, name: "17.5 mH" },
+    R10: { t: "R", v: 10 }, R50: { t: "R", v: 50 }, R100: { t: "R", v: 100 }, R1k: { t: "R", v: 1000 }, R1k5: { t: "R", v: 1500 }, R2k: { t: "R", v: 2000 }, R2k2: { t: "R", v: 2200 }, R3k: { t: "R", v: 3000 },
+    RA: { t: "R", v: 100, pmax: 400, name: "100 Ω 400 W", n: "A" }, RB: { t: "R", v: 100, pmax: 400, name: "100 Ω 400 W", n: "B" }, RC: { t: "R", v: 100, pmax: 400, name: "100 Ω 400 W", n: "C" }
+  };
+  function kit(ids) { return ids.map(function (id) { var q = JSON.parse(JSON.stringify(PIECES[id])); q.id = id; return q; }); }
+  function P(id, lb) { var q = JSON.parse(JSON.stringify(PIECES[id])); q.id = id; if (lb) q.lb = lb; return q; }
+  var BR = { t: "W", id: "W" };
+  var SQ = function (f, vpp, off) { return { fg: { on: true, w: "sq", f: f, vpp: vpp, off: off || 0 } }; };
+  function mix() { var o = {}; Array.prototype.forEach.call(arguments, function (x) { (function cp(t, s) { Object.keys(s).forEach(function (k) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k])) { t[k] = t[k] || {}; cp(t[k], s[k]); } else t[k] = s[k]; }); })(o, x || {}); }); return o; }
+
   var EXPS = [];
   /* ================= Experiment 1 ================= */
   (function () {
@@ -507,5 +520,65 @@
     });
   })();
 
-  CV.c2lab = { list: EXPS, sig: sig, Cx: Cx, rcSquare: rcSquare, rlcSquare: rlcSquare, coil: COIL };
+
+  /* ================= the bench for each experiment ================= */
+  function lay(id, name, parts, leads, set, lbl) { return { id: id, name: name, parts: parts || {}, leads: leads, set: set || {}, lbl: lbl || {} }; }
+  var SC = function (vd1, vd2, td) { return { sc: { c1: { vd: vd1, cp: "DC", on: true }, c2: { vd: vd2, cp: "DC", on: true }, td: td, meas: true } }; };
+  function B(e, inst, kitIds, layouts) { var x = EXPS[e - 1]; x.inst = inst; x.kit = kit(kitIds); x.procs.forEach(function (p, k) { p.layouts = layouts[k] || []; }); }
+  // Lab 1 and 2: generator → decade box R → C (v:1:2) → back; CH1 on C, CH2 on the generator
+  var rcLeads = [["fg.out", "rb.a"], ["rb.b", "t:1:2:3"], ["t:2:2:5", "fg.com"], ["sc.1", "t:1:2:1"], ["sc.1g", "t:2:2:3"], ["sc.2", "fg.out"], ["sc.2g", "t:2:2:7"]];
+  B(1, ["fg", "sc", "rb", "d1"], ["C47n", "C1n", "C10n"], [[lay("L1", "RC بموجة 0 → 10 V", { "v:1:2": P("C47n", "C") }, rcLeads, mix(SQ(200, 10, 5), { rb: { d: [1, 0, 0, 0, 0] } }, SC(2, 2, 5e-4)), { rb: "R" })]]);
+  B(2, ["fg", "sc", "rb", "d1"], ["C47n", "C1n", "C10n"], [[lay("L1", "RC بموجة ±10 V", { "v:1:2": P("C47n", "C") }, rcLeads, mix(SQ(200, 20, 0), { rb: { d: [1, 0, 0, 0, 0] } }, SC(5, 5, 5e-4)), { rb: "R" })]]);
+  // Lab 3: the coupled-coil unit (terminals 1 ● and 1' of coil 1, A and B of coil 2)
+  var dcSet = function () { return { ps: { on: true, mode: "normal", m: { v: 5, i: 2 } }, d1: { mode: "adc" }, d2: { mode: "vdc" } }; };
+  var acSet = { va: { on: true, v: 5 }, d1: { mode: "aac" }, d2: { mode: "vac" } };
+  B(3, ["ps", "va", "d1", "d2", "cc"], [], [
+    [lay("L1", "الملف 1", {}, [["ps.m+", "d1.A"], ["d1.COM", "cc.1"], ["cc.1'", "ps.m-"], ["d2.V", "cc.1"], ["d2.COM", "cc.1'"]], dcSet()),
+     lay("L2", "الملف 2", {}, [["ps.m+", "d1.A"], ["d1.COM", "cc.A"], ["cc.B", "ps.m-"], ["d2.V", "cc.A"], ["d2.COM", "cc.B"]], dcSet())],
+    [lay("L3", "الملف 1", {}, [["va.L", "d1.A"], ["d1.COM", "cc.1"], ["cc.1'", "va.N"], ["d2.V", "cc.1"], ["d2.COM", "cc.1'"]], acSet),
+     lay("L4", "الملف 2", {}, [["va.L", "d1.A"], ["d1.COM", "cc.A"], ["cc.B", "va.N"], ["d2.V", "cc.A"], ["d2.COM", "cc.B"]], acSet)],
+    [lay("L5", "V2 على الملف 2 المفتوح", {}, [["va.L", "d1.A"], ["d1.COM", "cc.1"], ["cc.1'", "va.N"], ["d2.V", "cc.A"], ["d2.COM", "cc.B"]], acSet)],
+    [lay("L6", "1' موصول بـ B، و VT بين 1 و A", {}, [["va.L", "cc.1"], ["cc.1'", "va.N"], ["cc.1'", "cc.B"], ["d1.V", "cc.1"], ["d1.COM", "cc.A"], ["d2.V", "cc.A"], ["d2.COM", "cc.B"]], { va: { on: true, v: 5 }, d1: { mode: "vac" }, d2: { mode: "vac" } })],
+    [lay("L7", "توالي aiding (1' ← B)", {}, [["va.L", "d1.A"], ["d1.COM", "cc.1"], ["cc.1'", "cc.B"], ["cc.A", "va.N"], ["d2.V", "cc.1"], ["d2.COM", "cc.A"]], acSet),
+     lay("L8", "توالي opposing (1' ← A)", {}, [["va.L", "d1.A"], ["d1.COM", "cc.1"], ["cc.1'", "cc.A"], ["cc.B", "va.N"], ["d2.V", "cc.1"], ["d2.COM", "cc.B"]], acSet)]]);
+  // Lab 4: generator → decade box R → L (h:1:2) → C (v:1:3); CH1 on C. The generator's own 50 Ω adds to the box.
+  var rlcLeads = [["fg.out", "rb.a"], ["rb.b", "t:1:2:3"], ["t:2:3:5", "fg.com"], ["sc.1", "t:1:3:1"], ["sc.1g", "t:2:3:3"], ["sc.2", "fg.out"], ["sc.2g", "t:2:3:7"]], rlcParts = { "h:1:2": P("L10m", "L"), "v:1:3": P("C1n", "C") };
+  B(4, ["fg", "sc", "rb", "d1"], ["L10m", "C1n", "C10n"], [[
+    lay("L1", "R = 200 Ω، 1 kHz", rlcParts, rlcLeads, mix(SQ(1000, 6), { rb: { d: [0, 0, 2, 0, 0] } }, SC(1, 1, 2e-5)), { rb: "R" }),
+    lay("L2", "حرج: صندوق 6275 Ω + 50 Ω المولد", rlcParts, rlcLeads, mix(SQ(3000, 6), { rb: { d: [0, 6, 2, 7, 5] } }, SC(1, 1, 2e-5)), { rb: "R" }),
+    lay("L3", "R = 6.9 kΩ، 3 kHz", rlcParts, rlcLeads, mix(SQ(3000, 6), { rb: { d: [0, 6, 9, 0, 0] } }, SC(1, 1, 2e-5)), { rb: "R" })]]);
+  // Lab 5: R (h:1:1) → L (h:1:2) → C (v:1:3), 5 V rms on the circuit; d1 on R, d2 on C
+  function ser(Rid) { return lay("L" + Rid, "R = " + PIECES[Rid].v + " Ω", { "h:1:1": P(Rid, "R"), "h:1:2": P("L17m", "L"), "v:1:3": P("C10n", "C") },
+    [["fg.out", "t:1:1:3"], ["t:2:3:5", "fg.com"], ["d1.V", "t:1:1:1"], ["d1.COM", "t:1:2:1"], ["d2.V", "t:1:3:1"], ["d2.COM", "t:2:3:1"]], { fg: { on: true, w: "sin", f: 12000 }, fgTerm: 5 * 2 * Math.SQRT2, d1: { mode: "vac" }, d2: { mode: "vac" } }); }
+  B(5, ["fg", "d1", "d2"], ["R100", "R50", "R10", "L17m", "C10n"], [[ser("R100")], [ser("R50")], [ser("R10")]]);
+  // Lab 6: R, C, L in parallel (v:1:2, v:1:3, v:1:4), source current through the mA input of d2
+  var parP = { "v:1:2": P("R1k", "R"), "v:1:3": P("C100n", "C"), "v:1:4": P("L17m", "L"), "h:1:2": BR, "h:1:3": BR, "h:2:2": BR, "h:2:3": BR },
+    parL = [["fg.out", "d2.mA"], ["d2.COM", "t:1:2:3"], ["t:2:2:5", "fg.com"], ["d1.V", "t:1:2:1"], ["d1.COM", "t:2:2:1"]];
+  B(6, ["fg", "d1", "d2"], ["R1k", "C100n", "L17m"], [[lay("L1", "1 kHz", parP, parL, { fg: { on: true, w: "sin", f: 1000 }, fgTerm: 2 * 2 * Math.SQRT2, d1: { mode: "vac" }, d2: { mode: "maac" } })],
+    [lay("L2", "قرب الرنين 3.8 kHz", parP, parL, { fg: { on: true, w: "sin", f: 3800 }, fgTerm: 2 * 2 * Math.SQRT2, d1: { mode: "vac" }, d2: { mode: "maac" } })]]);
+  // Lab 7: low-pass (box R then C) and high-pass (C then box R); CH1 on the generator, CH2 on the output
+  B(7, ["fg", "sc", "rb", "d1"], ["C10n", "C1n"], [
+    [lay("L1", "منخفض RC", { "v:1:2": P("C10n", "C") }, [["fg.out", "rb.a"], ["rb.b", "t:1:2:3"], ["t:2:2:5", "fg.com"], ["sc.1", "fg.out"], ["sc.1g", "t:2:2:3"], ["sc.2", "t:1:2:1"], ["sc.2g", "t:2:2:7"]],
+      mix({ fg: { on: true, w: "sin", f: 3183 }, fgTerm: 5 * 2 * Math.SQRT2, rb: { d: [0, 5, 0, 0, 0] } }, SC(5, 5, 1e-4)), { rb: "R" })],
+    [lay("L2", "عالٍ CR", { "h:1:1": P("C10n", "C") }, [["fg.out", "t:1:1:3"], ["t:1:2:5", "rb.a"], ["rb.b", "t:2:2:3"], ["t:2:2:5", "fg.com"], ["sc.1", "fg.out"], ["sc.1g", "t:2:2:1"], ["sc.2", "t:1:2:1"], ["sc.2g", "t:2:2:7"]],
+      mix({ fg: { on: true, w: "sin", f: 1592 }, fgTerm: 5, rb: { d: [1, 0, 0, 0, 0] } }, SC(1, 1, 2e-4)), { rb: "R" })]]);
+  // Lab 8: C1 (h:1:1), R1 (v:1:2), R2 (h:1:2), C2 (v:1:3), bottom bridge h:2:2
+  B(8, ["fg", "sc", "d1"], ["C10n", "C1n", "R1k5", "R2k2"], [[lay("L1", "تمرير النطاق", { "h:1:1": P("C10n", "C1"), "v:1:2": P("R1k5", "R1"), "h:1:2": P("R2k2", "R2"), "v:1:3": P("C1n", "C2"), "h:2:2": BR },
+    [["fg.out", "t:1:1:3"], ["t:2:2:5", "fg.com"], ["sc.1", "fg.out"], ["sc.1g", "t:2:2:3"], ["sc.2", "t:1:3:1"], ["sc.2g", "t:2:2:7"]], mix({ fg: { on: true, w: "sin", f: 25000 }, fgTerm: 5 }, SC(0.5, 0.5, 1e-5)))]]);
+  // Lab 9: the T network R1 (h:1:1), L (v:1:2), R2 (h:1:2), bottom bridges; 10 Ω sense resistor under the driven port
+  var tParts = function (extra) { var o = { "h:1:1": P("R2k", "R1"), "v:1:2": P("L17m", "L"), "h:1:2": P("R3k", "R2"), "h:2:1": BR, "h:2:2": BR }; Object.keys(extra).forEach(function (k) { o[k] = extra[k]; }); return o; };
+  var drive1 = [["fg.out", "t:1:1:3"], ["fg.com", "t:3:1:5"], ["sc.1", "fg.out"], ["sc.1g", "t:3:1:3"], ["sc.2", "t:2:1:3"], ["sc.2g", "t:3:1:7"], ["d1.V", "t:1:1:1"], ["d1.COM", "t:2:1:1"], ["d2.V", "t:1:3:1"], ["d2.COM", "t:2:3:1"]];
+  var drive2 = [["fg.out", "t:1:3:3"], ["fg.com", "t:3:3:5"], ["sc.1", "fg.out"], ["sc.1g", "t:3:3:3"], ["sc.2", "t:2:3:3"], ["sc.2g", "t:3:3:7"], ["d1.V", "t:1:1:1"], ["d1.COM", "t:2:1:1"], ["d2.V", "t:1:3:1"], ["d2.COM", "t:2:3:1"]];
+  var tSet = mix({ fg: { on: true, w: "sin", f: 1000 }, fgTerm: 10, d1: { mode: "vac" }, d2: { mode: "vac" } }, SC(2, 0.02, 2e-4));
+  B(9, ["fg", "sc", "d1", "d2"], ["R2k", "R3k", "L17m", "R10"], [
+    [lay("L1", "المنفذ 2 مفتوح", tParts({ "v:2:1": P("R10", "Rs") }), drive1, tSet)],
+    [lay("L2", "المنفذ 2 مقصور", tParts({ "v:2:1": P("R10", "Rs"), "v:1:3": BR }), drive1, tSet)],
+    [lay("L3", "المنفذ 1 مفتوح", tParts({ "v:2:3": P("R10", "Rs") }), drive2, tSet)],
+    [lay("L4", "المنفذ 1 مقصور", tParts({ "v:2:3": P("R10", "Rs"), "v:1:1": BR }), drive2, tSet)]]);
+  // Lab 10: Y load RA (v:1:2), RB (v:1:4), RC (v:1:6), star point on row 2, neutral to N
+  var yParts = { "v:1:2": P("RA", "RA"), "v:1:4": P("RB", "RB"), "v:1:6": P("RC", "RC"), "h:2:2": BR, "h:2:3": BR, "h:2:4": BR, "h:2:5": BR };
+  B(10, ["tp", "wm", "d1", "d2"], ["RA", "RB", "RC"], [
+    [lay("L1", "IA و VAB", yParts, [["tp.A", "d1.A"], ["d1.COM", "t:1:2:3"], ["tp.B", "t:1:4:3"], ["tp.C", "t:1:6:3"], ["tp.N", "t:2:2:5"], ["d2.V", "t:1:2:1"], ["d2.COM", "t:1:4:1"]], { tp: { on: true }, d1: { mode: "aac" }, d2: { mode: "vac" } })],
+    [lay("L2", "واتميتر على الطور A", yParts, [["tp.A", "wm.I"], ["wm.I'", "t:1:2:3"], ["tp.B", "t:1:4:3"], ["tp.C", "t:1:6:3"], ["tp.N", "t:2:2:5"], ["wm.V", "t:1:2:1"], ["wm.V'", "t:2:2:3"], ["d1.V", "t:1:2:7"], ["d1.COM", "t:2:2:7"]], { tp: { on: true }, wm: { tot: false }, d1: { mode: "vac" } })]]);
+  CV.c2lab = { PIECES: PIECES, list: EXPS, sig: sig, Cx: Cx, rcSquare: rcSquare, rlcSquare: rlcSquare, coil: COIL };
 })(typeof window !== "undefined" ? window : globalThis);

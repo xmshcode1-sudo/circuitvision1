@@ -221,3 +221,4 @@ html.wb-lock, html.wb-lock body { overflow: hidden; }
 html.wb-lock .lg-ref { top: calc(env(safe-area-inset-top, 0px) + 150px); }
 .wb-pop-tag { display: inline-block; unicode-bidi: isolate; font-weight: 600; color: var(--fg-2, #4a5568); margin-inline-start: 6px; }
 .wb-pop { z-index: 960; }
+.wb-core { fill: #5b6068; stroke: #3c4046; stroke-width: 1.2; } .wb-core-in { fill: #f4f4f1; }

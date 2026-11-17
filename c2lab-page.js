@@ -18,8 +18,9 @@
   function close(x, v, tol, abs) { return Math.abs(x - v) <= Math.max(tol * Math.abs(v), abs == null ? 0.01 : abs); }
   function videoDur(e) { var L = CV.lessons && CV.lessons["c2lab" + e.n]; return L && L.videoDur; }
 
-  var root = $("#cl-root");
+  var root = $("#cl-root"), bench = null;
   function route() {
+    if (bench) { bench.destroy(); bench = null; }
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
@@ -144,8 +145,13 @@
       '<h2 class="lg-h">التحضير (Pre-Lab)</h2>' + e.prelab.map(function (t, k) { return preView(e, t, k); }).join("") +
       '<h2 class="lg-h">خطوات التجربة</h2>' + e.procs.map(function (p, k) {
         return '<section class="card lg-sec c2-proc" data-p="' + k + '"><h2>' + bd(esc(p.title)) + '</h2><div class="cl-proc"><div class="cl-fig">' + CV.draw.render(p.fig, { aria: "رسمة الدائرة" }) + '</div><ol class="lg-steps">' + p.steps.map(function (s) { return "<li>" + bd(s) + "</li>"; }).join("") + '</ol></div>' +
-          '<h3 class="c2-h3">الأجهزة</h3>' + instView(p) + '<h3 class="c2-h3">الجداول</h3>' + p.tables.map(function (T, ti) { return tableView(e, p, T, ti); }).join("") + plotView(p) + '</section>';
+          (p.layouts && p.layouts.length ? '<div class="lg-act"><button type="button" class="btn btn-ghost btn-sm c2-tobench" data-lay="' + p.id + "/" + p.layouts[0].id + '">ركّبها على طاولة المعمل ↓</button></div>' : "") +
+          '<h3 class="c2-h3">قراءة سريعة من الأجهزة</h3>' + instView(p) + '<h3 class="c2-h3">الجداول</h3>' + p.tables.map(function (T, ti) { return tableView(e, p, T, ti); }).join("") + plotView(p) + '</section>';
       }).join("") +
+      '<section class="card lg-sec lg-bench" id="bench"><h2>طاولة المعمل</h2><p class="muted small">نفس طاولة معمل الدوائر 1 مع أجهزة الدوائر 2. ركّب الدائرة بنفسك واقرأ من الأجهزة، أو اعرض الحل على الطاولة.</p>' +
+      '<div class="lg-bench-bar"><label>الدائرة: <select id="cl-lay" class="select">' + e.procs.map(function (p) { return p.layouts.map(function (L) { return '<option value="' + p.id + "/" + L.id + '">' + esc(p.title.replace(/^الإجراء[^:]*:\s*|^الخطوات[^:]*:\s*/, "")) + (p.layouts.length > 1 ? " · " + esc(L.name) : "") + '</option>'; }).join(""); }).join("") + '</select></label>' +
+      '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button></div>' +
+      '<div class="lg-out" id="cl-out" aria-live="polite"></div><div id="cl-bench"></div></section>' +
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : '<a class="btn btn-ghost" href="#">→ كل التجارب</a>') + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     e.prelab.forEach(function (t, k) { wirePre(e, $('[data-pre="' + k + '"]', root), t, k); });
     e.procs.forEach(function (p, k) {
@@ -154,6 +160,30 @@
       p.tables.forEach(function (T, ti) { wireTable(e, p, T, ti, $('.cl-tbl[data-t="' + ti + '"]', sec), function () { drawPlot(p, sec); }); });
       drawPlot(p, sec);
     });
+    wireBench(e);
+  }
+  function layout(e, v) { var q = v.split("/"), p = e.procs.filter(function (x) { return x.id === q[0]; })[0]; return { p: p, L: p.layouts.filter(function (x) { return x.id === q[1]; })[0] }; }
+  function wireBench(e) {
+    var host = $("#cl-bench"); if (!host || !CV.clabBench) return;
+    bench = CV.clabBench.mount(host, { key: "c2-" + e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") });
+    if (e.inst.indexOf("rb") > -1 && bench.state().inst.rb.d.length !== 5) bench.set({ rb: { d: [0, 0, 0, 0, 0] } });
+    var K = CV.clabCheck, out = $("#cl-out");
+    $("#cl-check").onclick = function () {
+      var x = layout(e, $("#cl-lay").value), r = K.wiringReport(e, x.L, bench.state());
+      if (!r.ok) {   // maybe the student built another circuit of the same procedure (e.g. opposing instead of aiding)
+        var alt = x.p.layouts.filter(function (L) { return L !== x.L && K.wiringReport(e, L, bench.state()).ok; })[0];
+        if (alt) r = { ok: false, msgs: [{ lvl: "bad", t: "توصيلك يطابق دائرة «" + esc(alt.name) + "»، والمختارة «" + esc(x.L.name) + "». " + (e.inst.indexOf("cc") > -1 ? "الفرق في اتجاه طرفي أحد الملفين: اعكس طرفي الملف 2." : "راجع الفرق بينهما في الرسمة.") }] };
+      }
+      out.className = "lg-out " + (r.ok ? "ok" : "bad");
+      out.innerHTML = (r.ok ? "التوصيل صحيح ✓" + (r.msgs.length ? "" : " والأجهزة في أماكنها. الحين اقرأ واكتب في الجدول.") : "") + (r.msgs.length ? "<ul>" + r.msgs.map(function (m) { return "<li>" + m.t + "</li>"; }).join("") + "</ul>" : "");
+    };
+    $("#cl-sol").onclick = function () {
+      var x = layout(e, $("#cl-lay").value), set = JSON.parse(JSON.stringify(x.L.set || {})), term = set.fgTerm; delete set.fgTerm;
+      if (term) { var r = K.solveL(e, x.L, {}, false); set.fg = set.fg || {}; set.fg.vpp = Math.round(r.state.inst.fg.vpp * 1000) / 1000; }
+      bench.load({ parts: x.L.parts, leads: x.L.leads, set: set });
+      out.className = "lg-out"; out.textContent = "هذي دائرة «" + x.L.name + "» على الطاولة" + (term ? "، والمولد مضبوط بحيث يكون جهد طرفيه المطلوب تحت الحمل (مقاومته الداخلية 50 Ω)." : ".");
+    };
+    $$(".c2-tobench").forEach(function (b) { b.onclick = function () { $("#cl-lay").value = b.dataset.lay; $("#cl-sol").click(); $("#bench").scrollIntoView({ behavior: "smooth" }); }; });
   }
   window.addEventListener("hashchange", route);
   if (document.readyState === "complete") route(); else window.addEventListener("load", route);

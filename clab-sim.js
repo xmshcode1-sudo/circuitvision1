@@ -24,7 +24,7 @@
 
   /* ---------- nodal analysis with voltage sources (complex) ---------- */
   function solveMNA(N, els, w) {
-    var vs = els.filter(function (e) { return e.k === "V"; }), M = N + vs.length, A = [], b = [], i, j;
+    var vs = els.filter(function (e) { return e.k === "V"; }), xs = els.filter(function (e) { return e.k === "X"; }), M = N + vs.length + 2 * xs.length, A = [], b = [], i, j;
     for (i = 0; i < M; i++) { A.push([]); b.push(cx(0, 0)); for (j = 0; j < M; j++) A[i].push(cx(0, 0)); }
     function stamp(a, c, y) { if (a > 0) A[a - 1][a - 1] = add(A[a - 1][a - 1], y); if (c > 0) A[c - 1][c - 1] = add(A[c - 1][c - 1], y); if (a > 0 && c > 0) { A[a - 1][c - 1] = sub(A[a - 1][c - 1], y); A[c - 1][a - 1] = sub(A[c - 1][a - 1], y); } }
     for (i = 1; i < N + 1; i++) A[i - 1][i - 1] = add(A[i - 1][i - 1], cx(1e-12, 0));   // gmin: floating parts stay solvable
@@ -39,6 +39,12 @@
       if (e.a > 0) { A[e.a - 1][x] = add(A[e.a - 1][x], cx(1, 0)); A[x][e.a - 1] = add(A[x][e.a - 1], cx(1, 0)); }
       if (e.b > 0) { A[e.b - 1][x] = sub(A[e.b - 1][x], cx(1, 0)); A[x][e.b - 1] = sub(A[x][e.b - 1], cx(1, 0)); }
       b[x] = e.v;
+    });
+    /* coupled coils: branch currents i1 (a→b inside coil 1) and i2 (c→d inside coil 2); v_ab = z11 i1 + z12 i2, v_cd = z12 i1 + z22 i2 */
+    xs.forEach(function (e, k) {
+      var x1 = N + vs.length + 2 * k, x2 = x1 + 1;
+      [[e.a, x1, 1], [e.b, x1, -1], [e.c, x2, 1], [e.d, x2, -1]].forEach(function (q) { if (q[0] > 0) { A[q[0] - 1][q[1]] = add(A[q[0] - 1][q[1]], cx(q[2], 0)); A[q[1]][q[0] - 1] = add(A[q[1]][q[0] - 1], cx(q[2], 0)); } });
+      A[x1][x1] = sub(A[x1][x1], e.z11); A[x1][x2] = sub(A[x1][x2], e.z12); A[x2][x1] = sub(A[x2][x1], e.z12); A[x2][x2] = sub(A[x2][x2], e.z22);
     });
     // Gaussian elimination with partial pivoting
     for (i = 0; i < M; i++) {
@@ -56,6 +62,7 @@
     var x2 = []; for (i = M - 1; i >= 0; i--) { var s = b[i]; for (j = i + 1; j < M; j++) s = sub(s, mul(A[i][j], x2[j])); x2[i] = mag(A[i][i]) < 1e-30 ? cx(0, 0) : div(s, A[i][i]); }
     var V = [cx(0, 0)].concat(x2.slice(0, N)), I = {};
     vs.forEach(function (e, k) { I[e.id] = x2[N + k]; });   // current entering the + terminal from the circuit
+    xs.forEach(function (e, k) { I[e.id + ".1"] = x2[N + vs.length + 2 * k]; I[e.id + ".2"] = x2[N + vs.length + 2 * k + 1]; });
     return { V: V, Iv: I };
   }
 
@@ -77,18 +84,26 @@
   function ps0() { return { on: false, mode: "normal", m: { v: 0, i: 0.5 }, s: { v: 0, i: 0.5 } }; }
   function defaults() {
     return {
-      ps: ps0(), fg: { on: false, f: 1000, vpp: 0 },
+      ps: ps0(), fg: { on: false, f: 1000, vpp: 0, w: "sin" },
+      va: { on: false, v: 0 }, tp: { on: false }, wm: { tot: false },
       d1: { mode: "off" }, d2: { mode: "off", fuse: true },
       sc: { on: true, c1: { vd: 2, cp: "DC", on: true }, c2: { vd: 2, cp: "DC", on: true }, td: 0.0002, x1: 3, x2: 5, cur: false, math: false, meas: true },
       rb: { d: [0, 1, 0, 0] }, lb: { d: [1, 7, 5] }, cb: { d: [0, 0] }, mn: { on: false }
     };
   }
-  function rbValue(s) { var d = s.rb.d; return d[0] * 1000 + d[1] * 100 + d[2] * 10 + d[3]; }
+  function rbValue(s) { var d = s.rb.d, v = 0; for (var i = 0; i < d.length; i++) v = v * 10 + d[i]; return v; }
   function lbValue(s) { var d = s.lb.d; return (d[0] * 10 + d[1] + d[2] * 0.1) * 1e-3; }
   function cbValue(s) { var d = s.cb.d; return (d[0] + d[1] * 0.1) * 1e-6; }
   /* the lamp of Lab 10: a fluorescent tube with its magnetic ballast, modelled as R + L
      (an approximate model chosen so its power factor is low, as such loads are; not a measurement) */
   var LAMP = { r: 228, l: 1.618 };
+  /* Circuits 2, Lab 3: the two coupled coils on an iron core (1000 and 500 turns). The manual measures these, it does not give them;
+     these are the virtual bench's values. AC resistance = 1.15 × DC resistance, as the manual assumes. Dots: terminal 1 of coil 1 and
+     terminal B of coil 2 (the student finds the second one in Procedure 3). */
+  var COILS = { r1: 11.6, r2: 3.1, l1: 0.42, l2: 0.105, k: 0.92, skin: 1.15 };
+  COILS.m = COILS.k * Math.sqrt(COILS.l1 * COILS.l2);
+  /* Circuits 2, Lab 10: the three-phase transformer (secondary in star, 127 V per phase → 220 V line, 60 Hz, sequence ABC) */
+  var TP = { v: 127, f: 60 };
 
   /* ---------- netlist ---------- */
   function build(state, opt) {
@@ -108,7 +123,7 @@
       if (pc.t === "W" || (fl && fl.k === "short")) union(a, b);
       else if (fl && fl.k === "open") return;
       else { var fv = fl && fl.k === "value" ? fl.v : null;
-        els.push({ k: pc.t, a: a, b: b, r: pc.t === "R" ? (fv || actual(pc)) : 0, nom: pc.v, l: pc.t === "L" ? (fv || pc.v) : 0, c: pc.t === "C" ? (fv || pc.v) : 0, id: slot, piece: pc.id, lb: pc.lb }); }
+        els.push({ k: pc.t, a: a, b: b, r: pc.t === "R" ? (fv || actual(pc)) : 0, nom: pc.v, pmax: pc.pmax, l: pc.t === "L" ? (fv || pc.v) : 0, c: pc.t === "C" ? (fv || pc.v) : 0, id: slot, piece: pc.id, lb: pc.lb }); }
     });
     var use = opt.only || null;
     function on(k) { return !use || use.indexOf(k) > -1; }
@@ -128,7 +143,7 @@
     }
     if (on("fg")) {
       els.push({ k: "R", a: "fg.com", b: "earth", r: 0.01, id: "fg.gnd" });
-      if ((inst.fg.on || opt.allSrc) && !opt.dead) { var fge = { k: "V", a: "fg.int", b: "fg.com", ac: inst.fg.vpp / 2, f: inst.fg.f, id: "fg", src: "fg" }; if (inst.fg.off) { fge.dc = inst.fg.off; fge.ilim = 1; } els.push(fge); els.push({ k: "R", a: "fg.int", b: "fg.out", r: 50, id: "fg.r" }); }
+      if ((inst.fg.on || opt.allSrc) && !opt.dead) { var fge = { k: "V", a: "fg.int", b: "fg.com", ac: inst.fg.vpp / 2, f: inst.fg.f, id: "fg", src: "fg", sq: inst.fg.w === "sq" }; if (inst.fg.off) { fge.dc = inst.fg.off; fge.ilim = 1; } els.push(fge); els.push({ k: "R", a: "fg.int", b: "fg.out", r: 50, id: "fg.r" }); }
     }
     if (on("mn") && inst.mn) {   // mains panel with its power meter; output L/N, the lamp hard-wired after it
       if ((inst.mn.on || opt.allSrc) && !opt.dead) els.push({ k: "V", a: "mn.Li", b: "mn.N", ac: 220 * Math.SQRT2, f: 60, id: "mn", src: "mn" });
@@ -136,6 +151,15 @@
       els.push({ k: "R", a: "mn.L", b: "lamp.m", r: LAMP.r, id: "lamp.r" }); els.push({ k: "L", a: "lamp.m", b: "mn.N", l: LAMP.l, id: "lamp.l" });
       union("lamp.a", "mn.L"); union("lamp.b", "mn.N");
     }
+    if (on("va") && inst.va) {   // variac: adjustable 60 Hz AC, output floating
+      if ((inst.va.on || opt.allSrc) && !opt.dead) els.push({ k: "V", a: "va.L", b: "va.N", ac: inst.va.v * Math.SQRT2, f: 60, id: "va", src: "va" });
+    }
+    if (on("cc")) els.push({ k: "X", a: "cc.1", b: "cc.1'", c: "cc.B", d: "cc.A", id: "cc" });
+    if (on("tp") && inst.tp) {   // three-phase supply: A, B, C and the neutral N (earthed)
+      union("tp.N", "earth");
+      if ((inst.tp.on || opt.allSrc) && !opt.dead) [["A", 0], ["B", -120], ["C", 120]].forEach(function (q) { els.push({ k: "V", a: "tp." + q[0], b: "tp.N", ac: TP.v * Math.SQRT2, ph: q[1], f: TP.f, id: "tp." + q[0], src: "tp" }); });
+    }
+    if (on("wm")) { els.push({ k: "R", a: "wm.I", b: "wm.I'", r: 0.005, id: "wm.sh" }); els.push({ k: "R", a: "wm.V", b: "wm.V'", r: 10e6, id: "wm.vin" }); }
     if (on("sc")) { els.push({ k: "R", a: "sc.1", b: "earth", r: 1e6, id: "sc.1r" }); els.push({ k: "R", a: "sc.2", b: "earth", r: 1e6, id: "sc.2r" });
       els.push({ k: "R", a: "sc.1g", b: "earth", r: 0.01, id: "sc.1gr" }); els.push({ k: "R", a: "sc.2g", b: "earth", r: 0.01, id: "sc.2gr" }); }
     ["d1", "d2"].forEach(function (d) {
@@ -153,17 +177,23 @@
     var names = {}, N = 0;
     function idx(p) { var r = find(p); if (names[r] === undefined) names[r] = r === find("earth") ? 0 : ++N; return names[r]; }
     find("earth"); names[find("earth")] = 0;
-    els.forEach(function (e) { e.na = idx(e.a); e.nb = idx(e.b); });
+    els.forEach(function (e) { e.na = idx(e.a); e.nb = idx(e.b); if (e.k === "X") { e.nc = idx(e.c); e.nd = idx(e.d); } });
     return { els: els, N: N, node: function (p) { var r = find(tileOf(p)); return names[r] === undefined ? -1 : names[r]; }, find: find, tileOf: tileOf };
   }
 
-  function solveAt(net, w, srcFilter, ccState) {
+  function solveAt(net, w, srcFilter, ccState, srcVal) {
     var els = net.els.map(function (e) {
       var o = { k: e.k, a: e.na, b: e.nb, r: e.r, l: e.l, c: e.c, id: e.id };
+      if (e.k === "X") {
+        var C2 = COILS, sk = w ? C2.skin : 1;
+        return { k: "X", a: e.na, b: e.nb, c: e.nc, d: e.nd, id: e.id, z11: cx(C2.r1 * sk, w * C2.l1), z12: cx(0, w * C2.m), z22: cx(C2.r2 * sk, w * C2.l2) };
+      }
       if (e.k === "V") {
         var active = srcFilter(e);
         if (ccState && ccState[e.id] !== undefined && w === 0) return { k: "I", a: e.na, b: e.nb, i: cx(-ccState[e.id], 0), id: e.id };   // CC: current source out of +
-        o.v = active ? cx(w === 0 ? (e.dc || 0) : (e.ac || 0), 0) : cx(0, 0);
+        if (srcVal && w) { o.v = active ? srcVal(e) : cx(0, 0); return o; }
+        var amp = w === 0 ? (e.dc || 0) : (e.ac || 0), ph = w === 0 ? 0 : (e.ph || 0) * Math.PI / 180;
+        o.v = active ? cx(amp * Math.cos(ph), amp * Math.sin(ph)) : cx(0, 0);
       }
       return o;
     });
@@ -190,18 +220,35 @@
       if (!changed) break;
     }
     var acSrc = net.els.filter(function (e) { return e.k === "V" && e.ac; })[0], w = acSrc ? 2 * Math.PI * acSrc.f : 0;
-    var ac = acSrc ? solveAt(net, w, function (e) { return !!e.ac; }) : null;
-    return { net: net, dc: dc, ac: ac, w: w, f: acSrc ? acSrc.f : 0, cc: cc, state: state, opt: opt };
+    var ac = null, h = null;
+    if (acSrc && acSrc.sq) {
+      /* square wave = offset + Σ (4A/πn) sin(nωt), n odd: the circuit is linear, so each harmonic is solved as a phasor and the
+         waveforms are summed back. The Lanczos factor smooths the edges (a real generator's edge is not infinitely fast either). */
+      h = [];
+      for (var n = 1; n <= NH; n += 2) {
+        var sg = Math.sin(Math.PI * n / (NH + 2)) / (Math.PI * n / (NH + 2)), bn = 4 * acSrc.ac / (Math.PI * n) * sg;
+        h.push({ n: n, s: solveAt(net, n * w, function (e) { return e === acSrc; }, null, function (e) { return e === acSrc ? cx(0, -bn) : cx(0, 0); }) });
+      }
+      ac = h[0].s;
+    } else ac = acSrc ? solveAt(net, w, function (e) { return !!e.ac; }) : null;
+    return { net: net, dc: dc, ac: ac, h: h, w: w, f: acSrc ? acSrc.f : 0, cc: cc, state: state, opt: opt };
   }
 
+  var NH = 255;   // odd harmonics up to the 255th for the square wave
   /* ---------- quantities ---------- */
-  function vNode(sol, p) { var n = sol.net.node(p); return { dc: n < 0 ? 0 : sol.dc.V[n].re, ac: n < 0 || !sol.ac ? Z0 : sol.ac.V[n] }; }
-  function vBetween(sol, p, q) { var a = vNode(sol, p), b = vNode(sol, q); return { dc: a.dc - b.dc, ac: sub(a.ac, b.ac) }; }
+  function vNode(sol, p) { var n = sol.net.node(p), o = { dc: n < 0 ? 0 : sol.dc.V[n].re, ac: n < 0 || !sol.ac ? Z0 : sol.ac.V[n] };
+    if (sol.h) o.h = sol.h.map(function (q) { return n < 0 ? Z0 : q.s.V[n]; });
+    return o; }
+  function vBetween(sol, p, q) { var a = vNode(sol, p), b = vNode(sol, q), o = { dc: a.dc - b.dc, ac: sub(a.ac, b.ac) }; if (a.h) o.h = a.h.map(function (x, k) { return sub(x, b.h[k]); }); return o; }
+  /* RMS of the AC part (true RMS, all harmonics) */
+  function acRms(v) { if (v.h) { var s2 = 0; v.h.forEach(function (x) { s2 += x.re * x.re + x.im * x.im; }); return Math.sqrt(s2 / 2); } return mag(v.ac) / Math.SQRT2; }
+  /* the value at time t of a quantity {dc, ac, h} (w = fundamental angular frequency) */
+  function at(v, w, t) { var y = v.dc || 0; if (v.h) v.h.forEach(function (x, k) { var n = 2 * k + 1; y += mag(x) * Math.cos(n * w * t + ang(x)); }); else if (w) y += mag(v.ac) * Math.cos(w * t + ang(v.ac)); return y; }
   function elById(sol, id) { return sol.net.els.filter(function (e) { return e.id === id; })[0]; }
   /* current through an element from its a end to its b end */
   function iElem(sol, e) {
     var vdc = sol.dc.V[e.na].re - sol.dc.V[e.nb].re, vac = sol.ac ? sub(sol.ac.V[e.na], sol.ac.V[e.nb]) : Z0;
-    if (e.k === "R") return { dc: vdc / e.r, ac: div(vac, cx(e.r, 0)) };
+    if (e.k === "R") { var o = { dc: vdc / e.r, ac: div(vac, cx(e.r, 0)) }; if (sol.h) o.h = sol.h.map(function (q) { return div(sub(q.s.V[e.na], q.s.V[e.nb]), cx(e.r, 0)); }); return o; }
     if (e.k === "L") return { dc: vdc * 1e6, ac: sol.w ? div(vac, cx(0, sol.w * e.l)) : Z0 };
     if (e.k === "C") return { dc: 0, ac: sol.w ? mul(vac, cx(0, sol.w * e.c)) : Z0 };
     return { dc: 0, ac: Z0 };
@@ -217,7 +264,7 @@
   function ohms(state, p, q, exclude, opt) {
     var net = build(state, { dead: true, only: opt && opt.only });
     var els = net.els.filter(function (e) { return !exclude || exclude.indexOf(e.id.split(".")[0]) < 0; })
-      .map(function (e) { return { k: e.k, a: e.na, b: e.nb, r: e.r, l: e.l, c: e.c, id: e.id }; });
+      .map(function (e) { if (e.k === "X") return { k: "X", a: e.na, b: e.nb, c: e.nc, d: e.nd, id: e.id, z11: cx(COILS.r1, 0), z12: Z0, z22: cx(COILS.r2, 0) }; return { k: e.k, a: e.na, b: e.nb, r: e.r, l: e.l, c: e.c, id: e.id }; });
     var a = net.node(p), b = net.node(q);
     if (a < 0 || b < 0 || a === b) return a === b && a >= 0 ? 0 : Infinity;
     els.push({ k: "I", a: b, b: a, i: cx(1e-3, 0), id: "test" });
@@ -231,7 +278,7 @@
     if (mode === "off" || !elById(sol, d + ".vin")) return { text: "", mode: mode };
     function jackCurrent(j) { var e = elById(sol, d + "." + j + ".sh"); return e ? iElem(sol, e) : { dc: 0, ac: Z0 }; }
     if (mode === "vdc" || mode === "mv") { var v = vBetween(sol, d + ".V", d + ".COM").dc; return { val: v, unit: mode === "mv" ? "mV" : "V", text: fmtV(mode === "mv" ? v * 1000 : v, mode === "mv" ? "mV" : "V", d), ac: false, mode: mode }; }
-    if (mode === "vac") { var va = mag(vBetween(sol, d + ".V", d + ".COM").ac) / Math.SQRT2; return { val: va, unit: "V", text: fmtV(va, "V", d), ac: true, mode: mode }; }
+    if (mode === "vac") { var va = acRms(vBetween(sol, d + ".V", d + ".COM")); return { val: va, unit: "V", text: fmtV(va, "V", d), ac: true, mode: mode }; }
     if (mode === "ohm") {
       var live = anyLive(sol, d);
       if (live) return { val: NaN, unit: "Ω", text: "- - - -", warn: "live", mode: mode };
@@ -239,7 +286,7 @@
       return { val: r, unit: "Ω", text: r === Infinity ? "OL" : fmtR(r, d), mode: mode };
     }
     var jack = mode === "madc" || mode === "maac" ? "mA" : (J.A ? "A" : "10A"), cur = jackCurrent(jack), isAc = mode === "aac" || mode === "maac";
-    var val = isAc ? mag(cur.ac) / Math.SQRT2 : cur.dc, blown = st.blown && st.blown[jack];
+    var val = isAc ? acRms(cur) : cur.dc, blown = st.blown && st.blown[jack];
     if (blown) return { val: 0, unit: "A", text: jack === "mA" ? "0.00" : "0.000", mode: mode, fuse: jack };
     return { val: val, unit: "A", text: jack === "mA" ? fmtMA(val * 1000) : fmtA(val), ac: isAc, mode: mode, jack: jack };
   }
@@ -289,7 +336,7 @@
     s.net.els.forEach(function (e) {
       if (e.k !== "R" || !e.piece) return;
       var i = iElem(s, e), p = e.r * (i.dc * i.dc + mag(i.ac) * mag(i.ac) / 2);
-      if (p > 2) warn.push({ k: "hot", id: e.id, nom: e.nom, p: p });
+      if (p > (e.pmax || 2)) warn.push({ k: "hot", id: e.id, nom: e.nom, p: p, pmax: e.pmax || 2 });
     });
     // earth loop through the scope or generator ground
     ["sc.1gr", "sc.2gr", "fg.gnd"].forEach(function (id) {
@@ -298,13 +345,14 @@
     });
     out.sc = scope(s);
     out.mn = mains(s);
+    out.wm = watt(s);
     return out;
   }
 
   /* oscilloscope: each channel = DC level + sine (phasor) measured from the tip to earth */
   function scope(sol) {
     var st = sol.state.inst.sc; if (!st || !elById(sol, "sc.1r")) return null;
-    function ch(n) { var v = vNode(sol, "sc." + n), c = st["c" + n]; return { dc: c.cp === "AC" ? 0 : c.cp === "GND" ? 0 : v.dc, ac: c.cp === "GND" ? Z0 : v.ac, cp: c.cp, on: c.on, vd: c.vd }; }
+    function ch(n) { var v = vNode(sol, "sc." + n), c = st["c" + n]; return { dc: c.cp === "AC" ? 0 : c.cp === "GND" ? 0 : v.dc, ac: c.cp === "GND" ? Z0 : v.ac, h: c.cp === "GND" ? null : v.h, cp: c.cp, on: c.on, vd: c.vd }; }
     return { c1: ch(1), c2: ch(2), f: sol.f, w: sol.w };
   }
   function mains(sol) {
@@ -315,6 +363,13 @@
     return { v: Vr, i: Ir, p: P, q: S.im, pf: pf };
   }
 
+  /* wattmeter: P = Re(V·I*) of its voltage and current coils; the Σ key shows the total power the three-phase supply delivers */
+  function watt(sol) {
+    var sh = elById(sol, "wm.sh"); if (!sh || !sol.ac) return null;
+    var i = iElem(sol, sh).ac, v = vBetween(sol, "wm.V", "wm.V'").ac, S1 = mul(v, cx(i.re, -i.im)), tot = 0;
+    sol.net.els.forEach(function (e) { if (e.src !== "tp") return; var vv = sub(sol.ac.V[e.na], sol.ac.V[e.nb]), ii = sol.ac.Iv[e.id] || Z0; tot += -mul(vv, cx(ii.re, -ii.im)).re / 2; });
+    return { p: S1.re / 2, tot: tot };
+  }
   function si(v, u) {
     var a = Math.abs(v), p = a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "k"] : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e-3, "m"] : a >= 1e-6 ? [1e-6, "µ"] : [1e-9, "n"];
     var n = v / p[0]; return (Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(2).replace(/\.?0+$/, "")) + " " + p[1] + u;
@@ -323,7 +378,7 @@
     si: si,
     cx: cx, add: add, sub: sub, mul: mul, div: div, mag: mag, ang: ang,
     solveMNA: solveMNA, build: build, solve: solve, read: read, vNode: vNode, vBetween: vBetween, iElem: iElem, elById: elById,
-    ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP,
+    ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP, COILS: COILS, TP: TP, acRms: acRms, at: at, NH: NH,
     fmtV: fmtV, fmtA: fmtA, fmtMA: fmtMA, fmtR: fmtR
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -45,6 +45,17 @@
     if (k === "R") [6325, 6900].forEach(function (R) { var st = { R: R, f: "3000" }; out.push(st); });
     return out.slice(0, 4);
   }
+  /* the bench itself with the ready circuit, as a still picture (the same drawing the student uses on the page) */
+  function benchSvg(e, L) {
+    if (!CV.clabBench || !e.inst) return null;
+    var d = document.createElement("div"); d.style.cssText = "position:absolute;left:-5000px;width:1220px"; document.body.appendChild(d);
+    var b = CV.clabBench.mount(d, { key: "vid-" + e.id, inst: e.inst, kit: e.kit });
+    b.reset(); if (e.inst.indexOf("rb") > -1) b.set({ rb: { d: [0, 0, 0, 0, 0] } });
+    var set = JSON.parse(JSON.stringify(L.set || {})), term = set.fgTerm; delete set.fgTerm;
+    if (term) { var r = CV.clabCheck.solveL(e, L, {}, false); set.fg = set.fg || {}; set.fg.vpp = Math.round(r.state.inst.fg.vpp * 1000) / 1000; }
+    b.load({ parts: L.parts, leads: L.leads, set: set });
+    var svg = d.querySelector(".wb-svg").outerHTML; b.destroy(); d.remove(); return svg;
+  }
   function label(p, st) { return (p.inst.controls || []).map(function (c) { var v = st[c.k], o = c.opts && c.opts.filter(function (x) { return String(x[0]) === String(v); })[0]; return c.label + ": <b>" + esc(o ? o[1] : v) + "</b>"; }).join("، "); }
 
   X.list.forEach(function (e) {
@@ -62,6 +73,7 @@
     });
     e.procs.forEach(function (p) {
       out.push({ title: "خطوات التجربة", sub: p.title, text: "<ol class='steps'>" + p.steps.map(function (s) { return "<li class='now'>" + s + "</li>"; }).join("") + "</ol>", vis: sch(p), dur: 5 + strip(p.steps.join(" ")).length / 24 });
+      (p.layouts || []).forEach(function (Lx) { var sv = benchSvg(e, Lx); if (sv) out.push({ title: "على طاولة المعمل", sub: p.title + (p.layouts.length > 1 ? " · " + Lx.name : ""), text: "<p>نفس الدائرة مركّبة على الطاولة: القطع على لوحة التوصيل، والأسلاك من الأجهزة، والأجهزة مضبوطة وتقرأ.</p><p>في صفحة التجربة: «ركّبها على طاولة المعمل» ثم «تحقق من توصيلي».</p>", vis: sv, dur: 7 }); });
       settings(p).forEach(function (st, i) { var r = p.inst.read(st); out.push({ title: "قراءة الأجهزة", sub: p.title, text: "<p>" + label(p, st) + "</p>" + (i === 0 ? "<p>القراءة من شاشة الجهاز، وتُكتب في الجدول كما هي.</p>" : ""), vis: meters(r), dur: 5 }); });
       if (p.inst && !(p.inst.controls || []).length) { /* fixed setups already shown once above */ }
       p.tables.forEach(function (T) {

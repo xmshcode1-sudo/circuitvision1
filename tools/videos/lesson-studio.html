@@ -8,6 +8,7 @@
      Driven by tools/videos/lesson-render.py: window.show(id, i, progress). Not part of the site. -->
 <link rel="stylesheet" href="../../sig.css">
 <link rel="stylesheet" href="../../lg.css">
+<link rel="stylesheet" href="../../clab-bench.css">
 <style>
   html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050914; }
   body, body * { font-family: "DejaVu Sans", sans-serif !important; }
@@ -164,6 +165,7 @@
   .mt-i { display: grid; gap: 6px; padding: 18px 22px; border-radius: 16px; background: #0d1422; border: 1px solid #1e2738; }
   .mt-i span { font-size: 26px; color: #8f9bb0; } .mt-i b { font-family: "DejaVu Sans Mono", monospace !important; font-size: 44px; color: #7dffb0; direction: ltr; text-align: right; } .mt-i small { font-size: 24px; color: #8f9bb0; } .mt-i b.tx { font-family: "DejaVu Sans", sans-serif !important; direction: rtl; }
   .mt-sc { width: 1100px; margin-top: 24px; } .mt-sc svg { width: 100%; height: auto; }
+  #vis .wb-svg { width: 1220px !important; height: auto !important; max-height: 860px; border-radius: 12px; }
   .mt-n { margin-top: 12px; font-size: 22px; color: #8f9bb0; direction: rtl; }
   #vis .lgt td.v { color: #ff9f43; }
 </style>
@@ -184,7 +186,7 @@
 <script src="../../ss-ch1.js"></script><script src="../../ss-ch2.js"></script><script src="../../ss-ch3.js"></script><script src="../../ss-ch4.js"></script><script src="../../ss-ch5.js"></script><script src="../../ss-ch6.js"></script><script src="../../ss-ch7.js"></script>
 <script src="../../ld-ch1.js"></script><script src="../../ld-ch2.js"></script><script src="../../ld-ch3.js"></script><script src="../../ld-ch4.js"></script><script src="../../ld-ch5.js"></script>
 <script src="../../c2-ch1.js"></script><script src="../../c2-ch2.js"></script><script src="../../c2-ch3.js"></script>
-<script src="../../c2lab.js"></script><script src="c2lab-video.js"></script>
+<script src="../../clab-sim.js"></script><script src="../../clab-bench.js"></script><script src="../../clab-check.js"></script><script src="../../c2lab.js"></script><script src="c2lab-video.js"></script>
 <script>
 (function () {
   var CV = window.CV, $ = function (id) { return document.getElementById(id); };

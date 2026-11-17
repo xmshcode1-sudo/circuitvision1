@@ -77,7 +77,8 @@
       if (/\.sh$/.test(e.id) || e.id === "mn.meter") { u(e.na, e.nb); return; }          // ammeters (and the power meter) are wires
       if (/\.vin$|^sc\.|^fg\.gnd$|^fg\.r$/.test(e.id)) return;                        // voltmeters, scope, generator internals: not part of the circuit
       if (e.id === "fg") { els.push({ k: "FG", a: e.na, b: e.nb, pol: 1 }); return; }
-      if (e.k === "V") { els.push({ k: e.src === "mn" ? "MN" : "PS", a: e.na, b: e.nb, pol: 1 }); return; }
+      if (e.k === "X") { els.push({ k: "K1", a: e.na, b: e.nb, pol: 0, id: e.id }); els.push({ k: "K2", a: e.nc, b: e.nd, pol: 0, id: e.id }); return; }
+      if (e.k === "V") { els.push({ k: e.src === "mn" ? "MN" : e.src === "va" ? "VA" : e.src === "tp" ? "TP" : "PS", a: e.na, b: e.nb, pol: 1 }); return; }
       if (e.k === "R" && e.box && e.nom === 0) { u(e.na, e.nb); return; }
       els.push({ k: e.k, v: e.k === "R" ? (e.nom || e.r) : e.k === "L" ? e.l : e.c, a: e.na, b: e.nb, pol: 0, id: e.id });
     });
@@ -85,7 +86,7 @@
     var fgr = net.els.filter(function (e) { return e.id === "fg.r"; })[0];
     if (fgr) u(fgr.na, fgr.nb);
     els.forEach(function (x) { x.a = f(x.a); x.b = f(x.b); });
-    els = els.filter(function (x) { return x.a !== x.b || x.k === "PS"; });
+    els = els.filter(function (x) { return x.a !== x.b || x.k === "PS" || x.k === "VA" || x.k === "TP"; });
     // drop parts hanging in the air (both ends touch nothing else)
     var deg = {}; els.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; });
     return els.filter(function (x) { return deg[x.a] > 1 || deg[x.b] > 1; });
@@ -116,7 +117,7 @@
     return go(0);
   }
   /* ---------- the corrector: compare the student's bench with the manual's circuit and say exactly what is off ---------- */
-  function partName(x) { var si = S.si; return x.k === "R" ? "مقاومة " + si(x.v, "Ω") : x.k === "L" ? "ملف " + si(x.v, "H") : x.k === "C" ? "مكثف " + si(x.v, "F") : x.k === "PS" ? "المصدر المستمر" : x.k === "FG" ? "مولد الإشارة" : x.k === "MN" ? "مصدر المتردد" : x.k; }
+  function partName(x) { var si = S.si; return x.k === "R" ? "مقاومة " + si(x.v, "Ω") : x.k === "L" ? "ملف " + si(x.v, "H") : x.k === "C" ? "مكثف " + si(x.v, "F") : x.k === "PS" ? "المصدر المستمر" : x.k === "FG" ? "مولد الإشارة" : x.k === "MN" ? "مصدر المتردد" : x.k === "VA" ? "الفارياك" : x.k === "TP" ? "طور من المصدر ثلاثي الطور" : x.k === "K1" ? "الملف 1 (1000 لفة)" : x.k === "K2" ? "الملف 2 (500 لفة)" : x.k; }
   function relations(list) {   // which parts sit in parallel (same two nodes) or in series (share a node nothing else touches)
     var deg = {}, rel = {};
     list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; });
@@ -128,7 +129,7 @@
     }
     return rel;
   }
-  function openEnds(list) { var deg = {}, out = []; list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; }); list.forEach(function (x) { if (x.k !== "PS" && x.k !== "FG" && x.k !== "MN" && (deg[x.a] === 1 || deg[x.b] === 1)) out.push(partName(x)); }); return out; }
+  function openEnds(list) { var deg = {}, out = []; list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; }); list.forEach(function (x) { if (["PS", "FG", "MN", "VA", "TP"].indexOf(x.k) < 0 && (deg[x.a] === 1 || deg[x.b] === 1)) out.push(partName(x)); }); return out; }
 
   var JACK = { d1: { A: "A" }, d2: { mA: "mA", "10A": "10A" } }, DNAME = { d1: "الملتيميتر الأصفر (Fluke)", d2: "الملتيميتر الأزرق (PeakTech)" };
   function meters(state) {   // how each multimeter is wired: as an ammeter (A), a voltmeter (V), an ohmmeter (Ω), half wired, or not used
