@@ -7,7 +7,7 @@
   "use strict";
 
   /* Chapters whose lessons are written and tested. Add a chapter id here when its lesson file is done. */
-  var PUBLISHED = { "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
+  var PUBLISHED = { "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
 
   function ch(id, ar, en, topics) {
     return {
@@ -81,12 +81,36 @@
        description when the founder provides it, so nothing here is guessed. */
     { id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "next", planned: true, thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 6 تجارب عملية مع جهاز IC Trainer",
       level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] },
-    { id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "next", planned: true, thumb: "signals",
-      level: "قيد الإعداد · الفصول تُضاف من توصيف المقرر في القسم", chapters: [] }
+    {
+      id: "signals-systems", code: "Signals and Systems", ar: "تحليل الإشارات والنظم", group: "ss", thumb: "signals",
+      level: "EE 3010 · من محاضرات المقرر: الإشارات والنظم، نظم LTI، فورييه، لابلاس، Z، وأخذ العيّنات",
+      chapters: [
+        ch("ss-ch1", "الإشارات والنظم", "Signals and Systems", [
+          "Signals, Systems, CT and DT", "Periodic and Aperiodic Signals", "Energy and Power Signals", "Even and Odd Signals",
+          "Transformations of the Independent Variable", "Complex Exponential and Sinusoidal Signals", "Unit Impulse and Unit Step",
+          "Systems: Interconnections, Memory, Invertibility, Causality", "Stability, Time Invariance and Linearity"]),
+        ch("ss-ch2", "نظم LTI", "Linear Time-Invariant (LTI) Systems", [
+          "Impulse Response and the Convolution Sum", "Computing the Convolution Sum", "The Convolution Integral",
+          "Properties of Convolution and of LTI Systems", "Step Response and Correlation", "Systems Described by Differential and Difference Equations"]),
+        ch("ss-ch3", "متسلسلة فورييه", "Fourier Series Representation of Periodic Signals", [
+          "LTI Response to Complex Exponentials and the CT Fourier Series", "Trigonometric Form, Dirichlet Conditions and Examples", "Discrete-Time Fourier Series"]),
+        ch("ss-ch4", "تحويل فورييه", "Fourier Transform", [
+          "The Continuous-Time Fourier Transform", "Fourier Transform of Periodic Signals", "The Discrete-Time Fourier Transform",
+          "Properties: Linearity and Symmetry", "Properties: Shifts, Scaling, Parseval, Differentiation, Convolution", "Frequency Response of Systems Described by Differential and Difference Equations"]),
+        ch("ss-ch5", "تحويل لابلاس", "Laplace Transform", [
+          "The Laplace Transform and the Region of Convergence", "Poles, Zeros, ROC Properties and Common Pairs", "Properties of the Laplace Transform",
+          "The Inverse Laplace Transform", "The System Function: Causality, Stability, LCCDE", "The Unilateral Laplace Transform and Transform Circuits"]),
+        ch("ss-ch6", "تحويل Z", "Z-Transform", [
+          "The Z-Transform and the Region of Convergence", "Properties of the Z-Transform", "Poles, Zeros, System Function and Stability", "The Inverse Z-Transform"]),
+        ch("ss-ch7", "نظرية أخذ العيّنات", "Sampling Theorem", [
+          "The Sampling Theorem", "Reconstruction: Zero-Order Hold and Interpolation", "Aliasing", "Discrete-Time Processing of Continuous-Time Signals", "Sampling of Discrete-Time Signals"])
+      ]
+    }
   ];
   /* Groups on the dashboard. */
   var groups = [
     { id: "core", ar: "مقررات الدوائر", note: "الفصول والمواضيع حسب توصيف المقررين في القسم. اضغط على أي فصل لعرض مواضيعه." },
+    { id: "ss", ar: "تحليل الإشارات والنظم", note: "دروس EE 3010 من محاضرات المقرر، ولكل درس مقطع شرح وتمرين واختبار قصير." },
     { id: "next", ar: "مقررات قادمة", note: "مكانها محجوز في المنصة، والمحتوى يُبنى بعد إكمال مقررات الدوائر." }
   ];
 

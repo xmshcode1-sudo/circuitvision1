@@ -1,0 +1,29 @@
+/* CircuitVision — plots and interactive widgets of the Signals and Systems lessons (sig-plot.js, sig-widgets.js). */
+.sp { display: block; width: 100%; height: auto; direction: ltr; font-family: var(--font-mono, ui-monospace, monospace); }
+.sp-g { stroke: var(--line-soft, #e3e9f5); stroke-width: 1; }
+.sp-ax { stroke: var(--fg-3, #7584a6); stroke-width: 1.3; } .sp-axh { fill: var(--fg-3, #7584a6); }
+.sp-t { font-size: 11px; fill: var(--fg-3, #7584a6); } .sp-l { font-size: 12.5px; fill: var(--fg-2, #3f5079); font-style: italic; }
+.sp-ln { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.sp-dash { stroke-dasharray: 5 4; stroke-width: 1.6; }
+.sp-st { stroke-width: 2; } .sp-imp { stroke-width: 2.4; }
+.sp-ref { fill: none; stroke-width: 1.3; }
+.sp-band { opacity: .16; }
+.sp-z { fill: none; stroke-width: 2.2; } .sp-p { fill: none; stroke-width: 2.6; stroke-linecap: round; }
+.sp-c1.sp-ln, .sp-c1.sp-st, .sp-c1.sp-imp, .sp-c1.sp-ref, .sp-c1.sp-z, .sp-c1.sp-p { stroke: #2f7bff; } .sp-c1.sp-dot, .sp-c1.sp-imph, .sp-c1.sp-band, text.sp-c1 { fill: #2f7bff; }
+.sp-c2.sp-ln, .sp-c2.sp-st, .sp-c2.sp-imp, .sp-c2.sp-ref, .sp-c2.sp-z, .sp-c2.sp-p { stroke: #f08a24; } .sp-c2.sp-dot, .sp-c2.sp-imph, .sp-c2.sp-band, text.sp-c2 { fill: #f08a24; }
+.sp-c3.sp-ln, .sp-c3.sp-st, .sp-c3.sp-imp, .sp-c3.sp-ref, .sp-c3.sp-z, .sp-c3.sp-p { stroke: #23a26d; } .sp-c3.sp-dot, .sp-c3.sp-imph, .sp-c3.sp-band, text.sp-c3 { fill: #23a26d; }
+.sp-c4.sp-ln, .sp-c4.sp-st, .sp-c4.sp-imp, .sp-c4.sp-ref { stroke: var(--fg-3, #7584a6); } .sp-c4.sp-dot, text.sp-c4 { fill: var(--fg-3, #7584a6); }
+.sp-fig { margin: 8px 0; } .sp-fig figcaption { font-size: 13px; color: var(--fg-3); margin-top: 6px; text-align: center; }
+.sp-fig .sp { max-width: 620px; margin: auto; }
+.eq-n { display: block; font-family: var(--font-body, inherit); font-size: 12px; color: var(--fg-3); margin-top: 4px; direction: rtl; }
+
+.sw { display: grid; gap: 10px; padding: 12px; border-radius: 12px; border: 1px solid var(--line-soft); background: var(--bg-2); }
+.sw-plot { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
+.sw-plot .sp { max-width: 640px; }
+.sw-ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.sw-s { display: grid; gap: 4px; font-size: 13.5px; min-width: 200px; flex: 1 1 220px; }
+.sw-s input[type=range] { width: 100%; height: 30px; accent-color: var(--blue, #2f7bff); }
+.sw-note { margin: 0; line-height: 1.7; }
+.ss-vid { display: grid; gap: 6px; } .ss-vid video { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; }
+.sw-s input[type=range] { direction: ltr; }
+.l-sec .eq { overflow-wrap: break-word; white-space: normal; }
