@@ -23,7 +23,7 @@ async def shoot(plan, outdir):
         await pg.wait_for_timeout(400)
         total = sum(s["dur"] for s in plan["scenes"]); t = 0; files = []
         for k, s in enumerate(plan["scenes"]):
-            await pg.evaluate("([s, m]) => window.show(s, m)", [s, {"id": plan["id"], "n": plan["n"], "progress": t / total}])
+            await pg.evaluate("([s, m]) => window.show(s, m)", [s, {"id": plan["id"], "n": plan["n"], "label": plan.get("label"), "progress": t / total}])
             await pg.wait_for_timeout(60)
             f = os.path.join(outdir, "%03d.png" % k)
             await pg.screenshot(path=f)
@@ -57,9 +57,10 @@ def main():
         outdir = "/tmp/clab-frames/" + eid; os.makedirs(outdir, exist_ok=True)
         for f in os.listdir(outdir): os.remove(os.path.join(outdir, f))
         files = asyncio.run(shoot(plan, outdir))
-        out = os.path.join(ROOT, "clab-lab%d.mp4" % n)
+        name = plan.get("out") or ("clab-lab%d" % n)
+        out = os.path.join(ROOT, name + ".mp4")
         encode(files, out)
-        Image.open(files[0][0]).convert("RGB").resize((1280, 720)).save(os.path.join(ROOT, "clab-lab%d.jpg" % n), quality=82)
+        Image.open(files[0][0]).convert("RGB").resize((1280, 720)).save(os.path.join(ROOT, name + ".jpg"), quality=82)
         d = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration,size", "-of", "csv=p=0", out], capture_output=True, text=True).stdout.strip()
         print(eid, "→", os.path.basename(out), d)
 

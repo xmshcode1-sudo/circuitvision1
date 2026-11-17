@@ -39,6 +39,9 @@
   function route() {
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (bench) { bench.destroy(); bench = null; }
+    var M = CV.clabModes; if (M) M.leave();
+    var rp = document.getElementById("cl-report"); if (rp) { rp.remove(); document.documentElement.classList.remove("rp-open"); }
+    if (M && M.route(id, root)) { window.scrollTo(0, 0); return; }
     if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
   }
@@ -48,7 +51,8 @@
     root.innerHTML = '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1>معمل الدوائر الكهربائية</h1>' +
       '<p>التجارب العشر في كتيب معمل القسم، على طاولة تشبه طاولة المعمل: لوحة التوصيل والقطع، مصدر الجهد بقناتين، ملتيميتران، مولد الإشارة، الأوسيلوسكوب، وصناديق المقاومات والمحاثة. تركّب الدائرة بنفسك وتقيس، والمنصة تتحقق من توصيلك وقراءاتك.</p>' +
       '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بالتجربة 1</a></div></div>' +
-      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n' + (c.d === c.t && c.t ? " ok" : "") + '">' + e.n + '</span><div><b class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="pg">' + (c.d ? c.d + " من " + c.t : "") + '</span></div></a>'; }).join("") + '</div>';
+      '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n' + (c.d === c.t && c.t ? " ok" : "") + '">' + e.n + '</span><div><b class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="pg">' + (c.d ? c.d + " من " + c.t : "") + '</span></div></a>'; }).join("") + '</div>' + (CV.clabModes ? CV.clabModes.indexHtml() : "");
+    if (CV.clabModes) CV.clabModes.wireIndex(root);
   }
   function showExp(e) {
     cur = e;
@@ -59,7 +63,8 @@
     var procs = e.procs.map(function (p, k) { return procView(e, p, k); }).join("");
     var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     root.innerHTML = nav +
-      '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span></div>' +
+      '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span>' +
+      '<div class="lg-cta"><button type="button" class="btn btn-ghost btn-sm" id="cl-report-btn">📄 تقرير المعمل (PDF)</button>' + (e.inst.indexOf("mn") < 0 ? '<a class="btn btn-ghost btn-sm" href="#exam-' + e.id + '">⏱ اختبار عملي</a>' : "") + (CV.clabModes && CV.clabModes.faultPool(e.id).length ? '<a class="btn btn-ghost btn-sm" href="#fault-' + e.id + '">🔧 تدريب الأعطال</a>' : "") + '</div></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الأهداف</h2><ul>' + e.objective.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>الأدوات</h2><ul>' + e.equipment.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul>' + (e.note ? '<p class="lg-note">' + bd(esc(e.note)) + '</p>' : "") + '</section></div>' +
       (VIDEO[e.n] ? '<section class="card lg-sec lg-video"><h2>شرح التجربة بالفيديو <span class="muted small ltr">' + VIDEO[e.n] + '</span></h2><video controls playsinline preload="none" poster="clab-lab' + e.n + '.jpg" src="clab-lab' + e.n + '.mp4"></video><p class="muted small">نفس الطاولة اللي تحت: تركيب الدائرة قطعة قطعة وسلك سلك، ثم ضبط الأجهزة، ثم كل قراءة في الجدول والجهاز موصول في مكانه الصحيح.</p></section>' : '') +
@@ -73,6 +78,7 @@
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     bench = CV.clabBench.mount($("#cl-bench"), { key: e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") });
     wire(e);
+    if (CV.clabModes) { CV.clabModes.keepAnswers(e, root); $("#cl-report-btn").addEventListener("click", function () { CV.clabModes.report(e, root); }); }
   }
   /* reference drawing of the selected circuit, pinned top-right like the logic lab; the student can hide it */
   var REF_KEY = "cv-clab-ref-min";

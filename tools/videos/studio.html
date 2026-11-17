@@ -79,7 +79,8 @@
   function union(a, b) { if (!a) return b; if (!b) return a; var x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]); return [x, y, Math.max(a[0] + a[2], b[0] + b[2]) - x, Math.max(a[1] + a[3], b[1] + b[3]) - y]; }
   function viewFor(scene) {
     var sz = bench.size(), W = sz.W, H = sz.H, r = null, f = scene.focus;
-    if (scene.inst.indexOf("mn") > -1) {   // Lab 10: the whole bench to set up, the power meter close up for each reading
+    if (scene.view) r = scene.view.slice();
+    else if (scene.inst.indexOf("mn") > -1) {   // Lab 10: the whole bench to set up, the power meter close up for each reading
       (scene.marks || []).forEach(function (m) { if (m.box) r = union(r, m.box); });
       if (!r) r = [0, 0, W, H];
     } else if (f === "all") r = [0, 0, W, H];
@@ -98,8 +99,8 @@
       });
       if (!r) r = [0, 0, W, H];
     }
-    var pad = 26; r = [r[0] - pad, r[1] - pad, r[2] + 2 * pad, r[3] + 2 * pad];
-    var w = Math.max(r[2], 820), h = Math.max(r[3], w * PH / PW); w = Math.max(w, h * PW / PH);
+    var pad = scene.view ? 0 : 26; r = [r[0] - pad, r[1] - pad, r[2] + 2 * pad, r[3] + 2 * pad];
+    var w = Math.max(r[2], scene.view ? 300 : 820), h = Math.max(r[3], w * PH / PW); w = Math.max(w, h * PW / PH);
     var x = r[0] + r[2] / 2 - w / 2, y = r[1] + r[3] / 2 - h / 2;
     if (w <= W) x = Math.max(0, Math.min(W - w, x)); else x = (W - w) / 2;
     if (h <= H) y = Math.max(0, Math.min(H - h, y)); else y = (H - h) / 2;
@@ -119,7 +120,7 @@
     return h + "</table>";
   }
   window.show = function (scene, meta) {
-    document.getElementById("hdr-l").textContent = "التجربة " + meta.n;
+    document.getElementById("hdr-l").textContent = meta.label || "التجربة " + meta.n;
     document.getElementById("prog").style.width = (meta.progress * 100).toFixed(2) + "%";
     var card = document.getElementById("card");
     if (scene.kind === "card") {
@@ -134,7 +135,7 @@
       if (bench) bench.destroy();
       try { localStorage.clear(); } catch (e) {}
       var e = CV.clabExps.list.filter(function (x) { return x.id === meta.id; })[0];
-      bench = CV.clabBench.mount(document.getElementById("bench"), { key: "video-" + meta.id, inst: scene.inst, kit: e.kit });
+      bench = CV.clabBench.mount(document.getElementById("bench"), { key: "video-" + meta.id, inst: scene.inst, kit: e ? e.kit : [] });
       benchKey = key;
     }
     bench.load({ parts: scene.state.parts, leads: scene.state.leads, set: scene.state.inst });

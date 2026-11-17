@@ -110,3 +110,66 @@
 .cl-t th { white-space: nowrap; }
 .cl-t td.cl-e, .cl-t td.cl-p { min-width: 84px; text-align: center; font-variant-numeric: tabular-nums; background: var(--bg-2, #f3f5f9); border: 1px solid var(--line-soft, #e1e6ee); }
 .cl-t td.cl-e:empty::before { content: "—"; color: var(--fg-3, #8a93a3); }
+
+/* ---------- practical exam, troubleshooting, instrument videos (clab-modes.js) ---------- */
+.md-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.md-card p { margin: 0; color: var(--fg-2); line-height: 1.7; }
+.md-f { display: grid; gap: 4px; font-size: 13.5px; color: var(--fg-2); }
+.md-bar { position: sticky; top: 8px; z-index: 20; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 16px; }
+.md-bar p { margin: 0; flex: 1 1 260px; }
+.md-timer { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--fg-2); }
+.md-timer b { font-size: 26px; font-family: var(--font-mono); color: var(--fg); }
+.md-timer.low b { color: #e5484d; }
+.md-fig { max-width: 520px; }
+.md-t td, .md-t th { white-space: nowrap; }
+.md-t input { width: 110px; }
+.md-pair { display: flex; gap: 10px; flex-wrap: wrap; } .md-pair label { display: flex; gap: 6px; align-items: center; font-size: 12.5px; }
+.md-score { display: flex; gap: 10px; align-items: baseline; } .md-score b { font-size: 28px; }
+.md-break { margin: 6px 0; padding-inline-start: 20px; }
+.md-ans { display: flex; gap: 10px; flex-wrap: wrap; } .md-ans label { display: grid; gap: 4px; font-size: 13.5px; flex: 1 1 200px; }
+.md-exp summary { cursor: pointer; color: var(--fg-2); font-size: 14px; }
+.md-vids { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.md-vid { margin: 0; display: grid; gap: 6px; } .md-vid video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 16 / 9; }
+.md-vid figcaption { display: grid; gap: 2px; font-size: 14px; }
+
+/* ---------- lab report: on screen as a sheet over the page, printed alone ---------- */
+html.rp-open body { overflow: hidden; }
+.rp { position: fixed; inset: 0; z-index: 1000; overflow: auto; background: rgba(5, 9, 20, .82); padding: 16px; -webkit-overflow-scrolling: touch; }
+.rp-bar { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 820px; margin: 0 auto 12px; padding: 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+.rp-page { max-width: 820px; margin: 0 auto; background: #fff; color: #111; padding: 36px 40px; border-radius: 6px; font-size: 14px; line-height: 1.7; direction: rtl; }
+.rp-page h1 { font-size: 20px; margin: 4px 0; color: #111; text-align: right; } .rp-page h2 { font-size: 16px; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #1d3f91; color: #1d3f91; } .rp-page h3 { font-size: 14px; margin: 14px 0 6px; color: #222; }
+.rp-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; border-bottom: 3px solid #1d3f91; padding-bottom: 14px; }
+.rp-code { font-size: 12px; color: #1d3f91; font-weight: 700; } .rp-ar { color: #333; }
+.rp-who { border-collapse: collapse; font-size: 13px; } .rp-who th { text-align: right; padding: 3px 8px; color: #444; font-weight: 600; } .rp-who td { padding: 3px 8px; min-width: 170px; border-bottom: 1px solid #bbb; }
+.rp-in { font: inherit; color: #1d3f91; border: 0; background: #eef3ff; border-radius: 4px; padding: 2px 6px; width: 100%; box-sizing: border-box; }
+.rp-con { min-height: 110px; resize: vertical; line-height: 1.8; }
+.rp-t { border-collapse: collapse; width: 100%; font-size: 13px; margin: 4px 0; } .rp-t th, .rp-t td { border: 1px solid #999; padding: 4px 8px; text-align: center; color: #111; background: #fff; } .rp-t th { background: #e8edf8; }
+.rp-t td.l { text-align: right; } .rp-t .u { color: #666; font-size: 11px; }
+.rp-good { color: #11753a; font-weight: 700; } .rp-badc { color: #b42318; font-weight: 700; text-decoration: underline wavy; }
+.rp-ok { color: #11753a; } .rp-bad { color: #b42318; }
+.rp-q p { margin: 6px 0; } .rp-fig { max-width: 460px; margin: 6px auto; } .rp-fig svg { width: 100%; height: auto; }
+.rp-fig svg text, .rp-fig svg { color: #111; } .rp-page ul { margin: 0; padding-inline-start: 22px; }
+.rp-foot { margin-top: 24px; font-size: 11.5px; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }
+.rp-page .cl-plot-svg .ax { stroke: #555; } .rp-page .cl-plot-svg .ln { stroke: #1d3f91; } .rp-page .cl-plot-svg .tk, .rp-page .cl-plot-svg .tl { fill: #333; }
+@media (max-width: 600px) { .rp { padding: 6px; } .rp-page { padding: 18px 14px; } }
+@media print {
+  html.rp-open body > *:not(#cl-report) { display: none !important; }
+  html.rp-open, html.rp-open body { background: #fff !important; overflow: visible !important; }
+  .rp { position: static; background: none; padding: 0; overflow: visible; }
+  .no-print { display: none !important; }
+  .rp-page { max-width: none; padding: 0; border-radius: 0; }
+  .rp-in { background: none; color: #111; }
+  .rp-page h2 { break-after: avoid; } .rp-t, .rp-fig { break-inside: avoid; }
+  @page { size: A4; margin: 14mm; }
+}
+.md-fig { order: 0 !important; }
+/* the report is always a white sheet, whatever the site theme */
+.rp-page { color-scheme: light; --fg: #111; --fg-2: #333; --fg-3: #666; --line: #999; --line-soft: #ccc; --surface: #fff; --surface-2: #f3f5f9; --bg: #fff; --bg-2: #f6f8fc; --blue: #1d3f91; --orange: #d9730d; --ok: #11753a; --lf-fill: #dbe8f7; --lf-line: #5f7fb4; --lf-ink: #33476b; }
+.rp-t td, .rp-t tr.cl-sum td { background: #fff !important; color: #111 !important; box-shadow: none !important; }
+.rp-t tr.cl-sum td { background: #f3f5f9 !important; font-weight: 700; }
+.rp-t td.cl-e, .rp-t td.cl-p { min-width: 0; border: 1px solid #999; }
+.rp-t td.cl-e:empty::before { content: "—"; color: #888; }
+.rp-t th:empty { background: #e8edf8; }
+.rp-t td, .rp-t th { border: 1px solid #999 !important; border-radius: 0 !important; outline: 0 !important; }
+.rp-t span { border: 0 !important; background: none !important; }
+.cl-t td.ltr, .rp-t td.ltr, .md-t td.ltr { display: table-cell !important; }
