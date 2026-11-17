@@ -33,7 +33,7 @@
      left panel: the drawing (plot, K-map, circuit) or, when the step has none, a board with the equations or the steps;
      right column: title, a short orange line and the explanation. */
   function strip(h) { return String(h).replace(/<[^>]+>/g, ""); }
-  var COURSE = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111" };
+  var COURSE = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020" };
   function board(list, cur) { return "<div class='bd'>" + list.map(function (x, k) { return "<div class='bd-i" + (k === cur ? " now" : "") + "'>" + x + "</div>"; }).join("") + "</div>"; }
   function scenes(s, figs) {
     var out = [], ch = s.chapter || "", lawsB = "<div class='bd eqb'>" + eqs(s.laws.slice(0, 6)) + "</div>";

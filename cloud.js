@@ -214,7 +214,7 @@
       "c1-techniques-9": 6, "c1-techniques-10": 6, "c1-techniques-11": 6, "c1-power-6": 6, "c1-techniques-12": 7,
       "c1-sinusoidal-1": 8, "c1-sinusoidal-2": 8, "c1-sinusoidal-3": 8, "c1-sinusoidal-9": 8, "c1-sinusoidal-4": 9, "c1-sinusoidal-6": 9, "c1-power-7": 10 },
     labFree: function (n) { for (var k in api.LAB_OF) if (api.LAB_OF[k] === n && api.freeLesson(k)) return true; return false; },   // the first lesson of every chapter is the free sample
-    courseOf: function (lessonId) { return /^ss-/.test(lessonId) ? "signals-systems" : /^ld-/.test(lessonId) ? "logic-design" : "circuits-1"; },
+    courseOf: function (lessonId) { return /^ss-/.test(lessonId) ? "signals-systems" : /^ld-/.test(lessonId) ? "logic-design" : /^c2-/.test(lessonId) ? "circuits-2" : "circuits-1"; },
     canLesson: function (lessonId) { return api.freeLesson(lessonId) || api.can(api.courseOf(lessonId)); },
     price: function (id) { var c = api.course(id); return c ? (c.price_halalas / 100).toFixed(2) : "9.99"; },
     freeNote: function (id) { return id === "logic-design" ? "تجربة Lab#1 مجانية كاملة." : "الدرس الأول من كل فصل مجاني لتجربة المنصة."; },

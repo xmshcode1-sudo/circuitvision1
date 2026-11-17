@@ -27,3 +27,4 @@
 .ss-vid { display: grid; gap: 6px; } .ss-vid video { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #000; }
 .sw-s input[type=range] { direction: ltr; }
 .l-sec .eq { overflow-wrap: break-word; white-space: normal; }
+.sc-cdot { fill: var(--fg, #0d1b34); } .sc-arc { fill: none; stroke: var(--glow, #2f7bff); stroke-width: 1.8; stroke-dasharray: 5 4; } .sc-note { font-weight: 700; }

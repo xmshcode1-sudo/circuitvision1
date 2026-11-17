@@ -7,7 +7,7 @@
   "use strict";
 
   /* Chapters whose lessons are written and tested. Add a chapter id here when its lesson file is done. */
-  var PUBLISHED = { "ld-ch1": true, "ld-ch2": true, "ld-ch3": true, "ld-ch4": true, "ld-ch5": true, "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
+  var PUBLISHED = { "c2-lc": true, "c2-coupled": true, "c2-first-order": true, "c2-rlc": true, "c2-three-phase": true, "c2-frequency": true, "ld-ch1": true, "ld-ch2": true, "ld-ch3": true, "ld-ch4": true, "ld-ch5": true, "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
 
   function ch(id, ar, en, topics) {
     return {
@@ -52,29 +52,26 @@
       id: "circuits-2",
       code: "Circuits 2",
       ar: "الدوائر الكهربائية 2",
-      level: "الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، والاستجابة الترددية",
-      thumb: "ac",
+      level: "EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، والاستجابة الترددية",
+      thumb: "ac", lab: "lab2.html", labNote: "معمل EE 2020: 10 تجارب مع مقاطع شرح",
       chapters: [
         ch("c2-lc", "الملفات والمكثفات", "Inductance and Capacitance", [
           "The Inductor", "The Capacitor", "Series-Parallel Combinations of Inductance and Capacitance"]),
-        ch("c2-coupled", "الملفات المقترنة مغناطيسيًا والمحولات المثالية", "Magnetically Coupled Coils and Ideal Transformers", [
-          "Mutual Inductance", "A Model for Analyzing Mutually Coupled Coils", "Linear Transformers", "Ideal Transformers"]),
+        ch("c2-coupled", "الملفات المقترنة مغناطيسيًا والمحولات", "Magnetically Coupled Coils and Ideal Transformers", [
+          "Mutual Inductance and the Dot Convention", "Coupling Coefficient and Energy in Coupled Coils", "Linear Transformers", "Ideal Transformers"]),
         ch("c2-first-order", "استجابة دوائر RL و RC من الرتبة الأولى", "Response of First-Order RL and RC Circuits", [
           "The Natural Response of an RL Circuit", "The Natural Response of an RC Circuit",
-          "The Step Response of RL and RC Circuits", "A General Solution for Step and Natural Responses"]),
+          "The Step Response of an RL Circuit", "The Step Response of an RC Circuit and the General Solution"]),
         ch("c2-rlc", "الاستجابة الطبيعية والدرجية لدوائر RLC", "Natural and Step Responses of RLC Circuits", [
           "Introduction to the Natural Response of a Parallel RLC Circuit",
-          "The Forms of the Natural Response of a Parallel RLC Circuit",
-          "The Step Response of a Parallel RLC Circuit", "The Natural and Step Response of a Series RLC Circuit"]),
-        ch("c2-three-phase", "الدوائر ثلاثية الطور المتزنة", "Balanced Three-Phase Circuits", [
-          "Balanced Three-Phase Voltages", "Three-Phase Voltage Sources", "Analysis of the Wye-Wye Circuit",
-          "Analysis of the Wye-Delta Circuit", "Power Calculations in Balanced Three-Phase Circuits",
-          "Measuring Average Power in Three-Phase Circuits"]),
+          "The Forms of the Natural Response of a Parallel RLC Circuit", "The Step Response of a Parallel RLC Circuit"]),
+        ch("c2-three-phase", "الدوائر ثلاثية الطور", "Three-Phase Circuits", [
+          "Balanced Three-Phase Voltages and Sources", "Analysis of the Wye-Wye Circuit", "Analysis of the Wye-Delta Circuit",
+          "Power Calculations in Balanced Three-Phase Circuits", "Unbalanced Three-Phase Systems"]),
         ch("c2-frequency", "الاستجابة الترددية", "Frequency Response", [
-          "The Laplace Transform in Circuit Analysis", "Bode Plots", "Series and Parallel Resonance", "Passive Filters"]),
-        ch("c2-two-port", "شبكات المنفذين", "Two-Port Networks", [
-          "The Terminal Equations", "The Two-Port Parameters", "Analysis of the Terminated Two-Port Circuit",
-          "Interconnected Two-Port Circuits"])
+          "Transfer Function and the Decibel Scale", "Bode Plots", "Series and Parallel Resonance", "Passive Filters"]),
+        ch("c2-two-port", "شبكات المنفذين (قيد الإعداد: تُضاف عند وصول محاضرتها)", "Two-Port Networks", [
+          "The Terminal Equations", "The Two-Port Parameters", "Analysis of the Terminated Two-Port Circuit"])
       ]
     },
     /* Courses with a place reserved on the platform. Their chapters are added only from the department's course
@@ -145,7 +142,8 @@
     { id: "realworld",  ar: "الهندسة في الواقع",      en: "Real-World Engineering",  step: 6, status: "build", href: "realworld.html" },
     { id: "portfolio",  ar: "ملف الإنجاز",            en: "My Portfolio",            step: 6, status: "build", href: "portfolio.html" },
     { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" },
-    { id: "logic",      ar: "معمل التصميم المنطقي",   en: "Logic Design Lab",        step: 6, status: "build", href: "logic.html" }
+    { id: "logic",      ar: "معمل التصميم المنطقي",   en: "Logic Design Lab",        step: 6, status: "build", href: "logic.html" },
+    { id: "lab2",       ar: "معمل الدوائر 2",         en: "Circuits 2 Lab",          step: 3, status: "build", href: "lab2.html" }
   ];
 
   var statusLabel = { ok: "متاح", build: "متاح جزئيًا", plan: "مخطط" };
@@ -157,5 +155,5 @@
   window.CV.modules = modules;
   window.CV.statusLabel = statusLabel;
   window.CV.currentStep = 2;
-  window.CV.stepNote = "الدروس التفاعلية و Smart Feedback. مقرر Circuits 1 كامل (41 درسًا) مع مولّد التمارين، وأكاديمية المشاريع بستة مشاريع، والمعمل الذكي مع محاكي Arduino و40 تجربة موجّهة للدروس، وبنك الأسئلة، والتحديات، والمعلم الذكي، والنادي الطلابي (المعلم يحتاج مفتاح Gemini، والنادي يحتاج Supabase). Circuits 2 لم يُبنَ بعد.";
+  window.CV.stepNote = "الدروس التفاعلية و Smart Feedback. مقرر Circuits 1 كامل (41 درسًا) مع مولّد التمارين، وأكاديمية المشاريع بستة مشاريع، والمعمل الذكي مع محاكي Arduino و40 تجربة موجّهة للدروس، وبنك الأسئلة، والتحديات، والمعلم الذكي، والنادي الطلابي (المعلم يحتاج مفتاح Gemini، والنادي يحتاج Supabase). ومقرر Circuits 2 (EE 2020): 23 درسًا من المحاضرات مع مقاطع الشرح، ومعمله بعشر تجارب (شبكات المنفذين النظرية قيد الإعداد).";
 })();

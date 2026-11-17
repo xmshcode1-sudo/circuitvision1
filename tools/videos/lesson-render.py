@@ -51,7 +51,7 @@ async def main(ids):
         old = {}
         pth = os.path.join(ROOT, "ss-video-durations.js")
         try:
-            txt = open(pth).read(); old = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+            txt = open(pth).read(); old = json.loads(txt[txt.index("var D = ") + 8:txt.index("; var L")])
         except Exception: pass
         old.update(durs)
         open(pth, "w").write("/* Durations of the lesson videos (written by tools/videos/lesson-render.py). */\n(function () { var D = " + json.dumps(old, sort_keys=True) + "; var L = window.CV && window.CV.lessons; if (L) for (var k in D) if (L[k]) L[k].videoDur = D[k]; })();\n")

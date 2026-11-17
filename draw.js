@@ -78,6 +78,7 @@
       }
       L(A, P(-BODY, 0)); L(P(BODY, 0), B);
       var cls = e.asked ? " sc-asked" : "";
+      if (e.dot) { var dp = P(e.dot === "a" ? -BODY + 2 : BODY - 2, (h ? -1 : (e.a[1] === 0 ? 1 : -1)) * -16); out.push('<circle class="sc-cdot" cx="' + f(dp[0]) + '" cy="' + f(dp[1]) + '" r="4.5"/>'); }
       if (e.type === "R" && e.lamp) { // incandescent lamp: circle with a cross
         out.push('<circle class="sc-src' + cls + '" cx="' + f(mx) + '" cy="' + f(my) + '" r="16"/>');
         L([mx - 11, my - 11], [mx + 11, my + 11], "sc-lampx"); L([mx - 11, my + 11], [mx + 11, my - 11], "sc-lampx");
@@ -182,6 +183,8 @@
     Object.keys(deg).forEach(function (k) {
       if (deg[k] >= 3) { var p = pt(k.split(",").map(Number)); out.push('<circle class="sc-dot" cx="' + p[0] + '" cy="' + p[1] + '" r="4"/>'); }
     });
+    (c.notes || []).forEach(function (n) { var p = pt(n.at); labels.push('<text class="sc-val sc-note" x="' + f(p[0] + (n.dx || 0)) + '" y="' + f(p[1] + (n.dy || 0)) + '" text-anchor="middle">' + n.text + '</text>'); });
+    (c.arcs || []).forEach(function (n) { var p = pt(n.from), q = pt(n.to), mx = (p[0] + q[0]) / 2, my = Math.min(p[1], q[1]) - (n.h || 30); out.push('<path class="sc-arc" d="M' + f(p[0]) + ' ' + f(p[1]) + ' Q' + f(mx) + ' ' + f(my) + ' ' + f(q[0]) + ' ' + f(q[1]) + '"/>'); });
     if (c.omega) labels.push('<text class="sc-omega" x="' + (W - 8) + '" y="18" text-anchor="end">ω = ' + c.omega + ' rad/s</text>');
     return '<svg class="sc" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (opts.aria || "مخطط دائرة كهربائية") + '" style="max-width:' + W + 'px">' + out.join("") + labels.join("") + '</svg>';
   }

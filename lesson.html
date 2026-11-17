@@ -205,6 +205,9 @@
 <script src="ld-ch3.js"></script>
 <script src="ld-ch4.js"></script>
 <script src="ld-ch5.js"></script>
+<script src="c2-ch1.js"></script>
+<script src="c2-ch2.js"></script>
+<script src="c2-ch3.js"></script>
 <script src="ss-video-durations.js"></script>
 <script src="summaries.js"></script><script src="visuals.js"></script>
 <script>
@@ -297,7 +300,7 @@
     var SUM = (CV.lessonSum || {})[L.id];
     order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
-    if ((L.course === "signals-systems" || L.course === "logic-design") && CV.bi && CV.bi.mode() === "en") body = '<div class="card no-bi" style="padding:12px 16px" dir="ltr">English text for these lessons is in preparation (قيد الإعداد); the equations, drawings and videos below are language-neutral.</div>' + body;
+    if ((L.course === "signals-systems" || L.course === "logic-design" || L.course === "circuits-2") && CV.bi && CV.bi.mode() === "en") body = '<div class="card no-bi" style="padding:12px 16px" dir="ltr">English text for these lessons is in preparation (قيد الإعداد); the equations, drawings and videos below are language-neutral.</div>' + body;
     if (L.video) body += sec("video", "شرح الدرس بالفيديو", "Video", '<div class="ss-vid"><video controls playsinline preload="none" poster="' + L.video.replace(/\.mp4$/, ".jpg") + '" src="' + L.video + '"></video>' + (L.videoDur ? '<span class="muted small">المدة ' + L.videoDur + '</span>' : '') + '</div>');
     else body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
       '<div class="vids">' +
@@ -328,7 +331,7 @@
       '<div class="pending"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></span><p><b>قيد الإعداد</b>لكل درس سكربت MATLAB يحل مثال الدرس ويرسم نتائجه، تشغّله وتعدّل قيمه بنفسك. يُضاف هنا عند إعداده.</p></div>');
     toc.push(["matlab", "MATLAB"]);
 
-    if (L.course !== "signals-systems" && L.course !== "logic-design") {
+    if (L.course !== "signals-systems" && L.course !== "logic-design" && L.course !== "circuits-2") {
     body += sec("connected", "مرتبط بهذا الدرس", "Connected",
       '<div class="connected">' + labCard(L) + '<div class="pending"><span class="ic">' + CV.shell.icon("academy") + '</span><p><b>مشروع الدرس</b>مشروع يطبّق فكرة هذا الدرس بالضبط: تصمم، تحاكي، تبني على لوحة التجارب، وتقيس. <a href="academy.html#' + L.id + '" style="color:var(--glow);text-decoration:underline">افتح المشروع</a></p></div>' +
       '<div class="pending"><span class="ic">' + CV.shell.icon("bank") + '</span><p><b>بنك الأسئلة</b>كل أسئلة هذا الدرس وتمارينه في مكان واحد. <a href="bank.html" style="color:var(--glow);text-decoration:underline">افتح بنك الأسئلة</a>. أسئلة الكتب (Nilsson و Sadiku) تُضاف فقط من نصوص يوفّرها المؤسس.</p></div></div>');

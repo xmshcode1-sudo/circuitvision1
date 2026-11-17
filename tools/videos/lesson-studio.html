@@ -49,6 +49,123 @@
   #card .en { position: absolute; top: 590px; width: 100%; font-size: 25px; color: #9fb0d0; direction: ltr; }
   #card .ls { position: absolute; top: 650px; width: 100%; font-size: 25px; line-height: 1.75; color: #dfe6f3; }
   #card .ft { position: absolute; bottom: 48px; width: 100%; font-size: 22px; color: #7b88a6; direction: ltr; }
+:root { --orange: #ff8a3d; --orange-soft: rgba(255,138,61,.18); --ok: #4ade80; --surface: #0f1522; --font-mono: "JetBrains Mono", ui-monospace, monospace; }
+/* ---------- Schematics (engine/draw.js) ---------- */
+.sc { width: 100%; height: auto; display: block; margin-inline: auto; direction: ltr; }
+.sc-w { stroke: var(--fg-2); stroke-width: 2.2; stroke-linecap: round; }
+.sc-r { fill: none; stroke: var(--orange); stroke-width: 2.4; stroke-linejoin: round; }
+.sc-src, .sc-dep { fill: var(--surface); stroke: var(--glow); stroke-width: 2.2; }
+.sc-led { fill: var(--orange-soft, rgba(255,140,50,.18)); stroke: var(--orange); stroke-width: 2.2; stroke-linejoin: round; }
+.sc-asked { stroke-width: 3.2; }
+.sc-sign { fill: var(--fg); font: 600 15px var(--font-mono); }
+.sc-arr-l { stroke: var(--glow); stroke-width: 2; }
+.sc-arr { fill: var(--glow); }
+.sc-iref { fill: var(--ok); }
+.sc-ilbl { fill: var(--ok); font: 600 15px var(--font-mono); }
+.sc-vpol { fill: var(--ok); font: 700 17px var(--font-mono); }
+.sc-name { fill: var(--fg); font: 600 14px var(--font-mono); }
+.sc-name.sc-asked { fill: var(--ok); }
+.sc-val { fill: var(--fg-2); font: 500 13px var(--font-mono); }
+.sc-dot { fill: var(--fg-2); }
+.sc-plate { stroke: var(--orange); stroke-width: 3; stroke-linecap: round; }
+.sc-plate.sc-asked { stroke-width: 4; }
+.sc-omega { fill: var(--glow); font: 600 13px var(--font-mono); }
+.sc-gnd { stroke: var(--fg-2); stroke-width: 2.2; stroke-linecap: round; }
+.sc-nd { fill: var(--fg-2); }
+.sc-nd.on { fill: var(--ok); }
+.sc-ndl { fill: var(--glow); font: 600 14px var(--font-mono); }
+.sc-ndl.on { fill: var(--ok); font-size: 15px; }
+.sc-mesh { fill: none; stroke: var(--glow); stroke-width: 1.8; opacity: .8; }
+.sc-mesh.on { stroke: var(--ok); stroke-width: 2.4; opacity: 1; }
+.sc-mesh-h { fill: var(--glow); }
+.sc-mesh-h.on { fill: var(--ok); }
+.sc-term { fill: var(--bg); stroke: var(--fg); stroke-width: 2; }
+.sc-tlbl { fill: var(--fg); font: 700 16px var(--font-mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Circuit figures inside a practice prompt take the full width */
+.pb-head:has(.lfig) { grid-template-columns: minmax(0, 1fr); }
+.pb-fig .lfig .sc { max-height: 360px; }
+
+/* Phasor answer input */
+.ph-in { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ph-in .ph-form { width: auto; }
+.ph-polar, .ph-rect { display: inline-flex; gap: 6px; align-items: center; }
+.ph-in .pb-input { width: 110px; }
+.ph-sym { font-family: var(--font-mono); color: var(--fg-2); font-size: 16px; }
+
+/* Phasor diagrams */
+.pd-wrap { display: grid; justify-items: center; padding: 8px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-soft); }
+.pd { width: 100%; max-width: 260px; height: auto; direction: ltr; }
+.pd-ax { stroke: var(--line); stroke-width: 1.2; }
+.pd-t { fill: var(--fg-3); font: 11px var(--font-mono); }
+.pd-v { stroke: var(--fg-2); stroke-width: 2.4; }
+.pd-h { fill: var(--fg-2); }
+.pd-l { fill: var(--fg); font: 600 12px var(--font-mono); }
+.pd-v.pd-i { stroke: var(--glow); } .pd-h.pd-i, .pd-l.pd-i { fill: var(--glow); }
+.pd-v.pd-o { stroke: var(--orange); } .pd-h.pd-o, .pd-l.pd-o { fill: var(--orange); }
+.pd-v.pd-g { stroke: var(--ok); } .pd-h.pd-g, .pd-l.pd-g { fill: var(--ok); }
+/* Waveform plot (power lessons) */
+.pw { width: 100%; max-width: 520px; height: auto; direction: ltr; }
+.pw-c { fill: none; stroke-width: 2.2; stroke: var(--fg-2); }
+.pw-c.pw-i { stroke: var(--glow); } .pw-c.pw-p { stroke: var(--orange); stroke-width: 2.6; }
+.pw-avg { stroke: var(--ok); stroke-width: 1.6; stroke-dasharray: 6 5; }
+.pw-key { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; font-size: .85rem; color: var(--fg-2); }
+.pw-key i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-inline-end: 6px; background: var(--fg-2); }
+.pw-key .k-i { background: var(--glow); } .pw-key .k-p { background: var(--orange); } .pw-key .k-a { background: var(--ok); }
+/* Breadboard illustration: a physical white board, drawn with fixed colours in both themes */
+.bb-wrap { padding: 8px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-soft); overflow-x: auto; }
+.bb { width: 100%; min-width: 300px; height: auto; direction: ltr; display: block; }
+.bb-body { fill: #eef0f3; stroke: #c9ced6; stroke-width: 1.2; }
+.bb-gap { fill: #dfe3e8; }
+.bb-h { fill: #b4bac4; }
+.bb-pin { fill: #6b7280; }
+.bb-n { fill: #8a909a; font: 7.5px var(--font-mono); }
+.bb-t { fill: #39404b; font: 700 9px var(--font-mono); }
+.bb-tl { font-size: 6.5px; }
+.bb-leg { stroke: #9aa1ab; stroke-width: 1.6; stroke-linecap: round; }
+.bb-wire { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+.bb-lead { fill: none; stroke-width: 2.4; stroke-linecap: round; opacity: .92; }
+.bb-res { fill: #e7c79a; stroke: #b48a52; stroke-width: 1; }
+.bb-led { stroke: rgba(0,0,0,.35); stroke-width: 1; }
+.bb-box { fill: #1c2433; stroke: #3a465c; }
+.bb-bt { fill: #f1f4fa; font: 600 11px var(--font-body); }
+.bb-bp { fill: #b8c2d6; font: 9.5px var(--font-mono); }
+.bb-lcd { fill: #2a3320; font: 700 13px var(--font-mono); }
+.bb-old { opacity: .6; }
+.bb-new { filter: drop-shadow(0 0 3px rgba(255, 138, 43, .9)); }
+.sc-sw { stroke: var(--orange); stroke-width: 2.6; stroke-linecap: round; }
+.sc-sine { fill: none; stroke: var(--glow); stroke-width: 2; }
+.sc-am { fill: var(--glow); font: 700 14px var(--font-mono); }
+.sc-lampx { stroke: var(--orange); stroke-width: 2; stroke-linecap: round; }
+/* AI tutor */
+.pb-tutor { display: flex; justify-content: flex-start; margin-top: 10px; }
+.tt-drawer { position: fixed; inset-block: 0; inset-inline-start: 0; width: min(420px, 100%); z-index: 60; background: var(--surface); border-inline-end: 1px solid var(--line); box-shadow: 0 0 40px rgba(0,0,0,.4); display: grid; grid-template-rows: auto 1fr; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tt-h { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); }
+.tt-h b { font-family: var(--font-display); } .tt-t { color: var(--fg-3); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-body { min-height: 0; display: flex; }
+.tt { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px; width: 100%; min-height: 0; }
+.tt-log { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 160px; }
+.tt-m { padding: 9px 12px; border-radius: 12px; max-width: 88%; font-size: 14.5px; line-height: 1.7; overflow-wrap: anywhere; }
+.tt-user { align-self: flex-start; background: var(--blue-soft); color: var(--fg); }
+.tt-tutor { align-self: flex-end; background: var(--surface-2); }
+.tt-sys { align-self: center; background: transparent; border: 1px dashed var(--orange); color: var(--orange); font-size: 13px; max-width: 100%; }
+.tt-wait { color: var(--fg-3); }
+.tt-empty { color: var(--fg-2); font-size: 14px; margin: 0; }
+.tt-form { display: flex; gap: 8px; align-items: flex-end; }
+.tt-in { flex: 1; min-width: 0; resize: none; font: inherit; padding: 10px 12px; min-height: 44px; max-height: 160px; line-height: 1.6; }
+.tt-note { margin: 0; font-size: 12px; color: var(--fg-3); }
+.tt-page { min-height: 480px; border-radius: 14px; }
+
+  .mt { width: 1180px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; direction: rtl; }
+  .mt-i { display: grid; gap: 6px; padding: 18px 22px; border-radius: 16px; background: #0d1422; border: 1px solid #1e2738; }
+  .mt-i span { font-size: 26px; color: #8f9bb0; } .mt-i b { font-family: "DejaVu Sans Mono", monospace !important; font-size: 44px; color: #7dffb0; direction: ltr; text-align: right; } .mt-i small { font-size: 24px; color: #8f9bb0; } .mt-i b.tx { font-family: "DejaVu Sans", sans-serif !important; direction: rtl; }
+  .mt-sc { width: 1100px; margin-top: 24px; } .mt-sc svg { width: 100%; height: auto; }
+  .mt-n { margin-top: 12px; font-size: 22px; color: #8f9bb0; direction: rtl; }
+  #vis .lgt td.v { color: #ff9f43; }
 </style>
 </head>
 <body>
@@ -60,15 +177,18 @@
   <div id="card"><div class="eb"></div><div class="ti"></div><div class="en"></div><div class="ls"></div><div class="ft">CircuitVision · circuitvision1.vercel.app</div></div>
   <div id="prog"></div>
 </div>
+<script src="../../mna.js"></script><script src="../../ac.js"></script><script src="../../draw.js"></script>
 <script src="../../sig-plot.js"></script>
 <script src="../../lg-draw.js"></script>
 <script src="../../ss-build.js"></script>
 <script src="../../ss-ch1.js"></script><script src="../../ss-ch2.js"></script><script src="../../ss-ch3.js"></script><script src="../../ss-ch4.js"></script><script src="../../ss-ch5.js"></script><script src="../../ss-ch6.js"></script><script src="../../ss-ch7.js"></script>
 <script src="../../ld-ch1.js"></script><script src="../../ld-ch2.js"></script><script src="../../ld-ch3.js"></script><script src="../../ld-ch4.js"></script><script src="../../ld-ch5.js"></script>
+<script src="../../c2-ch1.js"></script><script src="../../c2-ch2.js"></script><script src="../../c2-ch3.js"></script>
+<script src="../../c2lab.js"></script><script src="c2lab-video.js"></script>
 <script>
 (function () {
   var CV = window.CV, $ = function (id) { return document.getElementById(id); };
-  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111" };
+  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020" };
   function fit(el, min) { var fs = parseFloat(getComputedStyle(el).fontSize); while (el.scrollHeight > el.clientHeight + 2 && fs > min) { fs -= 1; el.style.fontSize = fs + "px"; } }
   window.show = function (id, i, prog) {
     var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");
