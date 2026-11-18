@@ -222,3 +222,14 @@ html.wb-lock .lg-ref { top: calc(env(safe-area-inset-top, 0px) + 150px); }
 .wb-pop-tag { display: inline-block; unicode-bidi: isolate; font-weight: 600; color: var(--fg-2, #4a5568); margin-inline-start: 6px; }
 .wb-pop { z-index: 960; }
 .wb-core { fill: #5b6068; stroke: #3c4046; stroke-width: 1.2; } .wb-core-in { fill: #f4f4f1; }
+
+/* wires out of the way: while a part is carried, and with the «أسلاك شفافة» button */
+.wb-lead { transition: opacity .15s; }
+.wb-moving .wb-lead:not(.live), .wb-thin .wb-lead:not(.live) { opacity: .16; pointer-events: none; }
+.wb-thin .wb-lead.sel .wb-lead-o { stroke: rgba(0, 0, 0, .28); stroke-width: 7.4; }
+.wb-b.on { background: var(--blue, #2463d6); color: #fff; border-color: transparent; }
+.wb-pop-in { display: flex; gap: 8px; margin-top: 10px; direction: ltr; }
+.wb-pop-in input { flex: 1; min-width: 0; min-height: 46px; font-size: 20px; font-weight: 700; text-align: center; border-radius: 12px; border: 1px solid var(--line, #cfd6e0); background: var(--surface-2, #f6f8fb); color: var(--fg, #172033); font-variant-numeric: tabular-nums; }
+.wb-pop-in select, .wb-pop-in span { min-height: 46px; border-radius: 12px; border: 1px solid var(--line, #cfd6e0); background: var(--surface-2, #fff); color: var(--fg, #172033); font: inherit; font-size: 15px; padding: 0 8px; display: inline-flex; align-items: center; }
+.wb-pop-in button { min-height: 46px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--blue, #2463d6); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.wb-pop-e { color: #c0392b; }

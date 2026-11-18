@@ -56,11 +56,12 @@
     var I = state.inst;
 
     host.innerHTML = '<div class="wb"><div class="wb-bar"><span class="wb-hint"></span><span class="wb-acts">' +
-      '<button type="button" class="wb-b" data-a="undo" disabled>تراجع</button><button type="button" class="wb-b" data-a="leads">افصل الأسلاك</button><button type="button" class="wb-b" data-a="clear">فضّ الطاولة</button>' +
+      '<button type="button" class="wb-b" data-a="undo" disabled>تراجع</button><button type="button" class="wb-b" data-a="thin" aria-pressed="false" title="الأسلاك تصير شفافة ولا تنمسك، عشان تحط القطع وتحركها تحتها براحتك">أسلاك شفافة</button><button type="button" class="wb-b" data-a="leads">افصل الأسلاك</button><button type="button" class="wb-b" data-a="clear">فضّ الطاولة</button>' +
       '<span class="wb-zoom no-bi"><button type="button" class="wb-b" data-a="zo" aria-label="تصغير">−</button><button type="button" class="wb-b" data-a="fit" aria-label="كامل الطاولة">⤢</button><button type="button" class="wb-b" data-a="zi" aria-label="تكبير">＋</button></span>' +
       '<button type="button" class="wb-b wb-full" data-a="full">ملء الشاشة</button></span></div>' +
       '<div class="wb-stage"><svg class="wb-svg" viewBox="0 0 ' + W + ' ' + H + '" role="application" aria-label="طاولة معمل الدوائر"></svg><div class="wb-tool" hidden></div><div class="wb-pop" hidden></div><div class="wb-toast" hidden></div></div>' +
       '<ul class="wb-warn" aria-live="polite"></ul><p class="wb-rot">للمساحة الأكبر اقلب الجهاز بالعرض</p></div>';
+    var wrap0 = host.querySelector(".wb"); try { if (localStorage.getItem(KEY + ".thin")) { wrap0.classList.add("wb-thin"); var tb = wrap0.querySelector('[data-a="thin"]'); tb.setAttribute("aria-pressed", "true"); tb.classList.add("on"); } } catch (e) {}
     var wrap = host.querySelector(".wb"), svg = host.querySelector(".wb-svg"), stage = host.querySelector(".wb-stage"), pop = host.querySelector(".wb-pop"), tool = host.querySelector(".wb-tool"), toastEl = host.querySelector(".wb-toast"), hint = host.querySelector(".wb-hint");
     hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها";
 
@@ -467,6 +468,8 @@
     function nearestSlot(q, max) { var all = allSlots(), best = null, bd = max; Object.keys(all).forEach(function (id) { if (state.parts[id]) return; var g = all[id], d = Math.hypot(g.x - q[0], g.y - q[1]); if (d < bd) { bd = d; best = id; } }); return best; }
     function onBoard(q) { return q[0] > BX - 10 && q[0] < BX + BW + 10 && q[1] > BY - 10 && q[1] < BY + BH - 100; }
     function ghost(html) { var g = svg.querySelector(".wb-ghost"); if (g) g.innerHTML = html; }
+    function partUnder(evt) { if (!document.elementsFromPoint) return null; var all = document.elementsFromPoint(evt.clientX, evt.clientY); for (var i = 0; i < all.length; i++) { var s0 = all[i].closest && all[i].closest("[data-s]"); if (s0 && svg.contains(s0)) return s0; } return null; }
+    function moving(on) { svg.classList.toggle("wb-moving", !!on); }   // wires fade and let go of the pointer while a part is carried
     var pointers = {}, pinch = null;
     var asp = null;   // height/width of the view; in full screen it follows the screen so the bench fills it (drag the desk to see the rest)
     function fitFull() {
@@ -492,6 +495,7 @@
       if ((el = t.closest("[data-le]"))) { var le = el.dataset.le.split(":"); drag.k = "replug"; drag.i = +le[0]; drag.e = +le[1]; }
       else if ((el = t.closest("[data-c]"))) { drag.k = "ctl"; drag.c = el.dataset.c; drag.canDrag = !!el.dataset.drag; drag.v0 = ctlValue(drag.c); }
       else if ((el = t.closest("[data-s]"))) { drag.k = "part"; drag.id = el.dataset.s; }
+      else if (t.closest("[data-l]") && !t.closest("[data-le]") && (el = partUnder(evt))) { drag.k = "part"; drag.id = el.dataset.s; }   // a wire lying over a part: the part is what the student meant to grab
       else if ((el = t.closest("[data-t]"))) { var it = TRAY[+el.dataset.t]; if (it && !it.gone) { drag.k = "tray"; drag.pc = it.pc; } else drag.k = "none"; }
       else if ((el = t.closest("[data-p]"))) { drag.k = "lead"; drag.from = el.dataset.p; }
       else if ((el = t.closest("[data-l]"))) { drag.k = "leadsel"; drag.i = +el.dataset.l; }
@@ -513,15 +517,16 @@
       } else if (drag.k === "part" || drag.k === "tray") {
         var pc = drag.k === "part" ? state.parts[drag.id] : drag.pc, sl = onBoard(q) ? nearestSlot(q, Math.max(60, px(44))) : null, g = sl ? allSlots()[sl] : { x: q[0], y: q[1], h: true };
         if (drag.k === "part" && !sl && onBoard(q)) { var own = allSlots()[drag.id]; if (Math.hypot(own.x - q[0], own.y - q[1]) < 60) { sl = drag.id; g = own; } }
-        drag.slot = sl;
+        drag.slot = sl; moving(true);
         ghost((sl ? '<rect class="wb-target" x="' + (g.x - (g.h ? 32 : 18)) + '" y="' + (g.y - (g.h ? 18 : 32)) + '" width="' + (g.h ? 64 : 36) + '" height="' + (g.h ? 36 : 64) + '" rx="6"/>' : "") + partSvg(pc, g, "drag"));
         if (drag.k === "part") { var me = svg.querySelector('[data-s="' + drag.id + '"]'); if (me) me.style.opacity = ".25"; }
       } else if (drag.k === "ctl" && drag.canDrag) { dragCtl(drag.c, drag.v0, dxp - dyp, q); }
       else if (drag.k === "pan") { var rr = svg.getBoundingClientRect(); vb.x = drag.vb0.x - dxp * vb.w / rr.width; vb.y = drag.vb0.y - dyp * vb.h / rr.height; setVB(); }
     });
-    function cancelDrag() { drag = null; ghost(""); }
+    function cancelDrag() { drag = null; ghost(""); moving(false); }
     function endPtr(evt) {
       delete pointers[evt.pointerId]; if (Object.keys(pointers).length < 2) pinch = null;
+      moving(false);
       if (!drag) return; var d = drag; drag = null; ghost("");
       if (evt.type === "pointercancel") { render(); return; }
       if (d.k === "lead") {
@@ -558,7 +563,7 @@
       if ((m = /^ps\.([ms])\.([vi])$/.exec(c))) { var ch = m[1], tr = (I.ps.mode || "normal") !== "normal" && ch === "s"; return { get: function () { return I.ps[tr ? "m" : ch][m[2]]; }, set: function (v) { I.ps[tr ? "m" : ch][m[2]] = v; }, min: 0, max: m[2] === "v" ? 16 : 5, step: m[2] === "v" ? 0.1 : 0.01, px: m[2] === "v" ? 0.05 : 0.01, unit: m[2] === "v" ? "V" : "A", title: (ch === "m" ? "MASTER" : "SLAVE") + (m[2] === "v" ? " · الجهد" : " · حد التيار"), note: tr ? "في وضع SERIES/PARALLEL مقبض الـ MASTER هو اللي يتحكم." : "" }; }
       if (c === "fg.a") return { get: function () { return I.fg.vpp; }, set: function (v) { I.fg.vpp = v; }, min: 0, max: 20, step: 0.1, px: 0.05, unit: "Vpp", title: "AMPLITUDE · السعة (دائرة مفتوحة)" };
       if (c === "fg.off") return { get: function () { return I.fg.off || 0; }, set: function (v) { I.fg.off = v; }, min: -10, max: 10, step: 0.1, px: 0.05, unit: "V", title: "DC OFFSET" };
-      if (c === "fg.f") return { get: function () { return I.fg.f; }, set: function (v) { I.fg.f = v; }, min: 1, max: 1e6, step: 0, log: true, unit: "Hz", title: "FREQUENCY · التردد", presets: [50, 60, 100, 500, 1000, 2000, 5000, 10000] };
+      if (c === "fg.f") return { get: function () { return I.fg.f; }, set: function (v) { I.fg.f = v; }, min: 1, max: 1e6, step: 0, log: true, unit: "Hz", units: [["Hz", 1], ["kHz", 1e3], ["MHz", 1e6]], type: true, title: "FREQUENCY · التردد", presets: [50, 60, 100, 500, 1000, 2000, 5000, 10000] };
       if ((m = /^sc\.(c[12])\.vd$/.exec(c))) return { get: function () { return VDIV.indexOf(I.sc[m[1]].vd); }, set: function (v) { I.sc[m[1]].vd = VDIV[v]; }, min: 0, max: VDIV.length - 1, step: 1, px: 0.04, show: function (v) { return si(VDIV[v], "V") + "/div"; }, title: "VOLTS/DIV · " + m[1].toUpperCase().replace("C", "CH") };
       if (c === "sc.t") return { get: function () { return TDIV.indexOf(I.sc.td); }, set: function (v) { I.sc.td = TDIV[v]; }, min: 0, max: TDIV.length - 1, step: 1, px: 0.04, show: function (v) { return si(TDIV[v], "s") + "/div"; }, title: "SEC/DIV" };
       if ((m = /^sc\.(c[12])\.pos$/.exec(c))) return { get: function () { return I.sc[m[1]].pos || 0; }, set: function (v) { I.sc[m[1]].pos = v; }, min: -4, max: 4, step: 0.1, px: 0.03, unit: "div", title: "VERTICAL POSITION" };
@@ -621,13 +626,34 @@
       pop.innerHTML = '<div class="wb-pop-h"><b>' + esc(s.title || "") + (s.tag ? ' <span class="wb-pop-tag" dir="ltr">' + esc(s.tag) + '</span>' : "") + '</b><button type="button" class="wb-pop-x" aria-label="أغلق">✕</button></div>' +
         '<div class="wb-pop-v no-bi" dir="ltr"><span>' + esc(shown()) + '</span>' + (s.extra ? '<small>' + esc(s.extra()) + '</small>' : "") + '</div>' +
         '<div class="wb-pop-r no-bi">' + (big && big !== s.step ? '<button type="button" data-d="' + -big + '">−−</button>' : "") + '<button type="button" data-d="' + (s.log ? "/" : -s.step) + '">−</button><button type="button" data-d="' + (s.log ? "*" : s.step) + '">＋</button>' + (big && big !== s.step ? '<button type="button" data-d="' + big + '">＋＋</button>' : "") + '</div>' +
+        (s.type ? '<div class="wb-pop-in no-bi" dir="ltr"><input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-label="اكتب القيمة">' + (s.units ? '<select aria-label="الوحدة">' + s.units.map(function (u) { return '<option value="' + u[1] + '">' + esc(u[0]) + '</option>'; }).join("") + '</select>' : '<span>' + esc(s.unit || "") + '</span>') + '<button type="button" data-in="1">اضبط</button></div><p class="wb-pop-n wb-pop-e" hidden></p>' : "") +
         (s.log ? "" : '<input class="wb-pop-s" type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + s.get() + '">') +
         (s.presets ? '<div class="wb-pop-p no-bi" dir="ltr">' + s.presets.map(function (p) { return '<button type="button" data-set="' + p + '">' + esc(si(p, s.unit)) + '</button>'; }).join("") + '</div>' : "") +
         (s.note ? '<p class="wb-pop-n">' + esc(s.note) + '</p>' : "");
       placeBox(pop, evt);
       var first = true;
-      function apply(v) { if (first) { snap(); first = false; } v = s.log ? clamp(+v.toPrecision(3), s.min, s.max) : Math.round(quant(s, v) * 1e6) / 1e6; s.set(v); commit(); pop.querySelector(".wb-pop-v span").textContent = shown(); if (s.extra) pop.querySelector(".wb-pop-v small").textContent = s.extra(); var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.value = v; }
-      pop.querySelectorAll("[data-d]").forEach(function (b) { b.onclick = function () { var d = b.dataset.d, v = s.get(); apply(d === "*" ? v * 1.1 : d === "/" ? v / 1.1 : v + +d); }; });
+      function apply(v, exact) { if (first) { snap(); first = false; } v = s.log ? clamp(+v.toPrecision(exact ? 6 : 3), s.min, s.max) : Math.round(quant(s, v) * 1e6) / 1e6; s.set(v); commit(); pop.querySelector(".wb-pop-v span").textContent = shown(); if (s.extra) pop.querySelector(".wb-pop-v small").textContent = s.extra(); var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.value = v; fillIn(); }
+      /* the value typed by hand (the frequency: 1590 Hz, 2.5 kHz…) */
+      var inp = pop.querySelector(".wb-pop-in input"), usel = pop.querySelector(".wb-pop-in select"), err = pop.querySelector(".wb-pop-e");
+      function fillIn() {
+        if (!inp) return; var v = s.get(), k = 1;
+        if (usel) { var opt = Array.prototype.filter.call(usel.options, function (o) { return v >= +o.value; }).pop() || usel.options[0]; usel.value = opt.value; k = +opt.value; }
+        if (document.activeElement !== inp) inp.value = String(+(v / k).toPrecision(6));
+      }
+      function typed() {
+        var raw = String(inp.value).replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).replace(/[٫,]/g, ".").replace(/\s/g, ""), m = /^(\d*\.?\d+)(k|K|M|m)?(hz|Hz|HZ)?$/.exec(raw);
+        var k = usel ? +usel.value : 1; if (m && m[2]) k = { k: 1e3, K: 1e3, M: 1e6, m: 1e-3 }[m[2]];
+        var v = m ? +m[1] * k : NaN;
+        if (!(v > 0) || v < s.min || v > s.max) { err.hidden = false; err.textContent = "اكتب رقمًا بين " + (s.log ? si(s.min, s.unit) + " و " + si(s.max, s.unit) : s.min + " و " + s.max + (s.unit ? " " + s.unit : "")) + "."; return; }
+        err.hidden = true; inp.blur(); apply(v, true);
+      }
+      if (inp) { fillIn(); inp.onkeydown = function (e) { if (e.key === "Enter") { e.preventDefault(); typed(); } }; pop.querySelector("[data-in]").onclick = typed; if (usel) usel.onchange = function () { if (inp.value) typed(); }; }
+      function nice(v, up) { // the next round value: 1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8 in every decade
+        var N = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8], e = Math.floor(Math.log10(v)), list = [];
+        for (var d = e - 1; d <= e + 1; d++) N.forEach(function (n) { list.push(+(n * Math.pow(10, d)).toPrecision(3)); });
+        return up ? (list.filter(function (x) { return x > v * 1.0001; })[0] || v * 1.2) : (list.filter(function (x) { return x < v * 0.9999; }).pop() || v / 1.2);
+      }
+      pop.querySelectorAll("[data-d]").forEach(function (b) { b.onclick = function () { var d = b.dataset.d, v = s.get(); apply(d === "*" ? nice(v, true) : d === "/" ? nice(v, false) : v + +d); }; });
       pop.querySelectorAll("[data-set]").forEach(function (b) { b.onclick = function () { apply(+b.dataset.set); }; });
       var sl = pop.querySelector(".wb-pop-s"); if (sl) sl.oninput = function () { apply(+sl.value); };
       pop.querySelector(".wb-pop-x").onclick = closePop;
@@ -682,6 +708,7 @@
     wrap.querySelector(".wb-bar").addEventListener("click", function (evt) {
       var b = evt.target.closest("[data-a]"); if (!b) return; var a = b.dataset.a;
       if (a === "undo" && undo.length) { state = JSON.parse(undo.pop()); sel = null; commit(); }
+      if (a === "thin") { var th = wrap.classList.toggle("wb-thin"); b.setAttribute("aria-pressed", th ? "true" : "false"); b.classList.toggle("on", th); try { localStorage.setItem(KEY + ".thin", th ? "1" : ""); } catch (e) {} if (th) { if (sel && sel.k === "lead") sel = null; render(); toast("الأسلاك شفافة: حرّك القطع وحطها بدون ما تمسك سلك. اضغط الزر مرة ثانية لترجع الأسلاك."); } return; }
       if (a === "leads" && state.leads.length) { snap(); state.leads = []; sel = null; commit(); }
       if (a === "clear") { snap(); var keep = state.inst; state = fresh(); state.inst = keep; sel = null; commit(); }
       if (a === "zi") zoomAt([vb.x + vb.w / 2, vb.y + vb.h / 2], 1 / 1.3);
