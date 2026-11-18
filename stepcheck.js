@@ -421,7 +421,7 @@
       var line = raw.trim(); if (!line) return;
       var body = line.replace(/^[^=]*?[:：]\s*(?=.*=)/, ""); // "KCL عند العقدة 1:" labels
       if (!/=|≈/.test(body)) return;
-      var segs = body.split(/=|≈/), P = segs.map(function (sg) { return parse(sg, K); }), res = { n: idx + 1, text: line };
+      var segs = body.split(/=|≈/), P = segs.map(function (sg) { return parse(sg, K); }), res = { n: idx + 1, text: line, _segs: segs, _P: P };
       var unk = P.filter(function (p) { return p.unknown; })[0];
       if (unk) {
         var have = nodeVars.concat(meshVars).map(sub).join(" و "), haveEn = nodeVars.concat(meshVars).map(sub).join(", ");
@@ -552,18 +552,20 @@
           res.en = "The controlling quantity’s constraint has the wrong sign: " + (RW.ctrl.name || "it") + " follows the arrow (or polarity) drawn on " + RW.ctrl.on + ", i.e. (voltage at the arrow’s start − at its end)" + (RW.ctrl.isI ? " ÷ " + RW.ctrl.on : "") + ".";
           return;
         }
-        var addC = function (m, ar, en, z, flip) { if (m) cands.push({ ar: ar, en: en, d: lamCost(m), z: z, flip: flip }); };
+        var addC = function (m, ar, en, z, flip, lk) { if (m) cands.push({ ar: ar, en: en, d: lamCost(m), z: z, flip: flip, lk: lk }); };
         RW[mode].forEach(function (r) {
-          if (r.whole) { r.wholeSlips.forEach(function (sl) { addC(vecMatch(s, sl.t), sl.ar, sl.en); }); return; }
+          var addR = function (m, ar, en, z, flip) { addC(m, ar, en, z, flip, r.kind); };
+          if (r.whole) { r.wholeSlips.forEach(function (sl) { addR(vecMatch(s, sl.t), sl.ar, sl.en); }); return; }
           var ts = r.terms.map(function (x) { return x.t; });
           r.terms.forEach(function (x, j) {
             var others = sum(ts.filter(function (_, q) { return q !== j; }));
-            if (r.terms.length > 1) addC(vecMatch(s, others), "معادلة " + r.ar + " ناقصة: نسيت " + x.ar + ".", "Your " + r.en + " is missing " + x.en + ".");
-            addC(vecMatch(s, add(others, x.t, -1)), "في " + r.ar + " إشارة " + x.ar + " معكوسة: " + r.flipHint[0], "In " + r.en + " " + x.en + " has the wrong sign: " + r.flipHint[1], 0, 1);
-            x.slips.forEach(function (sl) { addC(vecMatch(s, add(others, sl.t)), "في " + r.ar + ": " + sl.ar, "In " + r.en + ": " + sl.en, sl.z); });
+            if (r.terms.length > 1) addR(vecMatch(s, others), "معادلة " + r.ar + " ناقصة: نسيت " + x.ar + ".", "Your " + r.en + " is missing " + x.en + ".");
+            addR(vecMatch(s, add(others, x.t, -1)), "في " + r.ar + " إشارة " + x.ar + " معكوسة: " + r.flipHint[0], "In " + r.en + " " + x.en + " has the wrong sign: " + r.flipHint[1], 0, 1);
+            x.slips.forEach(function (sl) { addR(vecMatch(s, add(others, sl.t)), "في " + r.ar + ": " + sl.ar, "In " + r.en + ": " + sl.en, sl.z); });
           });
         });
         cands.sort(function (a, b) { return a.d - b.d; });
+        res.lawK = cands.length ? cands[0].lk : mode === "node" ? "kcl" : "kvl";
         if (cands.length) {
           var tie = cands.filter(function (x) { return Math.abs(x.d - cands[0].d) < 1e-6; }), zt = tie.filter(function (x) { return x.z; })[0], ft = tie.filter(function (x) { return x.flip; })[0];
           if (zt && ft) { res.msg = zt.ar + " (أو أنك عكست إشارة هذا الحد: النتيجة نفسها.)"; res.en = zt.en + " (Or you reversed this term’s sign: it gives the same equation.)"; return; } // a lone L or C: both slips give this equation
@@ -585,6 +587,14 @@
       if (hh) { res.msg = "المعادلة لا تتحقق بالقيم الحقيقية لهذه الدائرة. " + hh[0]; res.en = "The equation doesn’t hold with this circuit’s real values. " + hh[1]; return; }
       res.msg = "المعادلة لا تتحقق بالقيم الحقيقية لهذه الدائرة. راجع القانون الذي استخدمته والإشارات" + (K.ac ? " والزوايا." : "."); res.en = "The equation doesn’t hold with this circuit’s real values. Check the law you used and the signs" + (K.ac ? " and angles." : ".");
     }
+    /* every step names the law it uses, and how that law reads (the student learns it while solving) */
+    var used = {};
+    lines.forEach(function (l) {
+      var lw = lawFor(l, K); delete l._segs; delete l._P; delete l.lawK;
+      if (!lw) return;
+      l.law = lw;
+      if (l.status === "ok") used[lw.id] = (used[lw.id] || 0) + 1;
+    });
     /* the method as a whole: is a set of equations missing? */
     var summary = { ok: lines.filter(function (l) { return l.status === "ok"; }).length, err: lines.filter(function (l) { return l.status === "err"; }).length, notes: [] };
     var hasVal = function (pfx) { return Object.keys(mine).some(function (k) { return k.indexOf(pfx) === 0; }); };
@@ -594,7 +604,68 @@
       var miss = rows.filter(function (r) { return !usedRows[r.id]; });
       summary.notes.push({ t: m[2] + rows.length + " معادلات مستقلة في هذه الدائرة. ينقصك: " + miss.map(function (r) { return r.ar; }).join("، ") + ".", en: m[3] + rows.length + " independent equations in this circuit. Still missing: " + miss.map(function (r) { return r.en; }).join("; ") + "." });
     });
+    summary.laws = Object.keys(used).map(function (id) { return { id: id, name: LAW[id].ar[0], en: LAW[id].en[0], n: used[id] }; });
     return { lines: lines, summary: summary };
+  }
+
+  /* ---------- the law behind a step ----------
+     Rows of the method (KCL, KVL, constraints) are known exactly from the match above. Other steps are read from
+     what they are about: a power, an impedance, a divider written out, an element's voltage or current from Ohm's
+     law or from the node voltages / mesh currents. A step that is only a number gets no card. */
+  var LAW = {
+    kcl: { ar: ["قانون كيرشوف للتيار (KCL)", "مجموع التيارات الخارجة من العقدة = صفر، لأن الشحنة لا تتجمع في نقطة: ما يدخل العقدة يخرج منها. كل تيار فرع تكتبه بقانون أوم: (جهد العقدة − جهد الطرف الآخر) ÷ المقاومة."], en: ["Kirchhoff’s current law (KCL)", "The currents leaving a node add up to zero, because charge doesn’t pile up at a point: what flows in flows out. Write each branch current with Ohm’s law: (node voltage − other end) ÷ resistance."], f: "Σ i_out = 0" },
+    kcls: { ar: ["KCL للعقدة العظمى", "عقدتان بينهما مصدر جهد تُعاملان كعقدة واحدة كبيرة: اجمع كل التيارات الخارجة منها معًا = صفر، فيختفي تيار المصدر المجهول."], en: ["KCL for a supernode", "Two nodes joined by a voltage source act as one big node: all currents leaving it add up to zero, so the source’s unknown current drops out."], f: "Σ i_out(supernode) = 0" },
+    vcons: { ar: ["قيد مصدر الجهد", "مصدر الجهد يفرض فرق الجهد بين طرفيه: جهد الطرف + ناقص جهد الطرف − يساوي قيمته. هذه المعادلة تكمّل KCL للعقدة العظمى."], en: ["Voltage-source constraint", "A voltage source fixes the difference between its ends: the + end minus the − end equals its value. This equation completes the supernode KCL."], f: "v₊ − v₋ = Vs" },
+    kvl: { ar: ["قانون كيرشوف للجهد (KVL)", "مجموع الجهود حول أي مسار مغلق = صفر: الارتفاعات تساوي الانخفاضات. امشِ مع اتجاه تيار الحلقة، وكل مقاومة جهدها i·R بتيارها الصافي."], en: ["Kirchhoff’s voltage law (KVL)", "Voltages around any closed path add up to zero: the rises equal the drops. Walk with the mesh current; each resistor’s voltage is i·R with its net current."], f: "Σ v = 0" },
+    kvls: { ar: ["KVL للحلقة العظمى", "حلقتان بينهما مصدر تيار: امشِ حول المسار الخارجي لهما معًا وتجاوز المصدر، لأن جهده مجهول."], en: ["KVL around a supermesh", "Two meshes sharing a current source: walk around their outer path together and skip the source, since its voltage is unknown."], f: "Σ v(supermesh) = 0" },
+    icons: { ar: ["قيد مصدر التيار", "مصدر التيار يحدد تيار فرعه: إذا كان على حافة مشتركة فهو فرق تياري الحلقتين حسب اتجاه السهم، وإذا كان على حافة خارجية فهو تيار حلقته نفسه."], en: ["Current-source constraint", "A current source fixes its branch current: on a shared edge it is the difference of the two mesh currents (by the arrow), on an outer edge it is that mesh’s current."], f: "i_a − i_b = Is" },
+    ctrl: { ar: ["قيد المصدر التابع", "اكتب الكمية المتحكِّمة (vₓ أو iₓ) بدلالة المجاهيل نفسها، ثم عوّضها في معادلات KCL أو KVL."], en: ["Dependent-source constraint", "Write the controlling quantity (vₓ or iₓ) in terms of the same unknowns, then substitute it into the KCL or KVL equations."], f: "vₓ = …(v₁, v₂…)" },
+    ohm: { ar: ["قانون أوم", "جهد المقاومة = تيارها × قيمتها، والتيار يدخل من طرفها الموجب (اصطلاح الإشارة الموجبة)."], en: ["Ohm’s law", "A resistor’s voltage is its current times its resistance, with the current entering its + end (passive sign convention)."], f: "v = i·R ⇔ i = v/R" },
+    ohmac: { ar: ["قانون أوم بالفيزورات", "في التيار المتردد: V = I·Z لكل عنصر، و Z عدد مركب. اضرب واقسم بالصيغة القطبية (المقادير تُضرب والزوايا تُجمع)."], en: ["Ohm’s law with phasors", "In AC, V = I·Z for every element, with Z complex. Multiply and divide in polar form (magnitudes multiply, angles add)."], f: "V = I·Z" },
+    power: { ar: ["القدرة", "القدرة التي يمتصها العنصر p = v·i (باصطلاح الإشارة الموجبة) = i²R = v²/R للمقاومة. موجبة: يمتص، سالبة: يعطي."], en: ["Power", "The power an element absorbs is p = v·i (passive sign convention) = i²R = v²/R for a resistor. Positive: absorbs; negative: delivers."], f: "p = v·i = i²R = v²/R" },
+    powerac: { ar: ["القدرة في التيار المتردد", "مع الفيزورات بالقيمة العظمى: P = ½·|V|·|I|·cos θ و Q = ½·|V|·|I|·sin θ، و S = ½·V·I* (θ = زاوية V − زاوية I)."], en: ["AC power", "With peak-value phasors: P = ½·|V|·|I|·cos θ, Q = ½·|V|·|I|·sin θ, S = ½·V·I* (θ = angle of V − angle of I)."], f: "S = ½·V·I*" },
+    imp: { ar: ["ممانعة العناصر", "المقاومة Z = R، الملف Z = jωL (موجبة)، المكثف Z = −j/(ωC) (سالبة)، و ω = 2πf."], en: ["Element impedance", "Resistor Z = R, inductor Z = jωL (positive), capacitor Z = −j/(ωC) (negative), with ω = 2πf."], f: "Z_L = jωL , Z_C = −j/(ωC)" },
+    vdiv: { ar: ["مقسم الجهد", "على عناصر على التوالي (نفس التيار) يتوزع الجهد بنسبة المقاومات: جهد العنصر = الجهد الكلي × مقاومته ÷ مجموع المقاومات."], en: ["Voltage divider", "Across elements in series (same current) the voltage splits in proportion: an element’s voltage = total voltage × its resistance ÷ the sum."], f: "v_k = v · R_k / (R₁ + R₂ + …)" },
+    idiv: { ar: ["مقسم التيار", "لفرعين على التوازي (نفس الجهد) يتوزع التيار عكس المقاومات: تيار الفرع = التيار الكلي × المقاومة المقابلة ÷ مجموعهما."], en: ["Current divider", "Between two parallel branches (same voltage) the current splits inversely: a branch’s current = total current × the other resistance ÷ their sum."], f: "i₁ = i · R₂ / (R₁ + R₂)" },
+    serpar: { ar: ["التوالي والتوازي", "التوالي (نفس التيار): R = R₁ + R₂. التوازي (نفس الجهد): R = R₁R₂/(R₁ + R₂)، أو 1/R = Σ 1/Rₖ."], en: ["Series and parallel", "Series (same current): R = R₁ + R₂. Parallel (same voltage): R = R₁R₂/(R₁ + R₂), or 1/R = Σ 1/Rₖ."], f: "R₁ ∥ R₂ = R₁R₂/(R₁+R₂)" },
+    vnodes: { ar: ["جهد العنصر من جهود العقد", "جهد أي عنصر = جهد طرفه الموجب − جهد طرفه السالب، وجهد الأرضي صفر."], en: ["Element voltage from node voltages", "An element’s voltage = the voltage at its + end − at its − end; ground is 0 V."], f: "v_R = v_a − v_b" },
+    imesh: { ar: ["تيار العنصر من تيارات الحلقات", "العنصر على حافة خارجية تياره تيار حلقته. العنصر المشترك بين حلقتين تياره فرق تياريهما (حسب الاتجاه)."], en: ["Element current from mesh currents", "An element on an outer edge carries its mesh current. One shared by two meshes carries their difference (by direction)."], f: "i_R = i₁ − i₂" },
+    thev: { ar: ["مقاومة ثيفنن / المكافئة", PH["p:rth"][0]], en: ["Thévenin / equivalent resistance", PH["p:rth"][1]], f: "R_Th = v_oc / i_sc" },
+    vth: { ar: ["جهد ثيفنن", PH["p:vth"][0]], en: ["Thévenin voltage", PH["p:vth"][1]], f: "V_Th = v_oc" },
+    norton: { ar: ["تيار نورتن", PH["p:in"][0]], en: ["Norton current", PH["p:in"][1]], f: "I_N = V_Th / R_Th" },
+    pmax: { ar: ["أقصى نقل للقدرة", PH["p:pmax"][0]], en: ["Maximum power transfer", PH["p:pmax"][1]], f: "R_L = R_Th , p_max = V_Th²/(4R_Th)" },
+    combo: { ar: ["معادلة تجمع أكثر من قانون", "صحيحة لهذه الدائرة لكنها ليست صف KCL أو KVL واحدًا: غالبًا جمعت معادلتين أو عوّضت قيدًا. هذا مقبول ما دامت صحيحة."], en: ["An equation combining laws", "It holds for this circuit but isn’t a single KCL or KVL row: you likely added two equations or substituted a constraint. That’s fine as long as it holds."], f: "" }
+  };
+  function lawFor(l, K) {
+    var P = l._P, segs = l._segs;
+    if (!P || l.status === "skip" || l.kind === "arith" || l.kind === "carried" || l.kind === "sub") return null;
+    var k = l.status === "err" ? l.lawK : l.kind;
+    if (k === "eq") k = null;
+    if (!k || !LAW[k]) {
+      var syms = {}; P.forEach(function (p) { if (p && p.syms) Object.keys(p.syms).forEach(function (q) { syms[q] = p.syms[q]; }); });
+      var list = Object.keys(syms).map(function (q) { return syms[q]; }), keys = Object.keys(syms);
+      var tgt = P[0] && P[0].n === 1 && /^\s*[-+]?\s*[A-Za-z_][\w()]*\s*$/.test(normalize(segs[0])) ? list.filter(function (x) { return P[0].syms[x.key]; })[0] : null;
+      var text = normalize((tgt ? segs.slice(1) : segs).join("=")), all = normalize(segs.join("="));
+      var has = function (re) { return keys.some(function (q) { return re.test(q); }); }, kinds = function (kd) { return list.some(function (x) { return x.kind === kd; }); };
+      var tk = tgt ? tgt.key : "";
+      if (has(/^e[pqs]:/)) k = K.ac ? "powerac" : "power";
+      else if (/^z:/.test(tk) || (K.ac && has(/^z:/) && !tgt)) k = "imp";
+      else if (/^p:/.test(tk)) k = /rth|req|rab|zth|zab|zeq/.test(tk) ? "thev" : /vth|voc/.test(tk) ? "vth" : /isc|in$/.test(tk) ? "norton" : "pmax";
+      else if (/([\w.]+)\s*\*\s*\(?([\w.]+)\)?\s*\/\s*\(([^()]*\+[^()]*)\)/.test(text) && (function () { var m = /([\w.]+)\s*\*\s*\(?([\w.]+)\)?\s*\/\s*\(([^()]*\+[^()]*)\)/.exec(text), parts = m[3].split("+").map(function (x) { return x.trim(); }); return parts.indexOf(m[2]) > -1 || parts.indexOf(m[1]) > -1; })()) k = /^(ei:|m:)/.test(tk) ? "idiv" : "vdiv";
+      else if (/\|/.test(all)) k = "serpar";
+      else if (/^(ev:|ei:)/.test(tk)) {
+        var el = K.c.edges.filter(function (e) { return e.name === tk.slice(3); })[0], passive = el && /^[RLC]$/.test(el.type);
+        if (/[*/]/.test(text) && passive) k = K.ac ? "ohmac" : "ohm";
+        else if (/^ev:/.test(tk) && kinds("node")) k = "vnodes";
+        else if (/^ei:/.test(tk) && kinds("mesh")) k = "imesh";
+        else if (passive && /[*/]/.test(text)) k = "ohm";
+      }
+      else if (!tgt && l.kind === "eq" && has(/^ev:/) && has(/^ei:/)) k = K.ac ? "ohmac" : "ohm";
+      else if (l.status === "ok" && l.kind === "eq") k = "combo";
+    }
+    if (!k || !LAW[k]) return null;
+    var L0 = LAW[k];
+    return { id: k, name: L0.ar[0], text: L0.ar[1], f: L0.f, en: L0.en[0], enText: L0.en[1], use: l.status === "ok" ? "used" : "aim" };
   }
 
   /* a ready context from a circuit (DC or AC). An open port (type T) of a Thévenin or equivalent circuit is left open
@@ -634,5 +705,18 @@
     }
     return { c: open, sol: sol, nodes: nodes, meshes: meshes, port: P, drawn: c };
   }
-  CV.stepcheck = { check: check, context: context, contextFor: contextFor, _rows: function (ctx) { var K = context(ctx); W = 1; return { K: K, RW: buildRows(K) }; } };
+  /* the names a student may write for this circuit (helps the handwriting reader pick v1 over vl, Vs over V5) */
+  function vocab(ctx) {
+    if (!ctx) return [];
+    var K = context(ctx), out = [];
+    function put(n) { if (n && out.indexOf(n) < 0) out.push(n); }
+    K.labels.forEach(function (n) { put("v" + n.name.slice(1)); });
+    K.meshes.forEach(function (m) { put("i" + m.name.slice(1)); });
+    K.c.edges.forEach(function (e) { if (e.name && e.name !== "D" && e.type !== "W" && e.type !== "T") { put(e.name); if (/^[RLC]$/.test(e.type)) { put("i_" + e.name); put("v_" + e.name); } } });
+    if (K.S.vx) put("vx"); if (K.S.ix) put("ix");
+    Object.keys(K.S).forEach(function (q) { if (/^port:/.test(q)) put(K.S[q].name); });
+    if (K.ac) { put("ω"); put("j"); }
+    return out.slice(0, 60);
+  }
+  CV.stepcheck = { check: check, context: context, contextFor: contextFor, vocab: vocab, _rows: function (ctx) { var K = context(ctx); W = 1; return { K: K, RW: buildRows(K) }; } };
 })(typeof window !== "undefined" ? window : globalThis);

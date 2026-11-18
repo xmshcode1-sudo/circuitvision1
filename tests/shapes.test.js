@@ -60,6 +60,14 @@ S.LIST.filter((id) => S.meshesOf(id) >= 2).forEach((id) => ["vN", "iM", "Vth", "
   const r = CV.stepcheck.check(L.join("\n"), ctx);
   r.lines.forEach((l, i) => { if (l.status !== want[i]) bad("step check '" + L[i] + "': " + l.status + " ≠ " + want[i]); });
   if (!/R4/.test(String(r.lines[4].msg || "").replace(/<[^>]+>/g, ""))) bad("step check did not name the missing R4");
+  /* every step names its law: KVL where it is used right, and where it was aimed at but went wrong */
+  [0, 2, 3, 4].forEach((i) => { if (!r.lines[i].law || r.lines[i].law.id !== "kvl") bad("step " + (i + 1) + " law: " + (r.lines[i].law && r.lines[i].law.id)); });
+  if (r.lines[1].law) bad("a bare value got a law card");
+  if (!r.summary.laws.some((x) => x.id === "kvl" && x.n === 2)) bad("summary of laws used");
+  const e = g.circuit.edges.filter((x) => x.name === "R1")[0], so = ctx.sol.byName.R1;
+  const r2 = CV.stepcheck.check(["i_R1 = v_R1/R1 = " + so.i, "p_R1 = i_R1^2*R1 = " + so.p, "v_R1 = Vs*R2/(R1+R2)"].join("\n"), ctx);
+  ["ohm", "power", "vdiv"].forEach((id, i) => { if (!r2.lines[i].law || r2.lines[i].law.id !== id) bad("law of '" + r2.lines[i].text + "': " + (r2.lines[i].law && r2.lines[i].law.id) + " ≠ " + id); });
+  if (!e || CV.stepcheck.vocab(ctx).indexOf("i1") < 0 || CV.stepcheck.vocab(ctx).indexOf("Vs") < 0) bad("vocab misses the circuit's names");
 }
 if (fail) { console.error(fail + " problems"); process.exit(1); }
 console.log("shapes: " + total + " circuits checked ✓");

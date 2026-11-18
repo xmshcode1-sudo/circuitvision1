@@ -179,14 +179,28 @@
       var box = $(".ws-check"), r = CV.stepcheck.check(txt.value, ctx);
       if (!r.lines.length) { box.innerHTML = "<p class='ws-note'>اكتب حلّك أولًا، كل معادلة في سطر فيها علامة =.</p>"; return; }
       if (CV.bi) { r.lines.forEach(function (l) { if (l.en) { var o = {}; o[l.msg] = l.en; CV.bi.add(o); } }); r.summary.notes.forEach(function (x) { var o = {}; o[x.t] = x.en; CV.bi.add(o); }); }
-      var cls = { ok: "good", err: "bad", warn: "warn", skip: "skip" };
-      box.innerHTML = "<ul class='ws-lines'>" + r.lines.map(function (l) {
-        return "<li class='" + cls[l.status] + "'><span class='ln'>" + l.n + "</span><span class='ltr lt'>" + esc(l.text) + "</span><span class='why'>" + esc(l.msg) + "</span></li>";
+      var cls = { ok: "good", err: "bad", warn: "warn", skip: "skip" }, canTutor = !!(CV.tutor && opts.tutor);
+      if (CV.bi) r.lines.forEach(function (l) { if (l.law) { var o = {}; o[l.law.name] = l.law.en; o[l.law.text] = l.law.enText; o["استخدمت " + l.law.name] = "You used " + l.law.en; o["القانون هنا: " + l.law.name] = "The law here: " + l.law.en; CV.bi.add(o); } });
+      function lawCard(l) {
+        if (!l.law) return "";
+        var w = l.law, head = l.status === "ok" ? "استخدمت " + w.name : "القانون هنا: " + w.name;
+        return "<details class='ws-law " + (l.status === "ok" ? "used" : "aim") + "'" + (l.status === "err" ? " open" : "") + "><summary>" + esc(head) + (w.f ? " <span class='ltr f'>" + esc(w.f) + "</span>" : "") + "</summary><p>" + esc(w.text) + "</p></details>";
+      }
+      box.innerHTML = "<ul class='ws-lines'>" + r.lines.map(function (l, i) {
+        return "<li class='" + cls[l.status] + "'><span class='ln'>" + l.n + "</span><span class='ltr lt'>" + esc(l.text) + "</span><span class='why'>" + esc(l.msg) + "</span>" + lawCard(l) +
+          (l.status === "err" && canTutor ? "<button type='button' class='lk ws-explain-1' data-i='" + i + "'>اشرح لي هذا السطر خطوة خطوة</button>" : "") + "</li>";
       }).join("") + "</ul>" +
+        (r.summary.laws && r.summary.laws.length ? "<p class='ws-note ws-laws'>طبّقت صح: " + r.summary.laws.map(function (x) { return esc(x.name) + (x.n > 1 ? " ×" + x.n : ""); }).join("، ") + "</p>" : "") +
         r.summary.notes.map(function (x) { return "<p class='ws-note ws-method'>" + esc(x.t) + "</p>"; }).join("") +
         "<p class='ws-note'>" + (r.summary.err ? (r.summary.err === 1 ? "وجدت سطرًا واحدًا فيه خطأ." : r.summary.err === 2 ? "وجدت سطرين فيهما أخطاء." : "وجدت " + r.summary.err + (r.summary.err <= 10 ? " أسطر" : " سطرًا") + " فيها أخطاء.") : r.summary.ok ? "كل الأسطر التي فحصتها صحيحة لهذه الدائرة." : "") +
         " أحكم على كل معادلة بالتعويض بقيم الدائرة الحقيقية من محرك الحل، فالمعادلة الصحيحة تُقبل بأي صيغة كتبتها.</p>" +
         (r.summary.err && CV.tutor && opts.tutor ? "<button type='button' class='btn btn-ghost btn-sm ws-explain'>اشرح لي الخطأ (المعلم الذكي)</button>" : "");
+      box.querySelectorAll(".ws-explain-1").forEach(function (b) { b.addEventListener("click", function () {
+        var l = r.lines[+b.dataset.i], c = opts.tutor();
+        c.attempt = "خطوة واحدة من حل الطالب (السطر " + l.n + "): «" + l.text.slice(0, 160) + "». تشخيص محرك الحل: " + l.msg + (l.law ? " القانون المطلوب في هذه الخطوة: " + l.law.name + " (" + l.law.f + ")." : "") +
+          " — ركّز على هذا السطر فقط: اذكر القانون وصيغته، وبيّن أين خالفه الطالب، ثم اسأله سؤالًا واحدًا يقوده لتصحيحه. لا تعطِ أرقامًا من عندك ولا الحل النهائي.";
+        CV.tutor.open(c);
+      }); });
       var ex = box.querySelector(".ws-explain");
       if (ex) ex.addEventListener("click", function () {
         var c = opts.tutor(), bad = r.lines.filter(function (l) { return l.status === "err"; }).slice(0, 2);
@@ -232,10 +246,15 @@
     /* ---------- recognition ---------- */
     function exportDrawing() {
       if (!data.strokes.length) return null;
-      var w = canvas.clientWidth, h = height, k = Math.min(2, 1600 / w, 2400 / h), c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k); // small enough to send fast, sharp enough to read
+      /* only the part with ink, plus a margin: a smaller picture is read faster, and the writing fills it so it is read better */
+      var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      data.strokes.forEach(function (s) { if (s.e) return; s.p.forEach(function (q) { x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); }); });
+      if (x1 < x0) return null;
+      var pad = 24; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(canvas.clientWidth, x1 + pad); y1 = Math.min(height, y1 + pad);
+      var w = Math.max(60, x1 - x0), h = Math.max(40, y1 - y0), k = Math.min(2, 1400 / w, 2000 / h), c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
       var x = c.getContext("2d"); x.setTransform(k, 0, 0, k, 0, 0);
       x.fillStyle = "#fff"; x.fillRect(0, 0, w, h);
-      var layer = document.createElement("canvas"); layer.width = c.width; layer.height = c.height; var lx = layer.getContext("2d"); lx.setTransform(k, 0, 0, k, 0, 0);
+      var layer = document.createElement("canvas"); layer.width = c.width; layer.height = c.height; var lx = layer.getContext("2d"); lx.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
       var map = { ink: "#111", blue: "#1f63e6", orange: "#d9600f" };
       data.strokes.forEach(function (s) { strokePath(lx, s, function (k) { return map[k] || "#111"; }); });
       x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(layer, 0, 0);
@@ -248,18 +267,35 @@
       var m = /^data:(image\/[a-z]+);base64,(.*)$/.exec(dataUrl);
       status("جارٍ التعرف على المكتوب…", "busy");
       var ctrl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 70000);
-      (CV.cloud ? CV.cloud.authFetch : fetch)(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime: m[1], image: m[2], context: opts.context || "" }), signal: ctrl && ctrl.signal })
+      var names = vocabNow();
+      (CV.cloud ? CV.cloud.authFetch : fetch)(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime: m[1], image: m[2], context: opts.context || "", vocab: names }), signal: ctrl && ctrl.signal })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
         .then(function (o) {
           clearTimeout(timer);
           if (!o.r.ok) { status(o.j.error || messageFor(o.r.status), "warn"); return; }
           var lines = (o.j.lines || []).filter(function (l) { return String(l).trim(); });
           if (!lines.length || o.j.unreadable) { status("لم أستطع قراءة الكتابة بوضوح. اكتب بخط أكبر أو صوّر بإضاءة أفضل.", "warn"); return; }
-          txt.value = (txt.value.trim() ? txt.value.trim() + "\n" : "") + lines.map(CV.mathcheck.prettify).join("\n");
+          var before = txt.value.trim() ? txt.value.trim().split("\n").length : 0;
+          txt.value = (txt.value.trim() ? txt.value.trim() + "\n" : "") + lines.map(function (l) { return CV.mathcheck.prettify(fixNames(String(l), names)); }).join("\n");
           data.text = txt.value; persist(); showTab("type"); renderCheck();
-          status("نقلت ما كتبته إلى تبويب الكيبورد. راجعه وعدّل أي حرف قُرئ خطأ، ثم استخدم الناتج كإجابة.", "ok");
+          var doubt = (o.j.doubt || []).filter(function (i) { return i >= 0 && i < lines.length; }).map(function (i) { return before + i + 1; });
+          status(doubt.length ? "نقلت ما كتبته إلى تبويب الكيبورد. انتبه للسطر " + doubt.join(" و ") + ": الكتابة فيه غير واضحة وممكن انقرأ غلط، عدّله إذا لزم ثم دقّق من جديد." : "نقلت ما كتبته إلى تبويب الكيبورد وفحصت كل خطوة. راجعه وعدّل أي حرف قُرئ خطأ.", doubt.length ? "warn" : "ok");
         })
         .catch(function (err) { clearTimeout(timer); status(err && err.name === "AbortError" ? "استغرق التعرف وقتًا طويلًا. حاول مرة أخرى." : messageFor(0), "warn"); });
+    }
+    function vocabNow() { try { return opts.circuit && CV.stepcheck && CV.stepcheck.vocab ? CV.stepcheck.vocab(opts.circuit()) : []; } catch (e) { return []; } }
+    /* look-alike characters in handwriting (vl → v1, V5 → Vs, R| → R1): a name that is not in this circuit is swapped
+       for the one circuit name it can be read as, and only when exactly one fits */
+    var LOOK = { "|": ["1"], "1": ["l", "I", "|"], l: ["1", "I"], I: ["1", "l"], "5": ["s", "S"], s: ["5"], S: ["5"], "0": ["o", "O"], o: ["0"], O: ["0"], "2": ["z", "Z"], z: ["2"], Z: ["2"], x: ["×"], v: ["V"], V: ["v"], r: ["R"] };
+    function fixNames(line, names) {
+      if (!names || !names.length) return line;
+      var low = names.map(function (n) { return n.replace(/_/g, ""); });
+      return line.replace(/[A-Za-z][A-Za-z0-9_|]*/g, function (tok) {
+        var t = tok.replace(/_/g, "");
+        if (low.indexOf(t) > -1 || /^(ohm|mA|kΩ|V|A|W|Hz|j|omega|sqrt)$/.test(tok)) return tok;
+        var hits = names.filter(function (n) { var a = n.replace(/_/g, ""); if (a.length !== t.length) return false; for (var i = 0; i < a.length; i++) if (a[i] !== t[i] && (LOOK[t[i]] || []).indexOf(a[i]) < 0) return false; return true; });
+        return hits.length === 1 ? hits[0] : tok;
+      });
     }
     function messageFor(code) {
       if (code === 429) return "وصلت خدمة التعرف لحدها المجاني مؤقتًا. حاول بعد دقيقة.";

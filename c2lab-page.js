@@ -21,6 +21,7 @@
   var root = $("#cl-root"), bench = null;
   function route() {
     if (bench) { bench.destroy(); bench = null; }
+    var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
@@ -150,7 +151,7 @@
       }).join("") +
       '<section class="card lg-sec lg-bench" id="bench"><h2>طاولة المعمل</h2><p class="muted small">نفس طاولة معمل الدوائر 1 مع أجهزة الدوائر 2. ركّب الدائرة بنفسك واقرأ من الأجهزة، أو اعرض الحل على الطاولة.</p>' +
       '<div class="lg-bench-bar"><label>الدائرة: <select id="cl-lay" class="select">' + e.procs.map(function (p) { return p.layouts.map(function (L) { return '<option value="' + p.id + "/" + L.id + '">' + esc(p.title.replace(/^الإجراء[^:]*:\s*|^الخطوات[^:]*:\s*/, "")) + (p.layouts.length > 1 ? " · " + esc(L.name) : "") + '</option>'; }).join(""); }).join("") + '</select></label>' +
-      '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button></div>' +
+      '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button><button type="button" class="btn btn-ghost btn-sm" id="cl-ref-open">📐 الرسمة</button></div>' +
       '<div class="lg-out" id="cl-out" aria-live="polite"></div><div id="cl-bench"></div></section>' +
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : '<a class="btn btn-ghost" href="#">→ كل التجارب</a>') + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
     e.prelab.forEach(function (t, k) { wirePre(e, $('[data-pre="' + k + '"]', root), t, k); });
@@ -163,6 +164,33 @@
     wireBench(e);
   }
   function layout(e, v) { var q = v.split("/"), p = e.procs.filter(function (x) { return x.id === q[0]; })[0]; return { p: p, L: p.layouts.filter(function (x) { return x.id === q[1]; })[0] }; }
+  /* the drawing of the selected circuit, pinned at the top corner while the student builds it (as in the Circuits 1 and logic labs) */
+  var REF_KEY = "cv-c2lab-ref-min";
+  function refPanel(e, open, quiet) {
+    var box = document.getElementById("lg-ref"), sel = $("#cl-lay"); if (!sel) return;
+    var v = sel.value.split("/"), k = -1, p = null, L = null;
+    e.procs.forEach(function (x, i) { if (x.id === v[0]) k = i; });
+    if (k >= 0) { p = e.procs[k]; L = (p.layouts || []).filter(function (x) { return x.id === v[1]; })[0]; }
+    var fp = null; for (var i = k; i >= 0 && !fp; i--) if (e.procs[i].fig) fp = e.procs[i];
+    if (!fp) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement("aside"); box.id = "lg-ref"; box.className = "lg-ref"; box.setAttribute("aria-label", "الرسمة المرجعية");
+      document.body.appendChild(box);
+      box.addEventListener("click", function (ev) {
+        var b = ev.target.closest("[data-ref]"); if (!b) return;
+        var min = b.dataset.ref === "min"; box.classList.toggle("min", min);
+        try { localStorage.setItem(REF_KEY, min ? "1" : "0"); } catch (x) {}
+      });
+    }
+    var min; try { min = localStorage.getItem(REF_KEY) === "1"; } catch (x) { min = false; }
+    if (open) { min = false; try { localStorage.setItem(REF_KEY, "0"); } catch (x) {} }
+    if (quiet && !open) min = true;
+    box.classList.toggle("min", min);
+    box.innerHTML = '<button type="button" class="lg-ref-pill" data-ref="open" aria-label="أظهر الرسمة المرجعية">📐 الرسمة</button>' +
+      '<div class="lg-ref-card"><div class="lg-ref-h"><div><b>' + bd(esc(p.title)) + '</b>' + (L && p.layouts.length > 1 ? '<span>' + bd(esc(L.name)) + '</span>' : "") + '</div><button type="button" class="lg-ref-x" data-ref="min" aria-label="أخفِ الرسمة" title="أخفِ">×</button></div>' +
+      '<div class="lg-ref-b"><div class="lg-ref-fig">' + CV.draw.render(fp.fig, { aria: "مخطط " + fp.title }) + '</div>' +
+      '<p class="lg-ref-note">' + (fp === p ? "رسمة الدائرة من كتيب المعمل." : "رسمة الدائرة من «" + esc(fp.title) + "» في كتيب المعمل.") + '</p></div></div>';
+  }
   function wireBench(e) {
     var host = $("#cl-bench"); if (!host || !CV.clabBench) return;
     bench = CV.clabBench.mount(host, { key: "c2-" + e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") });
@@ -183,7 +211,10 @@
       bench.load({ parts: x.L.parts, leads: x.L.leads, set: set });
       out.className = "lg-out"; out.textContent = "هذي دائرة «" + x.L.name + "» على الطاولة" + (term ? "، والمولد مضبوط بحيث يكون جهد طرفيه المطلوب تحت الحمل (مقاومته الداخلية 50 Ω)." : ".");
     };
-    $$(".c2-tobench").forEach(function (b) { b.onclick = function () { $("#cl-lay").value = b.dataset.lay; $("#cl-sol").click(); $("#bench").scrollIntoView({ behavior: "smooth" }); }; });
+    $$(".c2-tobench").forEach(function (b) { b.onclick = function () { $("#cl-lay").value = b.dataset.lay; $("#cl-sol").click(); refPanel(e, true); $("#bench").scrollIntoView({ behavior: "smooth" }); }; });
+    $("#cl-lay").addEventListener("change", function () { refPanel(e, false); });
+    $("#cl-ref-open").onclick = function () { refPanel(e, true); };
+    refPanel(e, false, true);
   }
   window.addEventListener("hashchange", route);
   if (document.readyState === "complete") route(); else window.addEventListener("load", route);

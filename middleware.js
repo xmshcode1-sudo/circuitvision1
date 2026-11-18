@@ -194,6 +194,8 @@ const SYSTEM = [
   "لا تعتمد على أرقام يكتبها الطالب كأنها صحيحة؛ قارنها بحقائق المحرك إن وُجدت، وإلا فقل إنها تحتاج تحققًا.",
   "لا تنسب أي مسألة أو رقم لكتاب (Nilsson أو Sadiku) إلا إذا كان ذلك مذكورًا في السياق.",
   "إذا سُئلت عن شيء خارج الدوائر الكهربائية والدراسة فاعتذر بلطف في جملة واحدة وارجع للموضوع.",
+  "إذا أُرسلت لك خطوة واحدة من حل الطالب فركّز عليها وحدها: ابدأ باسم القانون المناسب لها وصيغته في سطر واحد، ثم بيّن أين خالفه الطالب في هذه الخطوة تحديدًا (حد ناقص، إشارة، مقاومة خطأ…)، ثم اختم بسؤال واحد يقوده لتصحيحها. لا تنتقل لخطوات أخرى ولا تكتب الحل كاملًا.",
+  "وإذا كانت خطوة الطالب صحيحة فقل له أي قانون طبّقه ولماذا ينطبق هنا في جملة، ثم ما الخطوة التالية المنطقية دون أن تحلها عنه.",
   "اختصر: من 2 إلى 6 جمل عادةً. اكتب المعادلات كنص بسيط مثل v = iR و Z_C = −j/(ωC)."
 ].join("\n");
 
@@ -284,7 +286,8 @@ const PROMPT = [
   "Write math as plain text with Unicode: × for multiplication, / for division, ² ³ for powers, subscripts like R₁ i₂ vₓ,",
   "Ω for ohms, µ for micro, ∥ for parallel, √ for square root, − for minus. Keep units and SI prefixes as written (mA, kΩ, V).",
   "Keep Arabic words as Arabic. One array item per written line, top to bottom. Skip crossed-out text.",
-  "If the image has no readable handwriting, return an empty list and unreadable=true."
+  "If the image has no readable handwriting, return an empty list and unreadable=true.",
+  "In doubt, list the 0-based indexes of lines where a character could be read two ways (1/l/I, 5/s, 0/o, 2/z, + / t, − / =) in doubt; leave it empty when every line is clear."
 ].join(" ");
 
 const L = require("./_lib.js");
@@ -302,6 +305,7 @@ module.exports = async function handler(req, res) {
 
   const body = typeof req.body === "string" ? safeJson(req.body) : req.body || {};
   const { mime, image, context } = body;
+  const vocab = Array.isArray(body.vocab) ? body.vocab.map((v) => String(v).slice(0, 12)).filter((v) => /^[\w()ωΩ]+$/.test(v)).slice(0, 60) : [];
   if (!ALLOWED.includes(mime) || typeof image !== "string" || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 200))) {
     return res.status(400).json({ error: "أرسل صورة JPG أو PNG أو WebP." });
   }
@@ -310,15 +314,15 @@ module.exports = async function handler(req, res) {
   const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
   const payload = {
     contents: [{ role: "user", parts: [
-      { text: PROMPT + (context ? " The problem the student is solving (for reading ambiguous symbols only): " + String(context).slice(0, 600) : "") },
+      { text: PROMPT + (vocab.length ? " The names in this circuit are: " + vocab.join(", ") + ". When a handwritten name is ambiguous, read it as one of these (v1 not vl, Vs not V5, i_R2 not iR2 with a stray mark); never invent a name that is not written." : "") + (context ? " The problem the student is solving (for reading ambiguous symbols only): " + String(context).slice(0, 600) : "") },
       { inline_data: { mime_type: mime, data: image } }
     ] }],
     generationConfig: {
       temperature: 0,
-      maxOutputTokens: 4096,
-      thinkingConfig: { thinkingLevel: "low" },
+      maxOutputTokens: 2048,
+      thinkingConfig: { thinkingLevel: process.env.GEMINI_RECOGNIZE_THINKING || "minimal" },   // copying text needs little thinking, and it is the slow part
       responseMimeType: "application/json",
-      responseSchema: { type: "OBJECT", properties: { lines: { type: "ARRAY", items: { type: "STRING" } }, unreadable: { type: "BOOLEAN" } }, required: ["lines", "unreadable"] }
+      responseSchema: { type: "OBJECT", properties: { lines: { type: "ARRAY", items: { type: "STRING" } }, doubt: { type: "ARRAY", items: { type: "INTEGER" } }, unreadable: { type: "BOOLEAN" } }, required: ["lines", "unreadable"] }
     }
   };
 
@@ -337,7 +341,8 @@ module.exports = async function handler(req, res) {
     const text = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts && j.candidates[0].content.parts.filter((p) => !p.thought).map((p) => p.text || "").join("");
     const out = safeJson(text) || {};
     const lines = Array.isArray(out.lines) ? out.lines.map((l) => String(l).slice(0, 300)).slice(0, 60) : [];
-    return res.status(200).json({ lines, unreadable: !!out.unreadable || !lines.length });
+    const doubt = Array.isArray(out.doubt) ? out.doubt.filter((i) => Number.isInteger(i) && i >= 0 && i < lines.length).slice(0, 20) : [];
+    return res.status(200).json({ lines, doubt, unreadable: !!out.unreadable || !lines.length });
   } catch (e) {
     console.error("recognize", e && e.name, e && e.message);
     return res.status(502).json({ error: "تعذّر الاتصال بخدمة التعرف. حاول مرة أخرى." });
