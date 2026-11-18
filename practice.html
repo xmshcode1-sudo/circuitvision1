@@ -27,6 +27,24 @@
   .fams-shp { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .fams-shp .fam .thumb { height: 104px; } .fams-shp .fam .thumb .sc { max-height: 94px; }
   .fams-shp .fam .sc-sign, .fams-shp .fam .sc-ilbl, .fams-shp .fam .sc-vpol { display: none; }
+  .dz { display: grid; gap: 12px; }
+  .dz-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .dz-top .field { min-width: 200px; }
+  .dz-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dz-tool { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--fg); cursor: pointer; font: inherit; font-size: 14px; min-height: 40px; }
+  .dz-tool[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--fg); }
+  .dz-help { margin: 0; font-size: 13px; }
+  .dz-fig { background: var(--bg-2); border-radius: 12px; padding: 8px; overflow-x: auto; }
+  .dz-fig .sc { width: 100%; height: auto; max-width: 760px; display: block; margin-inline: auto; touch-action: manipulation; }
+  .dz-empty { stroke: var(--fg-3); stroke-width: 1.4; stroke-dasharray: 5 6; opacity: .55; }
+  .dz-hit { stroke: transparent; stroke-width: 26; cursor: pointer; pointer-events: stroke; }
+  .dz-hit:hover { stroke: rgba(63, 182, 255, .14); }
+  .dz-sel { stroke: var(--blue); stroke-width: 10; opacity: .28; stroke-linecap: round; } .dz-sel.dz-badl { stroke: var(--orange); }
+  .dz-pt { fill: var(--fg-3); opacity: .6; }
+  .dz-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); }
+  .dz-val { display: flex; gap: 6px; align-items: center; } .dz-val .input { width: 7em; }
+  .dz-status { margin: 0; font-size: 14px; } .dz-status.ok { color: var(--ok, #22c55e); } .dz-status.warn { color: var(--orange); }
+  .dz-ask { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .dz-ask .field { min-width: 240px; }
+  .dz-ex { border-top: 1px solid var(--line-soft); padding-top: 14px; }
   .work { padding: 20px 22px; display: grid; gap: 14px; }
   .work h2 { font-size: 19px; }
   .stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--fg-2); }
@@ -92,6 +110,12 @@
       <div id="gen"></div>
     </section>
 
+    <section class="work card" id="design" aria-labelledby="dz-h">
+      <div class="adv-h"><span class="eyebrow">تمرين من تصميمك</span><h2 id="dz-h">صمّم دائرتك</h2>
+      <p class="muted">ارسم دائرة بنفسك: مقاومات ومصادر وأسلاك على شبكة أو على أي شكل، ثم اختر ما تريد حسابه. المحرك يتأكد أن دائرتك صحيحة ويحلها، ثم تحلها أنت ويصحح إجابتك وخطواتك.</p></div>
+      <div id="designer"></div>
+    </section>
+
     <section class="work card adv" id="advanced" aria-labelledby="adv-h">
       <div class="adv-h"><span class="eyebrow">المستوى المتقدم</span><h2 id="adv-h">مسائل مركّبة: أكثر من متطلب على نفس الدائرة</h2>
       <p class="muted">كل مسألة دائرة واحدة وعدة أجزاء، وكل جزء يحتاج درسًا مختلفًا: قانونا كيرشوف وطرق التحليل، قانون أوم، اصطلاح الإشارة، توازن القدرة، والمصادر التابعة. تحت كل جزء الدروس التي يعتمد عليها. كل القيم من محرك الحل.</p></div>
@@ -127,7 +151,7 @@
 <script src="ac.js"></script>
 <script src="mathcheck.js"></script>
 <script src="workspace.js"></script><script src="stepcheck.js"></script>
-<script src="practice.js"></script><script src="compound.js"></script>
+<script src="practice.js"></script><script src="compound.js"></script><script src="designer.js"></script>
 <script>
 (function () {
   "use strict";
@@ -167,6 +191,7 @@
   famSel.addEventListener("change", function () { document.querySelectorAll(".fams .fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
   counts();
   CV.compound.mount(document.getElementById("compound"));
+  CV.designer.mount(document.getElementById("designer"), { fromGen: function () { return widget.state.gen; } });
 })();
 </script>
 <script src="calc.js"></script>
