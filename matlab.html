@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MATLAB — CircuitVision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Readex+Pro:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+  .main { min-width: 0; padding-block: 22px 56px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 16px; align-content: start; width: 100%; }
+  .lg-root { display: grid; gap: 16px; min-width: 0; max-width: 1180px; }
+  .lg-head { display: grid; gap: 6px; }
+  .lg-head h1 { font-size: clamp(24px, 3vw, 32px); }
+  .lg-head p { color: var(--fg-2); max-width: 75ch; margin: 0; }
+  .lg-head .code { font-family: var(--font-mono); font-size: 12.5px; color: var(--blue); }
+  .lg-head .en, .lg-card .en { font-family: var(--font-display); color: var(--fg-3); font-size: 13px; }
+  .lg-head .pg { font-size: 13px; color: var(--fg-3); }
+  .lg-sheet { direction: ltr; unicode-bidi: isolate; text-align: right; }
+  .lg-head h1.lg-sheet { font-family: var(--font-display); }
+  .lg-head .lg-ar { font-size: 17px; color: var(--fg-2); }
+  .lg-card .lg-sheet { text-align: start; }
+  .lg-cta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .lg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .lg-card { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 16px; align-items: start; }
+  .lg-card:hover { border-color: var(--blue); }
+  .lg-card > div { display: grid; gap: 4px; min-width: 0; }
+  .lg-card .chips { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-3); }
+  .lg-card .pg { font-size: 12.5px; color: var(--ok); }
+  .n { width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--line); flex: none; }
+  .n.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .lg-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .lg-tabs a { flex: none; display: flex; gap: 8px; align-items: center; padding: 6px 12px 6px 8px; border-radius: 99px; border: 1px solid var(--line-soft); background: var(--surface); font-size: 13px; color: var(--fg-2); white-space: nowrap; }
+  .lg-tabs a .n { width: 22px; height: 22px; font-size: 11.5px; }
+  .lg-tabs a.cur { border-color: var(--blue); color: var(--fg); background: var(--blue-soft); }
+  .lg-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; align-items: start; }
+  @media (max-width: 860px) { .lg-top { grid-template-columns: 1fr; } }
+  .lg-sec { padding: 18px 20px; display: grid; gap: 10px; min-width: 0; }
+  .lg-sec h2 { font-size: 18px; display: flex; gap: 10px; align-items: center; }
+  .lg-sec ul { margin: 0; padding-inline-start: 20px; color: var(--fg-2); }
+  .lg-h { font-size: 20px; margin-top: 8px; }
+  .lg-steps { margin: 0; padding-inline-start: 22px; display: grid; gap: 8px; max-width: 80ch; line-height: 1.75; }
+  .lg-chips { display: grid; gap: 6px; }
+  .lg-chip summary { cursor: pointer; padding: 6px 10px; border-radius: 9px; border: 1px solid var(--line-soft); background: var(--surface-2); display: flex; gap: 8px; align-items: baseline; }
+  .lg-chip summary span { color: var(--fg-3); font-size: 13px; }
+  .lg-pin { border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; margin: 8px auto; }
+  .lg-pin td { padding: 2px 9px; border-bottom: 1px solid var(--line-soft); }
+  .lg-pin td.ic { background: #1e1f22; width: 34px; border: 0; }
+  .lg-note { font-size: 13.5px; color: var(--fg-2); padding: 8px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line-soft); margin: 0; }
+  .lg-note:empty { display: none; }
+  .lg-tw { overflow-x: auto; max-width: 100%; }
+  .lg-t { border-collapse: collapse; font-family: var(--font-mono); font-size: 13.5px; }
+  .lg-t th, .lg-t td { border: 1px solid var(--line); padding: 5px 10px; text-align: center; }
+  .lg-t th { background: var(--surface-2); font-weight: 600; }
+  .lg-t th.o { color: var(--blue); }
+  .lg-fill td.o { padding: 2px; }
+  .lg-fill .bit { width: 38px; height: 32px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-family: var(--font-mono); font-size: 15px; cursor: pointer; }
+  .lg-fill input, .lg-fill select { width: 64px; height: 32px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-family: var(--font-mono); text-align: center; }
+  .lg-fill select { width: auto; }
+  .good { border-color: var(--ok) !important; box-shadow: inset 0 0 0 1px var(--ok); }
+  .bad { border-color: var(--bad, #e5484d) !important; box-shadow: inset 0 0 0 1px var(--bad, #e5484d); }
+  .lg-demo { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-soft); }
+  .lg-wl { margin: 0; padding-inline-start: 22px; display: grid; gap: 4px; font-size: 13.5px; }
+  .lg-task { padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+  .lg-th { display: flex; gap: 10px; align-items: flex-start; }
+  .lg-th b { line-height: 1.6; padding-top: 3px; }
+  .lg-io { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .lg-io li { padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line-soft); background: var(--surface-2); font-size: 13px; }
+  .lg-expr { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .lg-expr .input { flex: 1 1 260px; max-width: 420px; font-family: var(--font-mono); }
+  .lg-keys { display: flex; gap: 4px; }
+  .lg-keys .btn { font-family: var(--font-mono); min-width: 38px; }
+  .lg-mcq { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lg-pins { display: grid; gap: 6px; }
+  .lg-pins label { display: grid; grid-template-columns: minmax(150px, 260px) minmax(0, 200px); gap: 10px; align-items: center; font-size: 13.5px; }
+  .lg-pins .input { font-family: var(--font-mono); }
+  .lg-act { display: flex; gap: 8px; }
+  .lg-res:empty, .lg-out:empty { display: none; }
+  .lg-res, .lg-out { font-size: 14px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line-soft); background: var(--surface-2); }
+  .lg-res.ok, .lg-out.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .lg-res.bad, .lg-out.bad { border-color: var(--bad, #e5484d); }
+  .lg-out ul { margin: 6px 0 0; padding-inline-start: 20px; }
+  .lg-bench { scroll-margin-top: 12px; }
+  .lg-bench-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .lg-bench-bar label { display: flex; gap: 8px; align-items: center; font-size: 13.5px; flex: 1 1 320px; min-width: 0; }
+  .lg-bench-bar select { flex: 1; min-width: 0; max-width: 100%; }
+  .lg-pn { display: flex; justify-content: space-between; gap: 8px; }
+  .small { font-size: 12.5px; }
+  .cl-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 14px; }
+  .cl-f { display: grid; gap: 4px; font-size: 13.5px; }
+  .cl-in { display: flex; gap: 6px; align-items: center; }
+  .cl-in input { width: 120px; }
+  .cl-proc { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+  .cl-proc:not(:has(.cl-fig)) { grid-template-columns: 1fr; }
+  @media (max-width: 860px) { .cl-proc { grid-template-columns: 1fr; } }
+  .cl-fig { order: 2; background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 12px; padding: 8px; overflow-x: auto; }
+  .cl-fig svg { display: block; margin: auto; width: 100%; height: auto; }
+  .cl-tbl { display: grid; gap: 8px; margin-top: 6px; }
+  .cl-t td.l { text-align: start; font-family: var(--font-body); white-space: nowrap; }
+  .cl-t td.l .u { color: var(--fg-3); font-size: 12px; }
+  .cl-t input { width: 92px; height: 32px; border-radius: 7px; text-align: center; padding: 0 4px; }
+  .cl-t td { padding: 3px 6px; }
+  .cl-sum td { background: var(--surface-2); }
+  .cl-ok { color: var(--ok); }
+  .cl-wok { font-size: 13px; color: var(--ok); align-self: center; }
+  .cl-plot { max-width: 480px; }
+  .cl-plot-svg { width: 100%; height: auto; direction: ltr; }
+  .cl-plot-svg .ax { stroke: var(--fg-3); } .cl-plot-svg .ln { fill: none; stroke: var(--blue); stroke-width: 2; } .cl-plot-svg .pt { fill: var(--orange); }
+  .cl-plot-svg .tk { font-size: 11px; fill: var(--fg-3); } .cl-plot-svg .tl { font-size: 12px; fill: var(--fg-2); }
+  .c2-proc { grid-template-columns: minmax(0, 1fr); }
+  .c2-h3 { font-size: 15px; margin: 6px 0 0; color: var(--fg-2); }
+  .c2-inst { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line-soft); }
+  .c2-ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+  .c2-ctl label { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13.5px; }
+  .c2-ctl input.input { width: 110px; font-family: var(--font-mono); }
+  .c2-ctl input[type=range] { width: 180px; max-width: 60vw; }
+  .c2-meters { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .c2-m { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: #0d1422; color: #e9eef7; border: 1px solid #1e2738; }
+  .c2-m span { font-size: 12px; color: #8f9bb0; } .c2-m b { font-family: var(--font-mono); font-size: 17px; color: #7dffb0; } .c2-m small { font-size: 12px; color: #8f9bb0; } .c2-m b.tx { font-family: var(--font-body); }
+  .c2-scr { position: relative; max-width: 600px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-soft); padding: 6px; }
+  .c2-scr svg { width: 100%; height: auto; display: block; direction: ltr; }
+  .c2-leg { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 12px; color: var(--fg-3); padding-top: 2px; }
+  .c2-leg i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; } .c2-leg i.c1 { background: var(--sp-c1, #2f7bff); } .c2-leg i.c2 { background: var(--sp-c2, #ff8a1f); }
+  .c2-pc { font-family: var(--font-mono); color: var(--fg-2); }
+  .c2-plot { margin-top: 4px; }
+  .ml-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ml-tabs button { border: 1px solid var(--line-soft); background: var(--surface); color: var(--fg-2); border-radius: 99px; padding: 7px 14px; font: inherit; font-size: 13.5px; cursor: pointer; }
+  .ml-tabs button[aria-selected="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--fg); }
+  .ml-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .ml-item { display: grid; gap: 4px; padding: 14px 16px; text-decoration: none; color: inherit; }
+  .ml-item .n { font-family: var(--font-mono); font-size: 12px; color: var(--blue); }
+  .ml-item b { font-size: 15px; } .ml-item span { color: var(--fg-3); font-size: 12.5px; }
+  .ml-chap { margin: 14px 0 4px; font-size: 15px; color: var(--fg-2); }
+  .ss-vid video { width: 100%; max-width: 880px; border-radius: 12px; background: #000; display: block; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="القائمة الرئيسية">
+    <a class="logo" href="index.html" aria-label="CircuitVision">
+      <svg viewBox="0 0 34 24" aria-hidden="true"><defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3fb6ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient></defs><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="url(#lg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CircuitVision
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot" id="side-foot"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+  <main class="main" id="main">
+    <div class="mobile-top">
+      <a class="logo" href="index.html" aria-label="CircuitVision">
+        <svg viewBox="0 0 34 24" aria-hidden="true"><path d="M14 4.5A8.5 8.5 0 1 0 14 19.5" fill="none" stroke="#3fb6ff" stroke-width="3.2" stroke-linecap="round"/><path d="M16 4l7 16 7-16" fill="none" stroke="#2f7bff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        CircuitVision
+      </a>
+      <button class="menu-btn" id="menu-btn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div id="ml-root" class="lg-root"></div>
+  </main>
+</div>
+<script src="store.js"></script>
+<script src="bi.js"></script>
+<script src="ui.en.js"></script>
+<script src="config.js"></script>
+<script src="cloud.js"></script>
+<script src="curriculum.js"></script>
+<script src="shell.js"></script>
+<script>CV.shell.init({ active: "matlab" });</script>
+<script src="ss-video-durations.js"></script>
+<script src="matlab-index.js"></script>
+<script src="matlab-view.js"></script>
+<script src="matlab-page.js"></script>
+<script src="calc.js"></script>
+</body>
+</html>

@@ -168,6 +168,19 @@
   #vis .wb-svg { width: 1220px !important; height: auto !important; max-height: 860px; border-radius: 12px; }
   .mt-n { margin-top: 12px; font-size: 22px; color: #8f9bb0; direction: rtl; }
   #vis .lgt td.v { color: #ff9f43; }
+  .mld { position: relative; width: 1240px; height: 900px; direction: ltr; font-family: "DejaVu Sans Mono", monospace !important; }
+  .mld * { font-family: "DejaVu Sans Mono", monospace !important; }
+  .mle { position: absolute; left: 0; top: 0; right: 0; height: 600px; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #c9c9c2; }
+  .mlt { height: 38px; line-height: 38px; padding: 0 14px; background: #e9eaec; color: #333; font-size: 18px !important; border-bottom: 1px solid #c9c9c2; }
+  .mlt .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; } .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .mlc { padding: 8px 0; font-size: 21px; line-height: 1.5; color: #1d1d1b; white-space: pre; }
+  .mlc .ln { padding: 0 14px 0 0; opacity: 0.45; color: #1d1d1b !important; } .mlc .ln.on { opacity: 1; background: #fffbe0; }
+  .mlc .no { display: inline-block; width: 52px; text-align: right; margin-right: 18px; color: #999; }
+  .mlc .ml-c { color: #228b22; } .mlc .ml-s { color: #a020f0; } .mlc .ml-k { color: #0e00ff; } .mlc .ml-n { color: #b5651d; }
+  .mlw { position: absolute; left: 0; right: 0; top: 618px; bottom: 0; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #c9c9c2; }
+  .mlw pre { margin: 0; padding: 10px 16px; font-size: 21px; line-height: 1.45; color: #111; white-space: pre; }
+  .mlf { position: absolute; right: 0; top: 0; width: 760px; height: 600px; background: #f0f0f0; border-radius: 12px; overflow: hidden; border: 1px solid #b9b9b2; box-shadow: -10px 10px 30px rgba(0,0,0,.45); }
+  .mlf img { display: block; width: 100%; height: calc(100% - 38px); object-fit: contain; background: #fff; }
 </style>
 </head>
 <body>
@@ -187,10 +200,11 @@
 <script src="../../ld-ch1.js"></script><script src="../../ld-ch2.js"></script><script src="../../ld-ch3.js"></script><script src="../../ld-ch4.js"></script><script src="../../ld-ch5.js"></script>
 <script src="../../c2-ch1.js"></script><script src="../../c2-ch2.js"></script><script src="../../c2-ch3.js"></script>
 <script src="../../clab-sim.js"></script><script src="../../clab-bench.js"></script><script src="../../clab-check.js"></script><script src="../../c2lab.js"></script><script src="c2lab-video.js"></script>
+<script src="../../matlab-data.js"></script><script src="../../matlab-view.js"></script><script src="ml-titles.js"></script><script src="matlab-video.js"></script>
 <script>
 (function () {
   var CV = window.CV, $ = function (id) { return document.getElementById(id); };
-  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020" };
+  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020", "matlab": "MATLAB" };
   function fit(el, min) { var fs = parseFloat(getComputedStyle(el).fontSize); while (el.scrollHeight > el.clientHeight + 2 && fs > min) { fs -= 1; el.style.fontSize = fs + "px"; } }
   window.show = function (id, i, prog) {
     var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");

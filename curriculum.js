@@ -143,7 +143,8 @@
     { id: "portfolio",  ar: "ملف الإنجاز",            en: "My Portfolio",            step: 6, status: "build", href: "portfolio.html" },
     { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" },
     { id: "logic",      ar: "معمل التصميم المنطقي",   en: "Logic Design Lab",        step: 6, status: "build", href: "logic.html" },
-    { id: "lab2",       ar: "معمل الدوائر 2",         en: "Circuits 2 Lab",          step: 3, status: "build", href: "lab2.html" }
+    { id: "lab2",       ar: "معمل الدوائر 2",         en: "Circuits 2 Lab",          step: 3, status: "build", href: "lab2.html" },
+    { id: "matlab",     ar: "MATLAB",                 en: "MATLAB",                  step: 3, status: "build", href: "matlab.html" }
   ];
 
   var statusLabel = { ok: "متاح", build: "متاح جزئيًا", plan: "مخطط" };

@@ -689,3 +689,22 @@ html.bi-solo .bi-s { display: none !important; }
 /* pinned reference drawing: top-right of the work area, clear of the sidebar (which sits on the right in Arabic) */
 @media (min-width: 901px) { html[dir="rtl"] .lg-ref, html:not([dir]) .lg-ref { right: calc(268px + 14px); } }
 html.wb-lock .lg-ref { right: calc(env(safe-area-inset-right, 0px) + 14px) !important; }
+
+/* ---------- MATLAB scripts (matlab-view.js) ---------- */
+.ml-box { display: grid; gap: 14px; }
+.ml-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ml-head > div { display: grid; gap: 2px; }
+.ml-sec { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); min-width: 0; }
+.ml-sec.ml-proj { border-color: color-mix(in srgb, var(--orange, #ff8a3d) 55%, transparent); background: color-mix(in srgb, var(--orange, #ff8a3d) 6%, var(--surface)); }
+.ml-sh b { font-size: 15px; }
+.ml-k2 { font-family: var(--font-mono); font-size: 12px; color: #2e8b57; background: color-mix(in srgb, #2e8b57 12%, transparent); padding: 2px 7px; border-radius: 6px; }
+.ml-proj .ml-k2 { color: #c15b12; background: color-mix(in srgb, #ff8a3d 16%, transparent); }
+.ml-ar p { margin: 0 0 4px; line-height: 1.75; }
+.ml-code { margin: 0; padding: 12px 14px; background: #fbfbf9; color: #1d1d1b; border: 1px solid #e3e3dc; border-radius: 10px; overflow-x: auto; font: 13px/1.6 var(--font-mono); text-align: left; tab-size: 4; }
+.ml-c { color: #228b22; } .ml-s { color: #a020f0; } .ml-k { color: #0e00ff; } .ml-n { color: #b5651d; }
+.ml-cw { border: 1px solid #d9d9d2; border-radius: 10px; overflow: hidden; text-align: left; }
+.ml-cwh { display: block; padding: 4px 10px; font: 11.5px var(--font-mono); background: #ececE6; color: #555; border-bottom: 1px solid #d9d9d2; }
+.ml-cw pre { margin: 0; padding: 10px 12px; background: #fff; color: #111; font: 13px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+.ml-fig { margin: 0; } .ml-fig img { width: 100%; max-width: 760px; height: auto; display: block; margin: 0 auto; border: 1px solid #e3e3dc; border-radius: 8px; background: #fff; }
+[data-theme="dark"] .ml-code { background: #1e1e1e; color: #e6e6e6; border-color: #333; } [data-theme="dark"] .ml-c { color: #6a9955; } [data-theme="dark"] .ml-s { color: #ce9178; } [data-theme="dark"] .ml-k { color: #569cd6; } [data-theme="dark"] .ml-n { color: #b5cea8; }
+.crumbs { font-size: 13px; color: var(--fg-3); display: flex; gap: 8px; flex-wrap: wrap; }

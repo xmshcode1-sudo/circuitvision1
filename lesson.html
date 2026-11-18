@@ -209,6 +209,8 @@
 <script src="c2-ch2.js"></script>
 <script src="c2-ch3.js"></script>
 <script src="ss-video-durations.js"></script>
+<script src="matlab-index.js"></script>
+<script src="matlab-view.js"></script>
 <script src="summaries.js"></script><script src="visuals.js"></script>
 <script>
   function labCard(L) {
@@ -327,7 +329,8 @@
     }
     if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, short(byId.realworld, SUM)); toc.push(["realworld", "في الواقع"]); }
 
-    body += sec("matlab", "الدرس في MATLAB", "MATLAB",
+    var mlId = "ml-" + L.id, hasMl = CV.matlabIndex && CV.matlabIndex[mlId];
+    body += sec("matlab", "الدرس في MATLAB", "MATLAB", hasMl ? '<div id="ml-slot" data-id="' + mlId + '"></div>' :
       '<div class="pending"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></span><p><b>قيد الإعداد</b>لكل درس سكربت MATLAB يحل مثال الدرس ويرسم نتائجه، تشغّله وتعدّل قيمه بنفسك. يُضاف هنا عند إعداده.</p></div>');
     toc.push(["matlab", "MATLAB"]);
 
@@ -357,6 +360,11 @@
       '</div></div>';
 
     if (CV.sigWidgets) CV.sigWidgets.mountAll(root);
+    var mlSlot = document.getElementById("ml-slot");
+    if (mlSlot && CV.mlView) {   // load the MATLAB script only when its section comes near the screen
+      var go = function () { if (mlSlot.dataset.done) return; mlSlot.dataset.done = 1; CV.mlView.load(mlSlot.dataset.id, mlSlot); };
+      if ("IntersectionObserver" in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); go(); } }, { rootMargin: "600px" }); io.observe(mlSlot); } else go();
+    }
     var curChap = root.querySelector(".chap.cur"), chapsRow = root.querySelector(".chaps");
     if (curChap && chapsRow) chapsRow.scrollLeft += curChap.getBoundingClientRect().left - chapsRow.getBoundingClientRect().left - (chapsRow.clientWidth - curChap.offsetWidth) / 2;
 
