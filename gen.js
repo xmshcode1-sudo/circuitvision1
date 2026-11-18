@@ -307,7 +307,7 @@
   /* ================= Equivalent resistance ================= */
   /* Port element "T": two open terminals a (the edge's a-end) and b. */
   function reqValue(c) {
-    var copy = { rows: c.rows, cols: c.cols, edges: c.edges.map(function (e) {
+    var copy = { rows: c.rows, cols: c.cols, ground: c.ground, edges: c.edges.map(function (e) {
       if (e.type !== "T") return e;
       return { a: e.a, b: e.b, type: "I", value: 1, dir: "ba", name: "__port" }; // 1 A into terminal a
     }) };
@@ -381,7 +381,7 @@
       var fam = R.pick(opts.families || ["ladder", "grid"]);
       var c = FAMILIES[fam](R, {});
       c.edges.forEach(function (e) { if (e.type !== "R" && e.type !== "W") { e.type = "R"; e.value = R.pick(RV); delete e.plus; delete e.dir; } });
-      var lefts = c.edges.filter(function (e) { return !e.h && e.a[1] === 0; });
+      var lefts = c.shape ? c.edges.filter(function (e) { return e.port; }) : c.edges.filter(function (e) { return !e.h && e.a[1] === 0; });
       var port = R.pick(lefts); port.type = "T"; delete port.value;
       nameAll(c);
       var nRes = c.edges.filter(function (e) { return e.type === "R"; }).length;
@@ -421,7 +421,8 @@
       if (g.acq) return root.CV.ac.steps(g);
       if (g.analysis) return root.CV.analysis.steps(g);
       if (g.question.kind === "Req") return g.reduction.steps.concat(["<b>النتيجة:</b> <span class='eq-i'>R<sub>ab</sub> = " + CV.num(g.question.value) + " Ω</span>"]);
+      if (g.circuit.shape || g.custom) return root.CV.shapes ? root.CV.shapes.steps(g) : null;
       return steps(g);
     }, reduce: reduce, reqValue: reqValue, rng: rng, FAMILIES: Object.keys(FAMILIES),
-    _internal: { FAMILIES: FAMILIES, nameAll: nameAll, makeDependent: makeDependent, clean: clean, nice: nice, addSource: addSource, RV: RV } };
+    _internal: { FAMILIES: FAMILIES, finalLine: finalLine, nameAll: nameAll, makeDependent: makeDependent, clean: clean, nice: nice, addSource: addSource, RV: RV } };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -604,7 +604,7 @@
     if (!c) return null;
     var MNA = CV.mna, A = CV.analysis, ac = !!c.omega, AC = CV.ac;
     if (ac && !AC) return null;
-    var copy = function (keep) { return { rows: c.rows, cols: c.cols, ground: c.ground, omega: c.omega, edges: c.edges.filter(keep).map(function (e) { return Object.assign({}, e); }) }; };
+    var copy = function (keep) { return { rows: c.rows, cols: c.cols, ground: c.ground, omega: c.omega, shape: c.shape, center: c.center, embed: c.embed, meshes: c.meshes, edges: c.edges.filter(keep).map(function (e) { return Object.assign({}, e); }) }; };
     var port = c.edges.filter(function (e) { return e.type === "T"; })[0], open = port ? copy(function (e) { return e.type !== "T"; }) : c;
     var sol = null; try { var so = ac ? AC.solve(open) : MNA.solve(open); if (so.ok) sol = so; } catch (e) { sol = null; }
     var P = {};

@@ -23,28 +23,34 @@
   .fam .thumb .sc-name, .fam .thumb .sc-val { display: none; }
   .fam b { font-family: var(--font-display); font-size: 15px; }
   .fam span { font-size: 12.5px; color: var(--fg-3); }
+  .shp { display: grid; gap: 12px; } .shp-h { display: grid; gap: 4px; } .shp-h h2 { font-size: 19px; }
+  .fams-shp { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .fams-shp .fam .thumb { height: 104px; } .fams-shp .fam .thumb .sc { max-height: 94px; }
+  .fams-shp .fam .sc-sign, .fams-shp .fam .sc-ilbl, .fams-shp .fam .sc-vpol { display: none; }
+  .dz { display: grid; gap: 12px; }
+  .dz-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .dz-top .field { min-width: 200px; }
+  .dz-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dz-tool { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-soft); background: var(--surface-2); color: var(--fg); cursor: pointer; font: inherit; font-size: 14px; min-height: 40px; }
+  .dz-tool[aria-pressed="true"] { border-color: var(--blue); background: var(--blue-soft); color: var(--fg); }
+  .dz-help { margin: 0; font-size: 13px; }
+  .dz-fig { background: var(--bg-2); border-radius: 12px; padding: 8px; overflow-x: auto; }
+  .dz-fig .sc { width: 100%; height: auto; max-width: 760px; display: block; margin-inline: auto; touch-action: manipulation; }
+  .dz-empty { stroke: var(--fg-3); stroke-width: 1.4; stroke-dasharray: 5 6; opacity: .55; }
+  .dz-hit { stroke: transparent; stroke-width: 26; cursor: pointer; pointer-events: stroke; }
+  .dz-hit:hover { stroke: rgba(63, 182, 255, .14); }
+  .dz-sel { stroke: var(--blue); stroke-width: 10; opacity: .28; stroke-linecap: round; } .dz-sel.dz-badl { stroke: var(--orange); }
+  .dz-pt { fill: var(--fg-3); opacity: .6; }
+  .dz-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); }
+  .dz-val { display: flex; gap: 6px; align-items: center; } .dz-val .input { width: 7em; }
+  .dz-status { margin: 0; font-size: 14px; } .dz-status.ok { color: var(--ok, #22c55e); } .dz-status.warn { color: var(--orange); }
+  .dz-ask { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } .dz-ask .field { min-width: 240px; }
+  .dz-ex { border-top: 1px solid var(--line-soft); padding-top: 14px; }
   .work { padding: 20px 22px; display: grid; gap: 14px; }
   .work h2 { font-size: 19px; }
   .stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--fg-2); }
   .stats b { font-family: var(--font-mono); color: var(--fg); }
-  .how { padding: 18px 22px; display: grid; gap: 8px; }
-  .how h2 { font-size: 17px; }
-  .how ol { margin: 0; padding-inline-start: 20px; color: var(--fg-2); display: grid; gap: 6px; }
   @media (max-width: 900px) { .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } .fams { grid-template-columns: repeat(2, minmax(0, 1fr)); } .work { padding: 16px; } }
   .adv { display: grid; gap: 14px; } .adv-h { display: grid; gap: 6px; } .adv-h h2 { font-size: 19px; }
-  .cp-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-  .cp-dep { display: flex; gap: 6px; align-items: center; font-size: 14px; }
-  .cp-fig { overflow-x: auto; } .cp-fig svg { max-width: 560px; width: 100%; height: auto; display: block; margin-inline: auto; }
-  .cp-parts { display: grid; gap: 12px; margin: 0; padding-inline-start: 22px; }
-  .cp-part { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); }
-  .cp-part.done { border-color: var(--ok, #22c55e); }
-  .cp-q { margin: 0; }
-  .cp-reqs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
-  .cp-req { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line-soft); color: var(--glow); text-decoration: none; }
-  .cp-req:hover { border-color: var(--blue); }
-  .cp-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .cp-form .input { width: 9em; } .cp-form .select { width: auto; }
-  .cp-fb { margin: 0; font-size: 13.5px; } .cp-fb.ok { color: var(--ok, #22c55e); } .cp-fb.bad { color: var(--orange); } .cp-fb.hint { color: var(--fg-2); }
-  .cp-end { display: grid; gap: 10px; justify-items: start; } .cp-solution { display: grid; gap: 8px; width: 100%; }
 </style>
 </head>
 <body>
@@ -78,26 +84,22 @@
       <div class="fams" id="fams"></div>
     </section>
 
+    <section class="shp" aria-labelledby="shp-h">
+      <div class="shp-h"><h2 id="shp-h">أشكال متقدمة</h2><p class="muted">مضلعات ودوائر وعجلات ومكعب: من حلقة واحدة حتى 6 حلقات. اختر شكلًا ليولّد المحرك عليه دائرة جديدة في كل مرة، بعناصر وقيم مختلفة، محلولة ومتحقق منها قبل عرضها.</p></div>
+      <div class="fams fams-shp" id="fams-shp"></div>
+    </section>
+
     <section class="work card">
       <div class="sec-title" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline"><h2>تمرين</h2><div class="stats"><span>حللت في هذه الجلسة: <b id="st-session">0</b></span><span>كل التمارين المولّدة المحلولة: <b id="st-all">0</b></span></div></div>
       <div id="gen"></div>
     </section>
 
-    <section class="work card adv" id="advanced" aria-labelledby="adv-h">
-      <div class="adv-h"><span class="eyebrow">المستوى المتقدم</span><h2 id="adv-h">مسائل مركّبة: أكثر من متطلب على نفس الدائرة</h2>
-      <p class="muted">كل مسألة دائرة واحدة وعدة أجزاء، وكل جزء يحتاج درسًا مختلفًا: قانونا كيرشوف وطرق التحليل، قانون أوم، اصطلاح الإشارة، توازن القدرة، والمصادر التابعة. تحت كل جزء الدروس التي يعتمد عليها. كل القيم من محرك الحل.</p></div>
-      <div id="compound"></div>
+    <section class="work card" id="design" aria-labelledby="dz-h">
+      <div class="adv-h"><span class="eyebrow">تمرين من تصميمك</span><h2 id="dz-h">صمّم دائرتك</h2>
+      <p class="muted">ارسم دائرة بنفسك: مقاومات ومصادر وأسلاك على شبكة أو على أي شكل، ثم اختر ما تريد حسابه. المحرك يتأكد أن دائرتك صحيحة ويحلها، ثم تحلها أنت ويصحح إجابتك وخطواتك.</p></div>
+      <div id="designer"></div>
     </section>
 
-    <section class="how card">
-      <h2>كيف يعمل المولّد؟</h2>
-      <ol>
-        <li>يختار شكلًا للدائرة: حلقة واحدة، أو عناصر على التوازي، أو سُلّم، أو شبكة 3×3 يحذف منها فروعًا عشوائيًا فينتج أشكالًا مثل الجسر وحرف L.</li>
-        <li>يضع المقاومات والمصادر وقيمها، ويمكنه تحويل أحد المصادر إلى مصدر تابع من الأنواع الأربعة.</li>
-        <li>يحل الدائرة بطريقة <span class="ltr">Modified Nodal Analysis</span>، ويرفضها إذا كانت غير صحيحة (مصدرا جهد مختلفان على التوازي، عنصر مقصور، فرع معلّق) أو إذا لم يتحقق توازن القدرة.</li>
-        <li>يفضّل الدوائر التي تخرج إجاباتها أرقامًا نظيفة، لأنك تحلها بيدك.</li>
-      </ol>
-    </section>
   </main>
 </div>
 
@@ -113,11 +115,12 @@
 <script src="mna.js"></script>
 <script src="draw.js"></script>
 <script src="gen.js"></script>
+<script src="shapes.js"></script>
 <script src="analysis.js"></script>
 <script src="ac.js"></script>
 <script src="mathcheck.js"></script>
 <script src="workspace.js"></script><script src="stepcheck.js"></script>
-<script src="practice.js"></script><script src="compound.js"></script>
+<script src="practice.js"></script><script src="designer.js"></script>
 <script>
 (function () {
   "use strict";
@@ -133,28 +136,30 @@
     document.getElementById("st-session").textContent = sessionCount;
     document.getElementById("st-all").textContent = Object.keys(CV.store.get().questions).filter(function (k) { return k.indexOf("gen-") === 0; }).length;
   }
-  var widget = CV.practice.mount(document.getElementById("gen"), { controls: true, families: ["loop", "pair", "ladder", "grid"], onSolved: function () { sessionCount++; counts(); } });
+  var widget = CV.practice.mount(document.getElementById("gen"), { controls: true, families: ["loop", "pair", "ladder", "grid"].concat(CV.shapes.LIST), onSolved: function () { sessionCount++; counts(); } });
   var famSel = document.querySelector("#gen select");
-  var fams = document.getElementById("fams");
+  var fams = document.getElementById("fams"), famsShp = document.getElementById("fams-shp");
+  CV.shapes.LIST.forEach(function (id) { var n = CV.shapes.meshesOf(id); info[id] = [CV.shapes.name(id), n === 1 ? "حلقة واحدة" : n === 2 ? "حلقتان" : n + " حلقات"]; });
   Object.keys(info).forEach(function (f, i) {
     var g = CV.gen.generate({ seed: 4100 + i * 13, families: [f], types: ["iR"] });
+    if (!g) return;
     g.circuit.edges.forEach(function (e) { delete e.asked; });
     var b = document.createElement("button");
     b.type = "button"; b.className = "fam"; b.setAttribute("aria-pressed", "false"); b.dataset.f = f;
     b.innerHTML = '<div class="thumb">' + CV.draw.render(g.circuit, { aria: "مثال لشكل " + info[f][0] }) + '</div><b>' + info[f][0] + '</b><span>' + info[f][1] + '</span>';
     b.addEventListener("click", function () {
       var on = b.getAttribute("aria-pressed") !== "true";
-      fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+      document.querySelectorAll(".fams .fam").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
       b.setAttribute("aria-pressed", on ? "true" : "false");
       famSel.value = on ? f : "auto";
       famSel.dispatchEvent(new Event("change"));
       document.getElementById("gen").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    fams.appendChild(b);
+    (CV.shapes.SHAPES[f] ? famsShp : fams).appendChild(b);
   });
-  famSel.addEventListener("change", function () { fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
+  famSel.addEventListener("change", function () { document.querySelectorAll(".fams .fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
   counts();
-  CV.compound.mount(document.getElementById("compound"));
+  CV.designer.mount(document.getElementById("designer"), { fromGen: function () { return widget.state.gen; } });
 })();
 </script>
 <script src="calc.js"></script>
