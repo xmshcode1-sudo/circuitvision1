@@ -13,23 +13,10 @@
 
   /* ---------- Main ---------- */
   .main { min-width: 0; padding-block: 24px 48px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; align-content: start; max-width: 1180px; width: 100%; }
-  .greet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 20px; align-items: center; }
+  .greet { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: center; }
   .greet h1 { font-size: clamp(24px, 3vw, 30px); }
   .greet p { color: var(--fg-2); margin-top: 4px; }
-  .overall { padding: 16px 18px; display: grid; gap: 8px; }
-  .overall .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; color: var(--fg-2); gap: 8px; }
-  .overall .row b { font-family: var(--font-mono); color: var(--fg); font-size: 15px; }
 
-  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-  .tile { padding: 16px 18px; display: flex; gap: 14px; align-items: center; min-width: 0; }
-  .tile .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; }
-  .tile .ic svg { width: 22px; height: 22px; }
-  .tile small { display: block; color: var(--fg-2); font-size: 13px; }
-  .tile b { font-family: var(--font-mono); font-size: 22px; font-weight: 500; direction: ltr; display: inline-block; }
-  .tile .hint { display: block; font-size: 12px; color: var(--fg-3); }
-  .ic-blue { background: var(--blue-soft); color: var(--glow); }
-  .ic-ok { background: var(--ok-soft); color: var(--ok); }
-  .ic-or { background: var(--orange-soft); color: var(--orange); }
 
   .sec-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
   .sec-title h2 { font-size: 20px; }
@@ -94,7 +81,6 @@
     .greet { grid-template-columns: 1fr; }
     .main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   }
-  @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -125,17 +111,6 @@
         <h1 id="greet-title">أهلًا بك</h1>
         <p id="greet-sub">لوحتك تعرض تقدّمك الحقيقي فقط، وتبدأ من الصفر.</p>
       </div>
-      <div class="overall card">
-        <div class="row"><span>التقدم الكلي</span><b id="overall-pct">—</b></div>
-        <div class="bar"><span id="overall-bar" style="width:0%"></span></div>
-        <span class="note" id="overall-note"></span>
-      </div>
-    </section>
-
-    <section class="tiles" aria-label="ملخص التقدم">
-      <div class="tile card"><span class="ic ic-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><div><small>الدروس المكتملة</small><b id="t-lessons">0</b><span class="hint" id="t-lessons-h"></span></div></div>
-      <div class="tile card"><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg></span><div><small>الأسئلة المحلولة</small><b id="t-questions">0</b><span class="hint">من <a href="practice.html" style="text-decoration:underline">مولّد التمارين</a> و<a href="bank.html" style="text-decoration:underline">بنك الأسئلة</a></span></div></div>
-      <div class="tile card"><span class="ic ic-or"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/></svg></span><div><small>المشاريع المنجزة</small><b id="t-projects">0</b><span class="hint">من <a href="academy.html" style="text-decoration:underline">أكاديمية المشاريع</a></span></div></div>
     </section>
 
     <section style="display:grid; gap:14px">
@@ -243,20 +218,10 @@
     $("greet-title").textContent = name ? "أهلًا، " + name : "أهلًا بك";
     var ov = S.overall(CV.courses, d);
     if (ov.pct === null) {
-      $("overall-pct").textContent = "—";
-      $("overall-bar").style.width = "0%";
-      $("overall-note").textContent = "لا توجد دروس منشورة بعد. يبدأ الحساب مع أول درس في الخطوة 2.";
       $("greet-sub").textContent = "حسابك جاهز. الدروس الأولى قيد الإعداد، وسيظهر تقدمك هنا بمجرد نشرها.";
     } else {
-      $("overall-pct").textContent = ov.pct + "%";
-      $("overall-bar").style.width = ov.pct + "%";
-      $("overall-note").textContent = ov.done + " من " + ov.total + " دروس متاحة";
       $("greet-sub").textContent = "واصل من حيث توقفت.";
     }
-    $("t-lessons").textContent = ov.total ? ov.done + " / " + ov.total : "0";
-    $("t-lessons-h").textContent = ov.total ? "من الدروس المتاحة" : "تُنشر الدروس في الخطوة 2";
-    $("t-questions").textContent = Object.keys(d.questions).length;
-    $("t-projects").textContent = Object.keys(d.projects).filter(function (k) { return d.projects[k].completedAt; }).length;
 
     // Courses
     var host = $("courses"); host.innerHTML = "";
