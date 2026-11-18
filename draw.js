@@ -202,12 +202,15 @@
     // Mesh currents: clockwise arrows in the centre of each mesh
     (c.meshLabels || []).forEach(function (m) {
       var p0 = pt(m.at), cx = p0[0] + GAP_X * 0.7, cy = p0[1] + GAP_Y / 2 - 4, r = 20, asked = c.askedMesh === m.name;
+      if (c.shape) { cx = p0[0]; cy = p0[1]; } // shapes give the face centre itself
+      var mir = c.shape && m.ccw ? function (q) { return [2 * cx - q[0], q[1]]; } : function (q) { return q; }; // counter-clockwise: mirror the arrow
       var a0 = -Math.PI * 0.85, a1 = Math.PI * 0.55;
       var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
-      out.push('<path class="sc-mesh' + (asked ? " on" : "") + '" d="M' + f(x0) + ' ' + f(y0) + ' A' + r + ' ' + r + ' 0 1 1 ' + f(x1) + ' ' + f(y1) + '"/>');
+      var s0 = mir([x0, y0]), s1 = mir([x1, y1]);
+      out.push('<path class="sc-mesh' + (asked ? " on" : "") + '" d="M' + f(s0[0]) + ' ' + f(s0[1]) + ' A' + r + ' ' + r + ' 0 1 ' + (c.shape && m.ccw ? 0 : 1) + ' ' + f(s1[0]) + ' ' + f(s1[1]) + '"/>');
       var tx = -Math.sin(a1), ty = Math.cos(a1); // clockwise tangent (SVG y down)
       var tip = [x1 + tx * 7, y1 + ty * 7], bl = [x1 - tx * 2 + Math.cos(a1) * 5, y1 - ty * 2 + Math.sin(a1) * 5], br = [x1 - tx * 2 - Math.cos(a1) * 5, y1 - ty * 2 - Math.sin(a1) * 5];
-      out.push('<polygon class="sc-mesh-h' + (asked ? " on" : "") + '" points="' + [tip, bl, br].map(function (q) { return f(q[0]) + "," + f(q[1]); }).join(" ") + '"/>');
+      out.push('<polygon class="sc-mesh-h' + (asked ? " on" : "") + '" points="' + [tip, bl, br].map(mir).map(function (q) { return f(q[0]) + "," + f(q[1]); }).join(" ") + '"/>');
       labels.push('<text class="sc-ndl' + (asked ? " on" : "") + '" x="' + f(cx) + '" y="' + f(cy + 5) + '" text-anchor="middle">' + m.text + '</text>');
     });
     Object.keys(deg).forEach(function (k) {

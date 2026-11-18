@@ -1,7 +1,7 @@
 /* Generator shapes: every shape must give valid, solvable circuits whose drawing shows exactly
    the circuit's independent loops, with clean SVG (no NaN), for element, dependent-source and Req questions. */
 const path = require("path"), R = path.join(__dirname, "..");
-["draw.js", "mna.js", "gen.js", "analysis.js", "shapes.js"].forEach((f) => require(path.join(R, f)));
+["draw.js", "mna.js", "gen.js", "analysis.js", "ac.js", "mathcheck.js", "stepcheck.js", "shapes.js"].forEach((f) => require(path.join(R, f)));
 const CV = globalThis.CV, S = CV.shapes;
 let fail = 0, total = 0;
 const bad = (m) => { fail++; console.error("✗ " + m); };
@@ -24,6 +24,13 @@ S.LIST.forEach((id) => {
       if (!st || st.length < 3) bad(id + " seed " + s + ": no KVL steps");
       // the loop current in the steps must be the solver's
     }
+    // mesh currents (clockwise) must rebuild every branch current: i_ab = I(p) − I(m)
+    const M = CV.analysis.meshes(c, sol);
+    if (!M || M.length !== c.meshes) bad(id + " seed " + s + ": meshes " + (M && M.length));
+    else {
+      const by = {}; M.forEach((m) => (by[m.name] = m.value));
+      M.edgeFaces.forEach((x) => { const it = sol.elements.find((t) => t.edge === x.e); const ib = (x.p ? by[x.p] : 0) - (x.m ? by[x.m] : 0); if (it && Math.abs(it.i - ib) > 1e-6 * (1 + Math.abs(ib))) bad(id + " seed " + s + ": mesh currents do not give " + x.e.name); });
+    }
     ok++;
     if (S.meshesOf(id) >= 2) {
       const d = CV.gen.generate({ seed: s * 101, families: [id], dependent: true });
@@ -40,5 +47,19 @@ S.LIST.forEach((id) => {
   console.log((id + "            ").slice(0, 12), "loops", S.meshesOf(id), " circuits", ok, " dependent", dep, " Req", req);
   if (S.meshesOf(id) >= 2 && dep < 20) bad(id + ": too few dependent-source circuits (" + dep + ")");
 });
+/* node-voltage, mesh-current, Thévenin and superposition questions work on every multi-loop shape */
+S.LIST.filter((id) => S.meshesOf(id) >= 2).forEach((id) => ["vN", "iM", "Vth", "Rth", "sup"].forEach((k) => {
+  let n = 0; for (let s = 1; s <= 6; s++) { const g = CV.gen.generate({ seed: s * 53, kinds: [k], kind: k, families: [id] }); if (g && !/NaN|undefined/.test(CV.draw.render(g.circuit))) n++; }
+  if (n < 5) bad(id + " " + k + ": only " + n + "/6");
+}));
+
+/* the written solution is checked line by line on shapes too (house, seed 11: R1 = 40 Ω in the roof, Vs = 6 V in the ceiling) */
+{
+  const g = CV.gen.generate({ seed: 11, families: ["house"] }), ctx = CV.stepcheck.contextFor(g.circuit);
+  const L = ["40*i1 - 6 = 0", "i1 = 0.15", "6 + 4*i2 + 24*i2 + 20*i2 = 0", "40*i1 + 6 = 0", "6 + 4*i2 + 20*i2 = 0"], want = ["ok", "ok", "ok", "err", "err"];
+  const r = CV.stepcheck.check(L.join("\n"), ctx);
+  r.lines.forEach((l, i) => { if (l.status !== want[i]) bad("step check '" + L[i] + "': " + l.status + " ≠ " + want[i]); });
+  if (!/R4/.test(String(r.lines[4].msg || "").replace(/<[^>]+>/g, ""))) bad("step check did not name the missing R4");
+}
 if (fail) { console.error(fail + " problems"); process.exit(1); }
 console.log("shapes: " + total + " circuits checked ✓");

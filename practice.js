@@ -157,7 +157,7 @@
       var tsel = cfg.controls ? $("#" + uid + "-type").value : "";
       var ackinds = cfg.ackinds || ({ acI: ["acI"], acV: ["acV"], acZ: ["acZ"], acVN: ["acVN"], acIM: ["acIM"], acTh: ["acVth", "acZth"], acPow: ["acP", "acQ", "acS"], acPmax: ["acPmax"] })[tsel];
       var akinds = ackinds ? null : cfg.kinds || ({ vN: ["vN"], iM: ["iM"], thev: ["Vth", "Rth", "In"], Pmax: ["Pmax"], sup: ["sup"] })[tsel];
-      if (akinds) { req = false; fams = fams.filter(function (f) { return f === "ladder" || f === "grid"; }); if (!fams.length) fams = ["ladder", "grid"]; if (akinds.length === 1 && akinds[0] === "sup") dep = false; }
+      if (akinds) { req = false; fams = fams.filter(MULTI); if (!fams.length) fams = ["ladder", "grid"]; if (akinds.length === 1 && akinds[0] === "sup") dep = false; }
       if (ackinds) { req = false; fams = fams.filter(function (f) { return !SHP(f); }); if (cfg.controls) fams = fams.filter(function (f) { return f !== "pair"; }); if (!fams.length) fams = ["loop", "ladder", "grid"]; }
       var g = ackinds ? G.generate({ seed: seed, ac: true, kinds: ackinds, kind: ackinds[0], families: cfg.controls && $("#" + uid + "-fam").value === "auto" && !want ? ["loop", "ladder", "grid"] : fams, dependent: dep })
             : akinds ? G.generate({ seed: seed, kinds: akinds, kind: akinds[0], families: fams, dependent: dep })
