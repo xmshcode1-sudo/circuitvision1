@@ -35,6 +35,7 @@
 
   /* ---------- meshes ---------- */
   function meshes(c, sol) {
+    if (c.shape) return null; // free-form shapes (polygons, wheels, cube): windows are not grid cells
     var R = c.rows, C = c.cols, has = {};
     c.edges.forEach(function (e) { has[key(e.a) + "|" + key(e.b)] = e; });
     function edgeAt(a, b) { return has[key(a) + "|" + key(b)]; }
