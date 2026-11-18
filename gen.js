@@ -421,7 +421,7 @@
       if (g.acq) return root.CV.ac.steps(g);
       if (g.analysis) return root.CV.analysis.steps(g);
       if (g.question.kind === "Req") return g.reduction.steps.concat(["<b>النتيجة:</b> <span class='eq-i'>R<sub>ab</sub> = " + CV.num(g.question.value) + " Ω</span>"]);
-      if (g.circuit.shape) return root.CV.shapes ? root.CV.shapes.steps(g) : null;
+      if (g.circuit.shape || g.custom) return root.CV.shapes ? root.CV.shapes.steps(g) : null;
       return steps(g);
     }, reduce: reduce, reqValue: reqValue, rng: rng, FAMILIES: Object.keys(FAMILIES),
     _internal: { FAMILIES: FAMILIES, finalLine: finalLine, nameAll: nameAll, makeDependent: makeDependent, clean: clean, nice: nice, addSource: addSource, RV: RV } };

@@ -172,10 +172,12 @@
   function steps(gen) {
     var c = gen.circuit, sol = gen.solution, q = gen.question, fmt = CV.fmt;
     if (c.meshes !== 1 || q.kind === "Req" || c.edges.some(function (e) { return /^(CC|VC)/.test(e.type); })) return null;
-    var adj = {};
-    c.edges.forEach(function (e) { (adj[K(e.a)] = adj[K(e.a)] || []).push(e); (adj[K(e.b)] = adj[K(e.b)] || []).push(e); });
-    var seq = [], cur = c.edges[0].a, prev = null, area = 0;
-    for (var s = 0; s < c.edges.length; s++) {
+    var adj = {}, ring = c.edges.filter(function (e) { return e.type !== "T"; });
+    if (!ring.length) return null;
+    ring.forEach(function (e) { (adj[K(e.a)] = adj[K(e.a)] || []).push(e); (adj[K(e.b)] = adj[K(e.b)] || []).push(e); });
+    var seq = [], cur = ring[0].a, prev = null, area = 0;
+    for (var s = 0; s < ring.length; s++) {
+      if (adj[K(cur)].length !== 2) return null; // a stub or a junction: not a plain ring
       var e = adj[K(cur)].filter(function (x) { return x !== prev; })[0];
       if (!e) return null;
       var along = K(e.a) === K(cur), nxt = along ? e.b : e.a;
@@ -185,7 +187,7 @@
     if (area < 0) seq.forEach(function (x) { x.along = !x.along; });
     var cw = seq.filter(function (x) { return x.e.type !== "W"; });
     var iCW = cw.filter(function (x) { return x.e.type === "R"; }).map(function (x) { return x.along ? sol.byName[x.e.name].i : -sol.byName[x.e.name].i; })[0];
-    var lines = ["الدائرة حلقة واحدة مهما كان شكلها (" + SHAPES[c.shape].ar + ")، فكل العناصر يمر بها <b>نفس التيار</b>. نفرض تيار الحلقة <span class='eq-i'>i</span> مع عقارب الساعة."];
+    var lines = [(c.shape ? "الدائرة حلقة واحدة مهما كان شكلها (" + SHAPES[c.shape].ar + ")" : "الدائرة حلقة واحدة") + "، فكل العناصر يمر بها <b>نفس التيار</b>. نفرض تيار الحلقة <span class='eq-i'>i</span> مع عقارب الساعة."];
     var hasI = c.edges.filter(function (e) { return e.type === "I"; });
     if (hasI.length) lines.push("مصدر التيار <span class='ltr'>" + hasI[0].name + "</span> يفرض تيار الحلقة مباشرة: <span class='eq-i'>i = " + fmt(iCW, "A") + "</span> (بإشارة حسب اتجاه سهمه مقارنة بعقارب الساعة).");
     else {

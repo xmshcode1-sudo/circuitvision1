@@ -167,9 +167,14 @@
       if (!want && g && nLoops < 1 && quiet) return false;   // the drawing must show exactly the circuit's independent loops
       if (want && (!g || nLoops !== want)) { if (quiet) return false; $(".gp-q").textContent = want === 1 && (akinds || ackinds || req) ? "هذا النوع من الأسئلة يحتاج حلقتين على الأقل. اختر عددًا أكبر." : "تعذّر توليد دائرة بهذا العدد من الحلقات مع هذه الإعدادات. جرّب إعدادات أخرى."; return false; }
       if (!g) { $(".gp-q").textContent = "تعذّر توليد دائرة بهذه الإعدادات. جرّب إعدادات أخرى."; return; }
+      return present(g, { nLoops: nLoops, ackinds: ackinds, akinds: akinds, req: req, dep: dep });
+    }
+    /* show one exercise (generated, or designed by the student: g.custom) */
+    function present(g, M) {
+      var nLoops = M.nLoops, ackinds = M.ackinds, akinds = M.akinds, req = M.req, dep = M.dep;
       state.gen = g; state.wrong = 0; state.hints = 0; root.cvGen = g; // read by tests
       var LW = { 1: "حلقة واحدة", 2: "حلقتان", 3: "3 حلقات", 4: "4 حلقات", 5: "5 حلقات", 6: "6 حلقات" };
-      $(".gp-tag").innerHTML = "دائرة رقم <span class='ltr mono'>" + g.seed + "</span> · " + (g.circuit.shape ? FAM_AR[g.family] + " · " : "") + (LW[nLoops] || FAM_AR[g.family]) + (ackinds ? " · تيار متردد" : akinds ? (dep ? " · مصدر تابع" : "") : req ? " · مقاومة مكافئة" + (g.reduction.usedDY ? " (تحتاج Δ-Y)" : "") : dep ? " · مصدر تابع" : "");
+      $(".gp-tag").innerHTML = g.custom ? "دائرتك أنت" + (LW[nLoops] ? " · " + LW[nLoops] : "") + (req ? " · مقاومة مكافئة" : "") : "دائرة رقم <span class='ltr mono'>" + g.seed + "</span> · " + (g.circuit.shape ? FAM_AR[g.family] + " · " : "") + (LW[nLoops] || FAM_AR[g.family]) + (ackinds ? " · تيار متردد" : akinds ? (dep ? " · مصدر تابع" : "") : req ? " · مقاومة مكافئة" + (g.reduction.usedDY ? " (تحتاج Δ-Y)" : "") : dep ? " · مصدر تابع" : "");
       $(".gp-fig").innerHTML = CV.draw.render(g.circuit, { aria: "دائرة مولّدة: " + FAM_AR[g.family] });
       $(".gp-q").innerHTML = questionText(g.question, g);
       var SYM = { vN: (g.question.label || "v") + " =", iM: (g.question.label || "i") + " =", Vth: "VTh =", Rth: "RTh =", In: "IN =", Pmax: "pmax =", acP: "P =", acQ: "Q =", acPmax: "Pmax =", sup: (g.question.q === "i" ? "i" : "v") + "(" + g.question.src + ") =" };
@@ -271,8 +276,8 @@
       if (state.wrong >= 3 && !cfg.noSolution) $(".gp-sol").hidden = false;
     });
 
-    next(cfg.seed);
-    return { next: next, state: state };
+    if (!cfg.custom) next(cfg.seed);
+    return { next: next, state: state, show: function (g) { root.hidden = false; return present(g, { nLoops: g.loops, req: g.question.kind === "Req" }); } };
   }
 
   window.CV = window.CV || {};
