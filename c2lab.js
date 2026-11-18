@@ -245,7 +245,7 @@
             var max = -1e9; r.pts.forEach(function (q) { if (q[0] < r.T / 2) max = Math.max(max, q[1]); });
             var span = Math.min(r.T / 2, 120e-6) * 1e6;
             return { meters: [["α = R/2L", sig(a, 4), "rad/s"], ["نوع الاستجابة", kind, ""], ["أقصى vC بعد الخطوة", sig(max, 4), "V"]],
-              scope: { x: [0, span], y: [-4, 6], xl: "t (µs) بعد الحافة الصاعدة", yl: "V", items: [{ ct: function () { return 3; }, c: 2 }, { pts: r.pts.filter(function (q) { return q[0] * 1e6 <= span; }).filter(function (q, i) { return i % 2 === 0; }).map(function (q) { return [q[0] * 1e6, q[1]]; }), c: 1 }] } }; } },
+              scope: { x: [0, span], y: [-4, 10], xl: "t (µs) بعد الحافة الصاعدة", yl: "V", items: [{ ct: function () { return 3; }, c: 2 }, { pts: r.pts.filter(function (q) { return q[0] * 1e6 <= span; }).filter(function (q, i) { return i % 2 === 0; }).map(function (q) { return [q[0] * 1e6, q[1]]; }), c: 1 }] } }; } },
         tables: [{ title: "تحت التخميد (R = 200 Ω)", rows: ["200 Ω"], cols: [{ h: "R", k: "n", src: "row" }, { h: "Δt دورة (µs)", k: "dt", src: "meas" }, { h: "f = 1/Δt (kHz)", k: "f", src: "calc" }, { h: "ω مقاس (rad/s)", k: "w", src: "calc" }, { h: "ωd نظري (rad/s)", k: "wd", src: "calc" }],
           model: function () { var dt = sig(2 * PI / wd * 1e6, 3); return { n: "200 Ω", dt: dt, f: 1e3 / dt, w: 2 * PI * 1e6 / dt, wd: wd }; } },
           { title: "التخميد الحرج والزائد", rows: ["حرج", "زائد (6.9 kΩ)"], cols: [{ h: "", k: "n", src: "row" }, { h: "R (Ω)", k: "R", src: "meas" }, { h: "α (rad/s)", k: "a", src: "calc" }, { h: "s₁ (rad/s)", k: "s1", src: "calc" }, { h: "s₂ (rad/s)", k: "s2", src: "calc" }],
