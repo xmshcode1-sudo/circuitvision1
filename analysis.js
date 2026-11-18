@@ -35,7 +35,7 @@
 
   /* ---------- meshes ---------- */
   function meshes(c, sol) {
-    if (c.shape) return null; // free-form shapes (polygons, wheels, cube): windows are not grid cells
+    if (c.shape) return CV.shapes ? CV.shapes.meshes(c, sol) : null; // free-form shapes: faces of the drawing (shapes.js)
     var R = c.rows, C = c.cols, has = {};
     c.edges.forEach(function (e) { has[key(e.a) + "|" + key(e.b)] = e; });
     function edgeAt(a, b) { return has[key(a) + "|" + key(b)]; }
@@ -142,7 +142,7 @@
       var c = Gi.FAMILIES[fam](R, {});
       var needPort = kind === "Vth" || kind === "Rth" || kind === "In" || kind === "Pmax";
       if (needPort) {
-        var rights = c.edges.filter(function (e) { return e.a[0] !== e.b[0] && e.a[1] === c.cols - 1; });
+        var rights = c.shape ? c.edges.filter(function (e) { return e.port; }) : c.edges.filter(function (e) { return e.a[0] !== e.b[0] && e.a[1] === c.cols - 1; });
         var port = R.pick(rights); port.type = "T"; delete port.value; delete port.plus; delete port.dir;
         if (!c.edges.some(function (e) { return e.type === "V" || e.type === "I"; })) { var r0 = R.pick(c.edges.filter(function (e) { return e.type === "R"; })); if (!r0) continue; Gi.addSource(r0, R, R() < 0.6 ? "V" : "I"); }
       }
