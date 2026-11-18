@@ -23,6 +23,10 @@
   .fam .thumb .sc-name, .fam .thumb .sc-val { display: none; }
   .fam b { font-family: var(--font-display); font-size: 15px; }
   .fam span { font-size: 12.5px; color: var(--fg-3); }
+  .shp { display: grid; gap: 12px; } .shp-h { display: grid; gap: 4px; } .shp-h h2 { font-size: 19px; }
+  .fams-shp { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .fams-shp .fam .thumb { height: 104px; } .fams-shp .fam .thumb .sc { max-height: 94px; }
+  .fams-shp .fam .sc-sign, .fams-shp .fam .sc-ilbl, .fams-shp .fam .sc-vpol { display: none; }
   .work { padding: 20px 22px; display: grid; gap: 14px; }
   .work h2 { font-size: 19px; }
   .stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--fg-2); }
@@ -78,6 +82,11 @@
       <div class="fams" id="fams"></div>
     </section>
 
+    <section class="shp" aria-labelledby="shp-h">
+      <div class="shp-h"><h2 id="shp-h">أشكال متقدمة</h2><p class="muted">مضلعات ودوائر وعجلات ومكعب: من حلقة واحدة حتى 6 حلقات. اختر شكلًا ليولّد المحرك عليه دائرة جديدة في كل مرة، بعناصر وقيم مختلفة، محلولة ومتحقق منها قبل عرضها.</p></div>
+      <div class="fams fams-shp" id="fams-shp"></div>
+    </section>
+
     <section class="work card">
       <div class="sec-title" style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline"><h2>تمرين</h2><div class="stats"><span>حللت في هذه الجلسة: <b id="st-session">0</b></span><span>كل التمارين المولّدة المحلولة: <b id="st-all">0</b></span></div></div>
       <div id="gen"></div>
@@ -92,7 +101,7 @@
     <section class="how card">
       <h2>كيف يعمل المولّد؟</h2>
       <ol>
-        <li>يختار شكلًا للدائرة: حلقة واحدة، أو عناصر على التوازي، أو سُلّم، أو شبكة 3×3 يحذف منها فروعًا عشوائيًا فينتج أشكالًا مثل الجسر وحرف L.</li>
+        <li>يختار شكلًا للدائرة: حلقة واحدة، أو عناصر على التوازي، أو سُلّم، أو شبكة 3×3 يحذف منها فروعًا عشوائيًا فينتج أشكالًا مثل الجسر وحرف L، أو أحد الأشكال المتقدمة (مثلث، مضلعات، دائرة، بيت، قنطرة، مثلث بمركز، عجلات خماسية وسداسية، مربع داخل مربع، مكعب، وشبكات حتى 6 حلقات).</li>
         <li>يضع المقاومات والمصادر وقيمها، ويمكنه تحويل أحد المصادر إلى مصدر تابع من الأنواع الأربعة.</li>
         <li>يحل الدائرة بطريقة <span class="ltr">Modified Nodal Analysis</span>، ويرفضها إذا كانت غير صحيحة (مصدرا جهد مختلفان على التوازي، عنصر مقصور، فرع معلّق) أو إذا لم يتحقق توازن القدرة.</li>
         <li>يفضّل الدوائر التي تخرج إجاباتها أرقامًا نظيفة، لأنك تحلها بيدك.</li>
@@ -113,6 +122,7 @@
 <script src="mna.js"></script>
 <script src="draw.js"></script>
 <script src="gen.js"></script>
+<script src="shapes.js"></script>
 <script src="analysis.js"></script>
 <script src="ac.js"></script>
 <script src="mathcheck.js"></script>
@@ -133,26 +143,28 @@
     document.getElementById("st-session").textContent = sessionCount;
     document.getElementById("st-all").textContent = Object.keys(CV.store.get().questions).filter(function (k) { return k.indexOf("gen-") === 0; }).length;
   }
-  var widget = CV.practice.mount(document.getElementById("gen"), { controls: true, families: ["loop", "pair", "ladder", "grid"], onSolved: function () { sessionCount++; counts(); } });
+  var widget = CV.practice.mount(document.getElementById("gen"), { controls: true, families: ["loop", "pair", "ladder", "grid"].concat(CV.shapes.LIST), onSolved: function () { sessionCount++; counts(); } });
   var famSel = document.querySelector("#gen select");
-  var fams = document.getElementById("fams");
+  var fams = document.getElementById("fams"), famsShp = document.getElementById("fams-shp");
+  CV.shapes.LIST.forEach(function (id) { var n = CV.shapes.meshesOf(id); info[id] = [CV.shapes.name(id), n === 1 ? "حلقة واحدة" : n === 2 ? "حلقتان" : n + " حلقات"]; });
   Object.keys(info).forEach(function (f, i) {
     var g = CV.gen.generate({ seed: 4100 + i * 13, families: [f], types: ["iR"] });
+    if (!g) return;
     g.circuit.edges.forEach(function (e) { delete e.asked; });
     var b = document.createElement("button");
     b.type = "button"; b.className = "fam"; b.setAttribute("aria-pressed", "false"); b.dataset.f = f;
     b.innerHTML = '<div class="thumb">' + CV.draw.render(g.circuit, { aria: "مثال لشكل " + info[f][0] }) + '</div><b>' + info[f][0] + '</b><span>' + info[f][1] + '</span>';
     b.addEventListener("click", function () {
       var on = b.getAttribute("aria-pressed") !== "true";
-      fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+      document.querySelectorAll(".fams .fam").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
       b.setAttribute("aria-pressed", on ? "true" : "false");
       famSel.value = on ? f : "auto";
       famSel.dispatchEvent(new Event("change"));
       document.getElementById("gen").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    fams.appendChild(b);
+    (CV.shapes.SHAPES[f] ? famsShp : fams).appendChild(b);
   });
-  famSel.addEventListener("change", function () { fams.querySelectorAll(".fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
+  famSel.addEventListener("change", function () { document.querySelectorAll(".fams .fam").forEach(function (x) { x.setAttribute("aria-pressed", x.dataset.f === famSel.value ? "true" : "false"); }); });
   counts();
   CV.compound.mount(document.getElementById("compound"));
 })();

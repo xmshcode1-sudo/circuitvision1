@@ -47,10 +47,16 @@
     var out = [], labels = [], deg = {};
     c.edges.forEach(function (e) { [e.a, e.b].forEach(function (p) { var k = p.join(","); deg[k] = (deg[k] || 0) + 1; }); });
 
+    var SH = !!c.shape, CEN = SH ? (c.center ? pt(c.center) : [W / 2, H / 2]) : null;
     c.edges.forEach(function (e) {
       var A = pt(e.a), B = pt(e.b), h = e.a[0] === e.b[0];
       var ux = h ? 1 : 0, uy = h ? 0 : 1, nx = h ? 0 : 1, ny = h ? -1 : 0; // n points up (h) or right (v)
+      if (SH) { var dl0 = Math.hypot(B[0] - A[0], B[1] - A[1]); ux = (B[0] - A[0]) / dl0; uy = (B[1] - A[1]) / dl0; nx = uy; ny = -ux; h = Math.abs(uy) < 1e-6; }
       var mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+      // side: +1 = name label on the n side. Shapes put labels outside (away from the centre); grids keep their fixed rules.
+      var side = 1;
+      if (SH) { var od = (mx - CEN[0]) * nx + (my - CEN[1]) * ny; side = e.side || (Math.abs(od) < 2 ? 1 : od > 0 ? 1 : -1); }
+      function TA(p, ox, oy) { return 'x="' + f(p[0]) + '" y="' + f(p[1] + (oy > 4 ? 11 : oy < -4 ? 0 : 5)) + '" text-anchor="' + (ox > 4 ? "start" : ox < -4 ? "end" : "middle") + '"'; }
       function P(t, s) { return [mx + ux * t + nx * s, my + uy * t + ny * s]; }
       function L(p, q, cls) { out.push('<line class="' + (cls || "sc-w") + '" x1="' + f(p[0]) + '" y1="' + f(p[1]) + '" x2="' + f(q[0]) + '" y2="' + f(q[1]) + '"/>'); }
       if (e.sw) { // push button / switch: open or closed lever between two contacts
@@ -66,11 +72,16 @@
         if (e.label) labels.push('<text class="sc-val" x="' + f(P(0, 0)[0] + (h ? 0 : 22)) + '" y="' + f(P(0, 0)[1] + (h ? -22 : 4)) + '" text-anchor="' + (h ? "middle" : "start") + '">' + e.label + '</text>');
         return;
       }
+      if (e.type === "W" && e.arc) { // curved wire on a circle around e.arc
+        var O = pt(e.arc), rr = Math.hypot(A[0] - O[0], A[1] - O[1]), cr = (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
+        out.push('<path class="sc-w" style="fill:none" d="M' + f(A[0]) + ' ' + f(A[1]) + ' A' + f(rr) + ' ' + f(rr) + ' 0 0 ' + (cr > 0 ? 1 : 0) + ' ' + f(B[0]) + ' ' + f(B[1]) + '"/>');
+        return;
+      }
       if (e.type === "W") { L(A, B); return; }
       if (e.type === "T") { // open terminals a (at the a-end) and b
         L(A, P(-15, 0)); L(P(15, 0), B);
         [[-11, "a"], [11, "b"]].forEach(function (t) {
-          var cp = P(t[0], 0), lp = P(t[0], h ? 14 : (e.a[1] === 0 ? 14 : -14));
+          var cp = P(t[0], 0), lp = P(t[0], SH ? -side * 16 : h ? 14 : (e.a[1] === 0 ? 14 : -14));
           out.push('<circle class="sc-term" cx="' + f(cp[0]) + '" cy="' + f(cp[1]) + '" r="4.5"/>');
           labels.push('<text class="sc-tlbl" x="' + f(lp[0]) + '" y="' + f(lp[1] + 5) + '" text-anchor="middle">' + t[1] + '</text>');
         });
@@ -89,8 +100,8 @@
         out.push('<polyline class="sc-r' + cls + '" points="' + pts.map(function (p) { return f(p[0]) + "," + f(p[1]); }).join(" ") + '"/>');
       } else if (e.type === "L") {
         // four coil loops on the side opposite the label
-        var side = (h ? -1 : (e.a[1] === 0 ? 1 : -1)), dd = "M" + f(P(-BODY, 0)[0]) + " " + f(P(-BODY, 0)[1]);
-        for (var k = 0; k < 4; k++) { var p2 = P(-BODY + (k + 1) * (BODY / 2), 0), mid = P(-BODY + (k + 0.5) * (BODY / 2), side * 11);
+        var cside = SH ? -side : (h ? -1 : (e.a[1] === 0 ? 1 : -1)), dd = "M" + f(P(-BODY, 0)[0]) + " " + f(P(-BODY, 0)[1]);
+        for (var k = 0; k < 4; k++) { var p2 = P(-BODY + (k + 1) * (BODY / 2), 0), mid = P(-BODY + (k + 0.5) * (BODY / 2), cside * 11);
           dd += " Q" + f(mid[0]) + " " + f(mid[1]) + " " + f(p2[0]) + " " + f(p2[1]); }
         out.push('<path class="sc-r' + cls + '" d="' + dd + '"/>');
       } else if (e.type === "C") {
@@ -137,19 +148,38 @@
         var at = -BODY - 22, tp = P(at + 7, 0), b1 = P(at - 5, 6), b2 = P(at - 5, -6);
         out.push('<polygon class="sc-iref" points="' + [tp, b1, b2].map(function (p) { return f(p[0]) + "," + f(p[1]); }).join(" ") + '"/>');
         var leftC = !h && e.a[1] === 0;
+        if (SH) { var is = -side * 18, ilp = P(at, is); labels.push('<text class="sc-ilbl" ' + TA(ilp, nx * is, ny * is) + '>' + (e.ilabel || "i" + ctrlName) + '</text>'); }
+        else {
         var il = P(at, h ? -20 : (leftC ? 14 : -14));
         labels.push('<text class="sc-ilbl" x="' + f(il[0]) + '" y="' + f(il[1] + (h ? 0 : 5)) + '" text-anchor="' + (h ? "middle" : leftC ? "start" : "end") + '">' + (e.ilabel || "i" + ctrlName) + '</text>');
+        }
       }
       if (showV) {
         // polarity on the side opposite the name label: below horizontal parts, inside the loop for vertical ones
-        var side = h ? -20 : (!h && e.a[1] === 0 ? 18 : -18);
-        var pa = P(-BODY + 4, side), pb = P(BODY - 4, side);
+        var pside = SH ? -side * 20 : h ? -20 : (!h && e.a[1] === 0 ? 18 : -18);
+        var pa = P(-BODY + 4, pside), pb = P(BODY - 4, pside);
         labels.push('<text class="sc-vpol" x="' + f(pa[0]) + '" y="' + f(pa[1] + 6) + '" text-anchor="middle">+</text>');
         labels.push('<text class="sc-vpol" x="' + f(pb[0]) + '" y="' + f(pb[1] + 6) + '" text-anchor="middle">−</text>');
-        var vl = P(0, h ? -22 : side * 1.25);
+        var vl = P(0, SH ? pside * 1.3 : h ? -22 : pside * 1.25);
         labels.push('<text class="sc-ilbl" x="' + f(vl[0]) + '" y="' + f(vl[1] + 6) + '" text-anchor="middle">' + (e.vlabel || "v" + ctrlName) + '</text>');
       }
       // Name and value: above horizontal elements, right of vertical ones (left on the left edge)
+      var depName = e.type === "CCCS" || e.type === "CCVS" || e.type === "VCVS" || e.type === "VCCS";
+      if (SH) {
+        var ox = nx * side, oy = ny * side, Q;
+        if (Math.abs(ox) < 0.5) { // mostly horizontal part: block above or below
+          Q = [mx + ox * 34, my + oy * 34];
+          var y1 = oy < 0 ? Q[1] - 6 : Q[1] - 2;
+          labels.push('<text class="sc-name' + cls + '" x="' + f(Q[0]) + '" y="' + f(y1) + '" text-anchor="middle">' + (depName ? "" : e.name) + '</text>');
+          labels.push('<text class="sc-val" x="' + f(Q[0]) + '" y="' + f(y1 + 16) + '" text-anchor="middle">' + valueLabel(e) + '</text>');
+        } else {
+          Q = [mx + ox * 28, my + oy * 28];
+          var an = ox > 0 ? "start" : "end", yq = Q[1] + (Math.abs(oy) > 0.3 ? oy * 8 : 0);
+          labels.push('<text class="sc-name' + cls + '" x="' + f(Q[0]) + '" y="' + f(yq - 4) + '" text-anchor="' + an + '">' + (depName ? "" : e.name) + '</text>');
+          labels.push('<text class="sc-val" x="' + f(Q[0]) + '" y="' + f(yq + 13) + '" text-anchor="' + an + '">' + valueLabel(e) + '</text>');
+        }
+        return;
+      }
       var leftCol = !h && e.a[1] === 0;
       var bottomRow = h && e.a[0] === c.rows - 1 && c.rows > 1;
       var lx = h ? mx : mx + (leftCol ? -26 : 26), ly = h ? (bottomRow ? my + 30 : my - 40) : my - 4;

@@ -2,7 +2,7 @@
   "name": "circuitvision",
   "private": true,
   "scripts": {
-    "test": "node tests/clab-solutions.test.js && node tests/clab-mistakes.test.js && node tests/clab-values.test.js && node tests/clab-modes.test.js && node tests/lessons.test.js && node tests/c2lab.test.js && node tests/c2lab-bench.test.js && node tools/videos/clab-plan.js > /dev/null && echo \"videos plan: every reading checked\"",
+    "test": "node tests/clab-solutions.test.js && node tests/clab-mistakes.test.js && node tests/clab-values.test.js && node tests/clab-modes.test.js && node tests/lessons.test.js && node tests/c2lab.test.js && node tests/c2lab-bench.test.js && node tests/shapes.test.js && node tools/videos/clab-plan.js > /dev/null && echo \"videos plan: every reading checked\"",
     "videos": "node tools/videos/clab-plan.js > /tmp/clab-plan.json && python3 tools/videos/render.py /tmp/clab-plan.json exp1 exp2 exp3 exp4 exp5 exp6 exp7 exp8 exp9 exp10",
     "videos:signals": "python3 tools/videos/ss-render.py"
   }
