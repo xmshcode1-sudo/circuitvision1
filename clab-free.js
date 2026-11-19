@@ -21,7 +21,7 @@
     }).join("");
     root.innerHTML = '<p style="margin:0 0 10px"><a class="btn btn-ghost btn-sm" href="#">→ كل التجارب</a></p>' +
       '<div class="lg-head"><span class="code">' + esc(cfg.code) + '</span><h1>المعمل الحر</h1>' +
-      '<p>طاولة كاملة فيها كل أجهزة المعمل: ' + cfg.inst.map(function (k) { return NAMES[k]; }).filter(Boolean).join("، ") + '. خذ من القطع العدد اللي تحتاجه، وركّب أي دائرة تبيها واقرأ من الأجهزة.</p></div>' +
+      '<p>طاولة كاملة فيها كل أجهزة المعمل: ' + cfg.inst.map(function (k) { return NAMES[k]; }).filter(Boolean).join("، ") + '. خذ من القطع العدد اللي تحتاجه، وركّب أي دائرة تبيها واقرأ من الأجهزة. القطع اللي عليها ✎ تكتب قيمتها بنفسك، وتقدر تغيّر قيمة أي مقاومة أو مكثف أو ملف على اللوحة: اضغطها ثم «القيمة».</p></div>' +
       '<section class="card lg-sec lg-bench" id="bench"><h2>الطاولة</h2>' +
       '<p class="muted small">تبي تتأكد من دائرة من التجارب؟ اخترها وتحقق. ما يلزم تركّبها مثل رسمة الكتيب: أي توصيل مكافئ كهربائيًا ينقبل (مثل مقاومتين على التوالي بدل وحدة بقيمتهما، أو ترتيب ثاني على اللوحة).</p>' +
       '<div class="lg-bench-bar"><label>قارن بدائرة: <select id="fr-lay" class="select">' + opts + '</select></label>' +
@@ -29,7 +29,7 @@
       '<button type="button" class="btn btn-ghost btn-sm" id="fr-sol">ركّبها على الطاولة</button>' +
       '<button type="button" class="btn btn-ghost btn-sm" id="fr-clear">امسح الطاولة</button></div>' +
       '<div class="lg-out" id="fr-out" aria-live="polite"></div><div id="fr-bench"></div></section>';
-    var bench = CV.clabBench.mount($("#fr-bench"), { key: cfg.key, inst: cfg.inst, kit: cfg.kit, fullEl: $("#bench") });
+    var bench = CV.clabBench.mount($("#fr-bench"), { key: cfg.key, inst: cfg.inst, kit: cfg.kit, fullEl: $("#bench"), edit: true });
     if (cfg.rbDigits && bench.state().inst.rb && bench.state().inst.rb.d.length !== cfg.rbDigits) bench.set({ rb: { d: new Array(cfg.rbDigits).fill(0) } });
     var out = $("#fr-out");
     function pick() {
@@ -51,13 +51,16 @@
     $("#fr-clear").onclick = function () { bench.reset(); if (cfg.rbDigits) bench.set({ rb: { d: new Array(cfg.rbDigits).fill(0) } }); out.className = "lg-out"; out.textContent = ""; };
     return bench;
   }
-  /* parts for the free drawer: every block of the course, plus capacitors and inductors when the course has none */
+  /* parts for the free drawer: an R, C and L whose value the student types, a switch, then every block of the course
+     (plus capacitors and inductors when the course has none) */
+  var ADJ = [{ id: "Radj", t: "R", v: 1000, tol: 0, adj: true, tl: "مقاومة ✎" }, { id: "Cadj", t: "C", v: 1e-6, adj: true, tl: "مكثف ✎" },
+    { id: "Ladj", t: "L", v: 10e-3, adj: true, tl: "ملف ✎" }, { id: "SW", t: "S", on: false, tl: "مفتاح" }];
   function kitFrom(pieces, extra) {
     var out = [];
     Object.keys(pieces).forEach(function (id) { var p = JSON.parse(JSON.stringify(pieces[id])); p.id = id; out.push(p); });
     (extra || []).forEach(function (p) { out.push(p); });
     var order = { R: 0, C: 1, L: 2 };
-    return out.sort(function (a, b) { return (order[a.t] - order[b.t]) || (a.v - b.v); });
+    return JSON.parse(JSON.stringify(ADJ)).concat(out.sort(function (a, b) { return (order[a.t] - order[b.t]) || (a.v - b.v); }));
   }
   function forFree(exps, inst) {   // the experiments as the free bench checks them (also used by the tests)
     return exps.filter(function (e) { return e.inst.indexOf("mn") < 0; }).map(function (e) {
