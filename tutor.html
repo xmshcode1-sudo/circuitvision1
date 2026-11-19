@@ -165,6 +165,7 @@
         <p>اختر الدرس واسأل أي سؤال عنه: فكرة، قانون، متى تستخدم طريقة، أو لماذا تنجح.</p></header>
       <section class="card t-box">
         <div class="t-bar">
+          <div class="field t-pick" style="flex:0 1 220px"><label for="t-course">المقرر</label><select class="select" id="t-course"></select></div>
           <div class="field t-pick"><label for="t-lesson">الدرس</label><select class="select" id="t-lesson"></select></div>
           <button type="button" class="btn btn-ghost btn-sm" id="t-new">محادثة جديدة</button>
         </div>
@@ -197,22 +198,51 @@
 <script src="c1-techniques.js"></script>
 <script src="c1-sinusoidal.js"></script>
 <script src="c1-power.js"></script>
+<script src="sig-plot.js"></script>
+<script src="ss-build.js"></script>
+<script src="sig-widgets.js"></script>
+<script src="ss-ch1.js"></script>
+<script src="ss-ch2.js"></script>
+<script src="ss-ch3.js"></script>
+<script src="ss-ch4.js"></script>
+<script src="ss-ch5.js"></script>
+<script src="ss-ch6.js"></script>
+<script src="ss-ch7.js"></script>
+<script src="lg-draw.js"></script>
+<script src="ld-ch1.js"></script>
+<script src="ld-ch2.js"></script>
+<script src="ld-ch3.js"></script>
+<script src="ld-ch4.js"></script>
+<script src="ld-ch5.js"></script>
+<script src="c2-ch1.js"></script>
+<script src="c2-ch2.js"></script>
+<script src="c2-ch3.js"></script>
 <script>
 CV.shell.init({ active: "tutor" });
 (function () {
-  var sel = document.getElementById("t-lesson"), opts = "", first = "";
-  CV.courses[0].chapters.forEach(function (ch) { opts += '<optgroup label="' + ch.ar + '">' + ch.lessons.map(function (l) { var L = CV.lessons[l.id]; if (L && !first) first = l.id; return L ? '<option value="' + l.id + '">' + L.ar + '</option>' : ''; }).join("") + '</optgroup>'; });
-  sel.innerHTML = opts + '<option value="">سؤال عام في Circuits 1</option>';
+  var sel = document.getElementById("t-lesson"), csel = document.getElementById("t-course");
+  /* every course that has published lessons; a lesson belongs to the course whose chapters list it */
+  var courses = CV.courses.filter(function (c) { return c.chapters.some(function (ch) { return ch.lessons.some(function (l) { return CV.lessons[l.id]; }); }); });
+  function courseOfLesson(id) { return courses.filter(function (c) { return c.chapters.some(function (ch) { return ch.lessons.some(function (l) { return l.id === id; }); }); })[0]; }
+  csel.innerHTML = courses.map(function (c) { return '<option value="' + c.id + '">' + c.ar + '</option>'; }).join("");
+  function fill(c) {
+    var opts = "", first = "";
+    c.chapters.forEach(function (ch) { var o = ch.lessons.map(function (l) { var L = CV.lessons[l.id]; if (L && !first) first = l.id; return L ? '<option value="' + l.id + '">' + L.ar + '</option>' : ''; }).join(""); if (o) opts += '<optgroup label="' + ch.ar + '">' + o + '</optgroup>'; });
+    sel.innerHTML = opts + '<option value="">سؤال عام في ' + c.ar + '</option>';
+    return first;
+  }
   var last = ""; try { last = sessionStorage.getItem("cv.tutor.lesson") || ""; } catch (e) {}
-  var h = location.hash.replace("#", "");
-  sel.value = CV.lessons[h] ? h : CV.lessons[last] ? last : first;
+  var h = location.hash.replace("#", ""), start = CV.lessons[h] ? h : CV.lessons[last] ? last : "";
+  var c0 = (start && courseOfLesson(start)) || courses[0];
+  csel.value = c0.id; var f0 = fill(c0); sel.value = start || f0;
+  csel.addEventListener("change", function () { var c = courses.filter(function (x) { return x.id === csel.value; })[0]; sel.value = fill(c); sel.dispatchEvent(new Event("change")); });
   function plain(x) { var d = document.createElement("div"); d.innerHTML = x || ""; return d.textContent.replace(/\s+/g, " ").trim(); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ctx() {
-    var L = CV.lessons[sel.value];
-    if (!L) return { key: "general", title: "Circuits 1", empty: "اسأل أي سؤال عام في Circuits 1.", placeholder: "اكتب سؤالك…" };
+    var L = CV.lessons[sel.value], c = courses.filter(function (x) { return x.id === csel.value; })[0];
+    if (!L) return { key: "general:" + c.id, course: c.id, title: c.ar, empty: "اسأل أي سؤال عام في " + esc(c.ar) + ".", placeholder: "اكتب سؤالك…" };
     var laws = (L.sections || []).filter(function (s) { return s.id === "concept" || s.id === "laws"; }).map(function (s) { return plain(s.html); }).join(" ");
-    return { key: "lesson:" + L.id, title: L.ar + " (" + L.en + ")", empty: "اسأل أي سؤال عن درس <b>" + esc(L.ar) + "</b>.", placeholder: "سؤالك عن " + L.ar + "…",
+    return { key: "lesson:" + L.id, course: c.id, title: L.ar + " (" + L.en + ")", empty: "اسأل أي سؤال عن درس <b>" + esc(L.ar) + "</b>.", placeholder: "سؤالك عن " + L.ar + "…",
       problem: "سؤال عام عن الدرس (ليس مسألة محددة). أهداف الدرس: " + (L.objectives || []).join("؛ ") + ". ملخص الدرس: " + laws.slice(0, 1200) };
   }
   function showCtx() {

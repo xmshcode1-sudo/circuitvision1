@@ -42,6 +42,15 @@
     var M = CV.clabModes; if (M) M.leave();
     var rp = document.getElementById("cl-report"); if (rp) { rp.remove(); document.documentElement.classList.remove("rp-open"); }
     if (M && M.route(id, root)) { window.scrollTo(0, 0); return; }
+    if (id === "free" && CV.clabFree) {
+      bench = CV.clabFree.show(root, { key: "c1-free", code: "EE · Electric Circuits I Lab", title: "معمل الدوائر الكهربائية", exps: EXP,
+        inst: ["ps", "fg", "sc", "d1", "d2", "rb", "lb", "cb"],
+        kit: CV.clabFree.kitFrom(X.PIECES, [
+          { id: "C1n", t: "C", v: 1e-9, name: "1 nF" }, { id: "C10n", t: "C", v: 10e-9, name: "10 nF" }, { id: "C100n", t: "C", v: 0.1e-6, name: "0.1 µF" },
+          { id: "C1u", t: "C", v: 1e-6, name: "1 µF" }, { id: "C10u", t: "C", v: 10e-6, name: "10 µF" },
+          { id: "L10m", t: "L", v: 10e-3, name: "10 mH" }, { id: "L100m", t: "L", v: 0.1, name: "100 mH" }]) });
+      window.scrollTo(0, 0); return;
+    }
     if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
   }
@@ -50,7 +59,7 @@
     document.title = "معمل الدوائر الكهربائية — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE · Electric Circuits I Lab</span><h1>معمل الدوائر الكهربائية</h1>' +
       '<p>التجارب العشر في كتيب معمل القسم، على طاولة تشبه طاولة المعمل: لوحة التوصيل والقطع، مصدر الجهد بقناتين، ملتيميتران، مولد الإشارة، الأوسيلوسكوب، وصناديق المقاومات والمحاثة. تركّب الدائرة بنفسك وتقيس، والمنصة تتحقق من توصيلك وقراءاتك.</p>' +
-      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بالتجربة 1</a></div></div>' +
+      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بالتجربة 1</a><a class="btn btn-ghost" href="#free">🧪 المعمل الحر</a></div></div>' +
       '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n' + (c.d === c.t && c.t ? " ok" : "") + '">' + e.n + '</span><div><b class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="pg">' + (c.d ? c.d + " من " + c.t : "") + '</span></div></a>'; }).join("") + '</div>' + (CV.clabModes ? CV.clabModes.indexHtml() : "");
     if (CV.clabModes) CV.clabModes.wireIndex(root);
   }

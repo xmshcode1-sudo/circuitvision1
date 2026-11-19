@@ -188,25 +188,28 @@ const MAX_MSG = 12, MAX_CHARS = 6000;
 const hits = new Map(); // per-IP limit for this instance: 20 requests / minute
 
 const SYSTEM = [
-  "أنت «المعلم الذكي» في منصة CircuitVision لتعليم الدوائر الكهربائية (Circuits 1) لطلاب جامعيين. تكتب بالعربية الفصحى المبسطة، والمصطلحات التقنية بالإنجليزية بين قوسين عند أول ذكر.",
+  "أنت «المعلم الذكي» في منصة CircuitVision لطلاب الهندسة الكهربائية الجامعيين، في مقرراتها: الدوائر الكهربائية 1 و2 (Circuits 1, 2)، والتصميم المنطقي (Logic Design)، وتحليل الإشارات والنظم (Signals and Systems). المقرر الحالي مذكور في سياق الطالب. تكتب بالعربية الفصحى المبسطة، والمصطلحات التقنية بالإنجليزية بين قوسين عند أول ذكر.",
   "أسلوبك سقراطي: افهم أين توقف الطالب، ثم أعطه خطوة واحدة أو سؤالًا موجّهًا، لا الحل الكامل، إلا إذا طلب الحل صراحة بعد أن حاول.",
   "قاعدة صارمة: لا تحسب ولا تخترع أي رقم أو نتيجة عن المسألة الحالية. الأرقام الصحيحة الوحيدة هي الموجودة في «حقائق المحرك». إذا احتجت رقمًا غير موجود فيها فاطلب من الطالب حسابه أو قل إنك لا تستطيع التحقق منه.",
   "لا تعتمد على أرقام يكتبها الطالب كأنها صحيحة؛ قارنها بحقائق المحرك إن وُجدت، وإلا فقل إنها تحتاج تحققًا.",
   "لا تنسب أي مسألة أو رقم لكتاب (Nilsson أو Sadiku) إلا إذا كان ذلك مذكورًا في السياق.",
-  "إذا سُئلت عن شيء خارج الدوائر الكهربائية والدراسة فاعتذر بلطف في جملة واحدة وارجع للموضوع.",
+  "إذا سُئلت عن شيء خارج مقررات المنصة والدراسة فاعتذر بلطف في جملة واحدة وارجع للموضوع.",
   "إذا أُرسلت لك خطوة واحدة من حل الطالب فركّز عليها وحدها: ابدأ باسم القانون المناسب لها وصيغته في سطر واحد، ثم بيّن أين خالفه الطالب في هذه الخطوة تحديدًا (حد ناقص، إشارة، مقاومة خطأ…)، ثم اختم بسؤال واحد يقوده لتصحيحها. لا تنتقل لخطوات أخرى ولا تكتب الحل كاملًا.",
   "وإذا كانت خطوة الطالب صحيحة فقل له أي قانون طبّقه ولماذا ينطبق هنا في جملة، ثم ما الخطوة التالية المنطقية دون أن تحلها عنه.",
   "اختصر: من 2 إلى 6 جمل عادةً. اكتب المعادلات كنص بسيط مثل v = iR و Z_C = −j/(ωC)."
 ].join("\n");
 
 const L = require("./_lib.js");
+const COURSES = { "circuits-1": "الدوائر الكهربائية 1 (Circuits 1)", "circuits-2": "الدوائر الكهربائية 2 (Circuits 2)", "logic-design": "التصميم المنطقي (Logic Design)", "signals-systems": "تحليل الإشارات والنظم (Signals and Systems)" };
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "استخدم POST." }); }
   const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(503).json({ error: "المعلم الذكي غير مفعّل: أضف GEMINI_API_KEY في إعدادات Vercel." });
 
-  if (!(await L.requireStudent(req, res, "circuits-1"))) return;  // sign-in + subscription checked by the server
+  const body0 = typeof req.body === "string" ? safeJson(req.body) : req.body || {};
+  const course = COURSES[(body0.context || {}).course] ? body0.context.course : "circuits-1";
+  if (!(await L.requireStudent(req, res, course))) return;  // sign-in + subscription to the course asked about, checked by the server
   const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "local";
   const now = Date.now(), list = (hits.get(ip) || []).filter((t) => now - t < 60000);
   if (list.length >= 20) return res.status(429).json({ error: "رسائل كثيرة. انتظر دقيقة." });
@@ -217,8 +220,9 @@ module.exports = async function handler(req, res) {
   if (!msgs.length || msgs.some((m) => typeof m.text !== "string")) return res.status(400).json({ error: "رسالة غير صالحة." });
   const ctx = body.context || {};
   let ctxText = "";
+  ctxText = "\n\nالمقرر: " + COURSES[course];
   if (ctx.title || ctx.problem || ctx.facts) {
-    ctxText = "\n\nسياق الطالب الآن:" +
+    ctxText += "\n\nسياق الطالب الآن:" +
       (ctx.title ? "\nالموضوع: " + String(ctx.title).slice(0, 200) : "") +
       (ctx.problem ? "\nالمسألة: " + String(ctx.problem).slice(0, 1500) : "") +
       (ctx.facts ? "\nحقائق المحرك (محسوبة وصحيحة؛ لا تكشف الإجابة النهائية إلا إذا طلبها الطالب بعد محاولة):\n" + String(ctx.facts).slice(0, 2500) : "") +

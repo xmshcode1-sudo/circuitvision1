@@ -343,6 +343,8 @@
       var e = elById(s, id); if (!e) return; var i = iElem(s, e);
       if (Math.abs(i.dc) > 0.005 || mag(i.ac) > 0.005) warn.push({ k: "earth", id: id });
     });
+    var fs = {}; s.net.els.forEach(function (e) { if (e.k === "V" && e.ac) fs[e.f] = 1; });
+    if (Object.keys(fs).length > 1) warn.push({ k: "twoAC" });
     out.sc = scope(s);
     out.mn = mains(s);
     out.wm = watt(s);

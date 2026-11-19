@@ -19,7 +19,7 @@
   }
   function card(k) {
     var x = I[k], dur = CV.videoDur && CV.videoDur[k];
-    return '<a class="card ml-item" href="#' + k + '"><span class="n">' + esc(x.lesson || ("الحلقة " + x.level)) + '</span><b>' + esc(x.ar) + '</b><span class="ltr">' + esc(x.title) + '</span><span>' + x.n + " أقسام · " + x.figs + " رسوم" + (x.checks ? " · " + x.checks + " اختبار" : "") + (dur ? " · فيديو " + dur : "") + "</span></a>";
+    return '<a class="card ml-item" href="#' + k + '"><span class="n">' + esc(x.lesson || ("الحلقة " + x.level)) + '</span><b>' + esc(x.ar) + '</b><span class="ltr">' + esc(x.title) + '</span><span>' + x.n + " أقسام" + (x.figs ? " · " + x.figs + " رسوم" : "") + (x.checks ? " · " + x.checks + " اختبار" : "") + (dur ? " · فيديو " + dur : "") + "</span></a>";
   }
   function index(tab) {
     tab = tab || "intro";
