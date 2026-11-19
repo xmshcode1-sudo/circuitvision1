@@ -125,7 +125,7 @@
   function colorTool() {
     var opt = function (list, sel, f) { return list.map(function (c, i) { return '<option value="' + i + '"' + (i === sel ? " selected" : "") + '>' + c[0] + (f ? f(c) : "") + '</option>'; }).join(""); };
     return '<section class="card rw-tool" id="tool-color"><h2>حاسبة ألوان المقاومة</h2>' +
-      '<div class="rw-row"><div class="field"><label for="cb-n">عدد الحلقات</label><select class="select" id="cb-n"><option value="4">4</option><option value="5">5</option></select></div>' +
+      '<div class="rw-row"><div class="field"><label for="cb-n">عدد الحلقات الملونة</label><select class="select" id="cb-n"><option value="4">4</option><option value="5">5</option></select></div>' +
       '<div class="field"><label for="cb-1">الرقم 1</label><select class="select" id="cb-1">' + opt(COL, 2) + '</select></div><div class="field"><label for="cb-2">الرقم 2</label><select class="select" id="cb-2">' + opt(COL, 2) + '</select></div>' +
       '<div class="field" id="cb-3w" hidden><label for="cb-3">الرقم 3</label><select class="select" id="cb-3">' + opt(COL, 0) + '</select></div>' +
       '<div class="field"><label for="cb-m">المضاعف</label><select class="select" id="cb-m">' + opt(MULT, 1, function (c) { return " ×" + (c[2] >= 1 ? c[2].toLocaleString("en") : c[2]); }) + '</select></div>' +

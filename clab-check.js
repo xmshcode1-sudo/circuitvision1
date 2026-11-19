@@ -116,6 +116,43 @@
     }
     return go(0);
   }
+  /* ---------- electrical equivalence: the student does not have to copy the manual's board ----------
+     Both circuits are reduced the same way before comparing: parts that carry no current (an end touching nothing else) go,
+     parts in parallel between the same two points become one, and parts in series through a point nothing else touches become one
+     (R and L add; C in parallel add). So 1 kΩ + 1 kΩ in series is accepted for 2 kΩ, two 2.2 kΩ in parallel for 1.1 kΩ, extra parts
+     left on the board are ignored, and the order of parts along a branch does not matter. Meters are left out here; what each meter
+     reads is still compared with the manual afterwards, so a meter on the wrong point is still caught. */
+  var PASSIVE = { R: 1, L: 1, C: 1 };
+  function reduce(list) {
+    var els = list.map(function (x) { return { k: x.k, v: x.v, a: x.a, b: x.b, pol: x.pol }; }), changed = true, guard = 0;
+    function degs() { var d = {}; els.forEach(function (x) { d[x.a] = (d[x.a] || 0) + 1; d[x.b] = (d[x.b] || 0) + 1; }); return d; }
+    while (changed && guard++ < 500) {
+      changed = false;
+      // 1) no current: a passive part with an end that touches nothing else, or both ends on the same point
+      var d = degs(), keep = els.filter(function (x) { return !(PASSIVE[x.k] && (x.a === x.b || d[x.a] === 1 || d[x.b] === 1)); });
+      if (keep.length !== els.length) { els = keep; changed = true; continue; }
+      // 2) parallel: same kind between the same two points
+      for (var i = 0; i < els.length && !changed; i++) for (var j = i + 1; j < els.length && !changed; j++) {
+        var x = els[i], y = els[j];
+        if (!PASSIVE[x.k] || x.k !== y.k) continue;
+        if (!((x.a === y.a && x.b === y.b) || (x.a === y.b && x.b === y.a))) continue;
+        x.v = x.k === "C" ? x.v + y.v : 1 / (1 / x.v + 1 / y.v); els.splice(j, 1); changed = true;
+      }
+      if (changed) continue;
+      // 3) series: two parts of the same kind meeting at a point that nothing else touches
+      d = degs();
+      for (var n in d) {
+        if (d[n] !== 2) continue;
+        var two = els.filter(function (x) { return String(x.a) === n || String(x.b) === n; });
+        if (two.length !== 2 || !PASSIVE[two[0].k] || two[0].k !== two[1].k) continue;
+        var p = two[0], q = two[1], pe = String(p.a) === n ? p.b : p.a, qe = String(q.a) === n ? q.b : q.a;
+        p.v = p.k === "C" ? 1 / (1 / p.v + 1 / q.v) : p.v + q.v; p.a = pe; p.b = qe;
+        els.splice(els.indexOf(q), 1); changed = true; break;
+      }
+    }
+    return els;
+  }
+  function equiv(T, U) { return iso(T, U) || iso(reduce(T), reduce(U)); }
   /* ---------- the corrector: compare the student's bench with the manual's circuit and say exactly what is off ---------- */
   function partName(x) { var si = S.si; return x.k === "R" ? "مقاومة " + si(x.v, "Ω") : x.k === "L" ? "ملف " + si(x.v, "H") : x.k === "C" ? "مكثف " + si(x.v, "F") : x.k === "PS" ? "المصدر المستمر" : x.k === "FG" ? "مولد الإشارة" : x.k === "MN" ? "مصدر المتردد" : x.k === "VA" ? "الفارياك" : x.k === "TP" ? "طور من المصدر ثلاثي الطور" : x.k === "K1" ? "الملف 1 (1000 لفة)" : x.k === "K2" ? "الملف 2 (500 لفة)" : x.k; }
   function relations(list) {   // which parts sit in parallel (same two nodes) or in series (share a node nothing else touches)
@@ -161,19 +198,19 @@
     // 2) the meters: are they wired the right way, and do they measure what the manual asks?
     var sol = stateFor(L, {}, false), mw = meters(sol), mg = meters(state), ROLE = { A: "أميتر", V: "فولتميتر", "Ω": "أوميتر" };
     if (e.inst.indexOf("mn") > -1) mg = {};
-    var want = core(stateFor(L, {}, false), e.inst), whole = iso(want, core(state, e.inst));
+    var want = core(stateFor(L, {}, false), e.inst), gotCore = core(state, e.inst), exact = iso(want, gotCore), whole = exact || equiv(want, gotCore);
     Object.keys(mg).forEach(function (d) {
       var m = mg[d];
       if (m.role === "half") say("bad", DNAME[d] + " موصول بسلك واحد بس: الجهاز يحتاج سلكين (COM ومدخل القياس).");
       if (m.role === "odd") say("bad", DNAME[d] + " موصول بين مدخلين غلط: لازم واحد من السلكين في COM.");
       if (m.role === "A") {
         var o = {}; o[d + "." + m.jack + ".sh"] = 1;
-        if (!whole && iso(want, core(state, e.inst, { open: o }))) say("bad", DNAME[d] + " مستخدم أميتر لكنه موصول <b>توازي</b>: الأميتر مقاومته شبه صفر، فيقصر اللي بين طرفيه. افتح الدائرة في مكان القياس وحطّه <b>توالي</b>.");
+        if (!whole && equiv(want, core(state, e.inst, { open: o }))) say("bad", DNAME[d] + " مستخدم أميتر لكنه موصول <b>توازي</b>: الأميتر مقاومته شبه صفر، فيقصر اللي بين طرفيه. افتح الدائرة في مكان القياس وحطّه <b>توالي</b>.");
         if (!/^(a|ma)/.test(m.mode)) say("bad", "سلك " + DNAME[d] + " في مدخل التيار (" + m.jack + ") والمفتاح على غير التيار: حوّل المفتاح على A.");
       }
       if (m.role === "V") {
         var wv = {}; wv[d + ".vin"] = 1;
-        if (!whole && iso(want, core(state, e.inst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
+        if (!whole && equiv(want, core(state, e.inst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
       }
     });
     if (bad) return { ok: false, msgs: msgs };
@@ -194,6 +231,7 @@
       }
       return { ok: false, msgs: msgs };
     }
+    if (!exact) say("info", "توصيلك مختلف عن رسمة الكتيب لكنه مكافئ كهربائيًا (نفس الدائرة بعد جمع القطع اللي على التوالي والتوازي وتجاهل القطع اللي ما يمر فيها تيار). ✓");
     if (e.inst.indexOf("mn") > -1) return { ok: true, msgs: msgs };
     var need = {}, have = {};
     Object.keys(mw).forEach(function (d) { need[mw[d].role] = (need[mw[d].role] || 0) + 1; });
@@ -226,5 +264,5 @@
   }
   var MODE = { vdc: "V⎓", vac: "V~", mv: "mV", ohm: "Ω", adc: "A⎓", aac: "A~", madc: "mA⎓", maac: "mA~", off: "OFF" };
 
-  CV.clabCheck = { layoutOf: layoutOf, deepSet: deepSet, stateFor: stateFor, solveL: solveL, elByLabel: elByLabel, node: node, evalQ: evalQ, scaled: scaled, close: close, num: num, core: core, same: same, iso: iso, partName: partName, relations: relations, openEnds: openEnds, meters: meters, elementsWith: elementsWith, wiringReport: wiringReport, MODE: MODE, RMS: RMS };
+  CV.clabCheck = { layoutOf: layoutOf, deepSet: deepSet, stateFor: stateFor, solveL: solveL, elByLabel: elByLabel, node: node, evalQ: evalQ, scaled: scaled, close: close, num: num, core: core, same: same, iso: iso, reduce: reduce, equiv: equiv, partName: partName, relations: relations, openEnds: openEnds, meters: meters, elementsWith: elementsWith, wiringReport: wiringReport, MODE: MODE, RMS: RMS };
 })(typeof window !== "undefined" ? window : globalThis);

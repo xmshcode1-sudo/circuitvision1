@@ -46,6 +46,12 @@
     opts = opts || {};
     var inst = opts.inst || ["ps", "d1", "d2", "rb"], KEY = "cv-clab2-" + (opts.key || "free");
     var kit = (opts.kit || []).slice(), MAINS = inst.indexOf("mn") > -1, H = MAINS ? 560 : 950;
+    var TCOLS = 4, TROWS = Math.max(4, Math.ceil((kit.length + 1) / TCOLS)), TRAY_H = Math.max(278, 50 + TROWS * 62);
+    if (!MAINS) {
+      var rightN = ["rb", "lb", "cb", "va", "cc"].filter(function (k) { return inst.indexOf(k) > -1; }).length +
+        (["fg", "ps", "sc"].some(function (k) { return inst.indexOf(k) > -1; }) ? ["tp", "wm"].filter(function (k) { return inst.indexOf(k) > -1; }).length : 0);
+      H = Math.max(H, 282 + rightN * 214 + 10, 654 + TRAY_H + 16);
+    }
     var W = MAINS || ["rb", "lb", "cb", "sc", "va", "cc", "tp", "wm"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
     var marks = [], state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
     var vb = { x: 0, y: 0, w: W, h: H };
@@ -134,12 +140,12 @@
     function hole(id, x, y) { P[id] = [x, y]; o('<g class="wb-pt wb-hole" data-p="' + id + '"><circle class="wb-so" cx="' + x + '" cy="' + y + '" r="4.8"/><circle class="wb-so-in" cx="' + x + '" cy="' + y + '" r="2.6"/><circle class="wb-hit" cx="' + x + '" cy="' + y + '" r="10.5"/></g>'); }
 
     /* ---------- the drawer with the lab's component blocks ---------- */
-    var TX = 16, TY = 654, TW = 388, TH = 278, TRAY = [];
+    var TX = 16, TY = 654, TW = 388, TH = TRAY_H, TRAY = [];
     function drawTray() {
       rect(TX, TY, TW, TH, "wb-tray", 10); rect(TX + 8, TY + 30, TW - 16, TH - 38, "wb-tray-in", 6);
       text("PARTS · القطع", TX + TW / 2, TY + 21, "wb-lbl-d");
-      TRAY = []; var used = {}; Object.keys(state.parts).forEach(function (s) { if (state.parts[s].id) used[state.parts[s].id] = 1; });
-      var items = [{ t: "W", id: "W" }].concat(kit), cols = 4, cw = (TW - 28) / cols;
+      TRAY = []; var used = {};   // the drawer never runs out: take as many copies of a part as the circuit needs
+      var items = [{ t: "W", id: "W" }].concat(kit), cols = TCOLS, cw = (TW - 28) / cols;
       items.forEach(function (pc, k) {
         var x = TX + 14 + cw * (k % cols) + cw / 2, y = TY + 62 + Math.floor(k / cols) * 62, gone = pc.t !== "W" && used[pc.id];
         TRAY.push({ pc: pc, x: x, y: y, gone: gone });
@@ -410,6 +416,7 @@
       ohmLive: function () { return ["warn", "لا تقيس المقاومة والدائرة موصولة بمصدر شغال: القراءة غلط وقد تتلف الجهاز. افصل المصدر أو أطفئه أولًا."]; },
       noJack: function () { return ["info", "المفتاح على التيار، لكن ما فيه سلك في مدخل A أو mA."]; },
       hot: function (w) { return ["warn", "المقاومة " + si(w.nom, "Ω") + " تسخن: قدرتها " + w.p.toFixed(2) + " W وهي مصممة لـ " + w.pmax + " W. خفّض الجهد."]; },
+      twoAC: function () { return ["warn", "شغّال أكثر من مصدر متردد بترددات مختلفة: المحاكي يحسب على تردد واحد. شغّل مصدرًا مترددًا واحدًا (أو بنفس التردد)."]; },
       earth: function (w) { return ["bad", "تيار يمر في أرضي " + (w.id === "fg.gnd" ? "مولد الإشارة" : "الأوسيلوسكوب") + ": المشبك الأسود على عقدة غير عقدة الأرضي (الطرف الأسود للمولد). كل المشابك السوداء لازم تكون على نفس العقدة."]; }
     };
     function drawWarnings() {
@@ -543,7 +550,14 @@
         else if (!d.slot) { snap(); delete state.parts[d.id]; sel = null; commit(); }
         else render();
       } else if (d.k === "tray") {
-        if (d.moved && d.slot) { snap(); state.parts[d.slot] = JSON.parse(JSON.stringify(d.pc)); sel = null; commit(); }
+        if (d.moved && d.slot) {
+          snap(); var np = JSON.parse(JSON.stringify(d.pc));
+          if (np.t !== "W") {   // a second copy of the same block gets its own id (so its own actual value, like another real resistor)
+            var taken = {}; Object.keys(state.parts).forEach(function (s) { if (s !== d.slot && state.parts[s].id) taken[state.parts[s].id] = 1; });
+            var base = String(np.id).split("~")[0], k = 2; np.id = base; while (taken[np.id]) np.id = base + "~" + k++;
+          }
+          state.parts[d.slot] = np; sel = null; commit();
+        }
         else if (!d.moved) { toast("اسحب القطعة إلى مكانها على اللوحة"); }
         else render();
       } else if (d.k === "ctl") { if (d.moved && d.canDrag) commit(); else tapCtl(d.c, evt); }

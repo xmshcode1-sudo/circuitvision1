@@ -23,6 +23,11 @@
     if (bench) { bench.destroy(); bench = null; }
     var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
+    if (id === "free" && CV.clabFree) {
+      bench = CV.clabFree.show(root, { key: "c2-free", code: "EE 2020 · Electric Circuits II Lab", title: "معمل الدوائر الكهربائية 2", exps: EXP, rbDigits: 5,
+        inst: ["ps", "fg", "sc", "d1", "d2", "rb", "lb", "cb", "va", "cc", "tp", "wm"], kit: CV.clabFree.kitFrom(CV.c2lab.PIECES) });
+      window.scrollTo(0, 0); return;
+    }
     if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
   }
@@ -30,8 +35,7 @@
     document.title = "معمل الدوائر الكهربائية 2 — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE 2020 · Electric Circuits II Lab</span><h1>معمل الدوائر الكهربائية 2</h1>' +
       '<p>التجارب العشر في كتيب معمل المقرر EE 2020: شحن المكثف وتفريغه، الملفات المقترنة، RLC، الرنين، المرشحات، شبكات المنفذين، وثلاثي الطور. لكل تجربة: التحضير، والخطوات، وأجهزة افتراضية تقرأ منها، وجداول تتحقق منها المنصة، ورسم لقراءاتك، وفيديو شرح.</p>' +
-      '<p class="lg-note">التوصيل الحر للقطع على لوحة التوصيل لتجارب الدوائر 2: قيد الإعداد. الأجهزة هنا موصولة جاهزة كما في رسمة كل إجراء.</p>' +
-      '<div class="lg-cta"><a class="btn btn-primary" href="#c2e1">ابدأ بالتجربة 1</a></div></div>' +
+      '<div class="lg-cta"><a class="btn btn-primary" href="#c2e1">ابدأ بالتجربة 1</a><a class="btn btn-ghost" href="#free">🧪 المعمل الحر</a></div></div>' +
       '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n' + (c.d === c.t && c.t ? " ok" : "") + '">' + e.n + '</span><div><b class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="pg">' + (c.d ? c.d + " من " + c.t : "") + '</span></div></a>'; }).join("") + '</div>';
   }
 

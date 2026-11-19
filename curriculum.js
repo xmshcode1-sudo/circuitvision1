@@ -22,7 +22,7 @@
       code: "Circuits 1",
       ar: "الدوائر الكهربائية 1",
       level: "تحليل دوائر DC، ثم تحليل التيار المتردد في الحالة المستقرة وحسابات القدرة",
-      thumb: "dc",
+      thumb: "dc", lab: "lab.html", labNote: "معمل الدوائر 1: 10 تجارب، والمعمل الحر",
       chapters: [
         ch("c1-variables", "متغيرات الدائرة", "Circuit Variables", [
           "Circuit Analysis: An Overview", "Voltage and Current", "The Ideal Basic Circuit Element", "Power and Energy"]),
