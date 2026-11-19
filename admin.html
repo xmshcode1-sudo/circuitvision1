@@ -111,7 +111,7 @@
   }
 
   function frame(inner) {
-    var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"], ["pages", "الصفحات"], ["survey", "الاستبيان"]];
+    var T = [["stats", "نظرة عامة"], ["users", "المستخدمون والاشتراكات"], ["courses", "المقررات والأسعار"], ["payments", "المدفوعات"], ["ann", "الإعلانات"], ["pages", "الصفحات"]];
     if (!C.subscriptionsOn()) T = T.filter(function (x) { return x[0] !== "courses" && x[0] !== "payments"; }).map(function (x) { return x[0] === "users" ? ["users", "المستخدمون"] : x; });
     if (!T.some(function (x) { return x[0] === tab; })) tab = "stats";
     root.innerHTML = '<header class="ad-head"><div><h1>لوحة الإدارة</h1><p>تتحكم هنا في الحسابات والاشتراكات والأسعار والإعلانات. كل عملية يتحقق منها الخادم بأنك المدير.</p></div></header>' +
@@ -120,7 +120,7 @@
   }
   function show() {
     frame('<p class="muted">جارٍ التحميل…</p>');
-    ({ stats: stats, users: usersTab, courses: coursesTab, payments: paymentsTab, ann: annTab, pages: pagesTab, survey: surveyTab })[tab]();
+    ({ stats: stats, users: usersTab, courses: coursesTab, payments: paymentsTab, ann: annTab, pages: pagesTab })[tab]();
   }
   function body(html) { var b = document.getElementById("ad-body"); if (b) b.innerHTML = html; return b; }
   function fail(e) { body('<p class="ad-msg bad">' + esc(rpcErr(e)) + '</p>'); }
@@ -260,39 +260,6 @@
     });
   }
 
-  /* ---------- student survey (survey.html) ---------- */
-  var SV_LABEL = { term: "المستوى", c1: "Circuits 1", c2: "Circuits 2", c1_diff: "صعوبة Circuits 1 (من 5)", c1_hard: "أصعب فصول Circuits 1", c1_grade: "تقدير Circuits 1",
-    c2_diff: "صعوبة Circuits 2 (من 5)", c2_hard: "أصعب فصول Circuits 2", c2_grade: "تقدير Circuits 2", obstacles: "أكثر ما يعيقهم", sources: "مصادر المذاكرة", hours: "ساعات المذاكرة أسبوعيًا",
-    device: "جهاز المذاكرة", help: "كم يفرق لو كان موجود (متوسط من 5)", top: "أهم شي واحد", pay: "كم يدفعون شهريًا", change: "شي واحد يغيّرونه", worked: "أكثر ما ساعدهم", "else": "ملاحظات أخرى" };
-  var SV_TEXT = { change: 1, worked: 1, "else": 1 };
-  function surveyTab() {
-    db.from("survey_responses").select("answers,created_at").order("created_at", { ascending: false }).limit(2000).then(function (r) {
-      if (r.error) return fail(r.error);
-      var rows = (r.data || []).map(function (x) { return x.answers || {}; }), N = rows.length;
-      var link = location.origin + location.pathname.replace(/[^/]*$/, "") + "survey.html";
-      var head = '<section class="card ad-sec"><h2>استبيان الطلاب: ' + N + ' إجابة</h2><p class="muted" style="font-size:13px">رابط الاستبيان للطلاب (بدون تسجيل دخول): <b class="ltr" id="sv-link">' + esc(link) + '</b> <button type="button" class="btn btn-ghost btn-sm" id="sv-copy">نسخ الرابط</button></p></section>';
-      if (!N) { body(head + '<p class="muted">لا توجد إجابات بعد.</p>'); copyBtn(); return; }
-      var keys = Object.keys(SV_LABEL), html = head;
-      keys.forEach(function (k) {
-        var vals = rows.map(function (a) { return a[k]; }).filter(function (v) { return v !== undefined && v !== null && v !== ""; });
-        if (!vals.length) return;
-        var out = "";
-        if (SV_TEXT[k]) out = '<ul style="margin:0;padding-inline-start:18px;display:grid;gap:6px">' + vals.map(function (v) { return "<li>" + esc(v) + "</li>"; }).join("") + '</ul>';
-        else if (typeof vals[0] === "number") { var s = 0; vals.forEach(function (v) { s += v; }); out = bars(count(vals), vals.length, "المتوسط " + (s / vals.length).toFixed(1) + " من 5"); }
-        else if (typeof vals[0] === "object" && !Array.isArray(vals[0])) {
-          var agg = {}; vals.forEach(function (o) { Object.keys(o).forEach(function (q) { (agg[q] = agg[q] || []).push(o[q]); }); });
-          var items = Object.keys(agg).map(function (q) { var a = agg[q], t = 0; a.forEach(function (v) { t += v; }); return [q, t / a.length]; }).sort(function (x, y) { return y[1] - x[1]; });
-          out = items.map(function (it) { return bar(it[0], it[1].toFixed(1), it[1] / 5); }).join("");
-        } else { var flat = []; vals.forEach(function (v) { flat = flat.concat(v); }); out = bars(count(flat), vals.length); }
-        html += '<section class="card ad-sec"><h2>' + esc(SV_LABEL[k]) + ' <span class="muted" style="font-size:12.5px;font-weight:400">' + vals.length + ' أجابوا</span></h2>' + out + '</section>';
-      });
-      body(html); copyBtn();
-    });
-    function count(list) { var c = {}; list.forEach(function (v) { c[v] = (c[v] || 0) + 1; }); return Object.keys(c).map(function (k) { return [k, c[k]]; }).sort(function (a, b) { return b[1] - a[1]; }); }
-    function bars(pairs, n, note) { return pairs.map(function (p) { return bar(p[0], p[1] + " (" + Math.round(100 * p[1] / n) + "%)", p[1] / n); }).join("") + (note ? '<p class="muted" style="font-size:13px">' + note + '</p>' : ''); }
-    function bar(label, val, frac) { return '<div style="display:grid;gap:4px"><div style="display:flex;justify-content:space-between;gap:10px;font-size:13.5px"><span style="min-width:0;overflow-wrap:anywhere">' + esc(label) + '</span><b class="ltr" style="white-space:nowrap">' + esc(String(val)) + '</b></div><div class="bar"><span style="width:' + Math.max(2, Math.round(100 * Math.min(frac, 1))) + '%"></span></div></div>'; }
-    function copyBtn() { var b = document.getElementById("sv-copy"); if (b) b.onclick = function () { var t = document.getElementById("sv-link").textContent; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = "✓ نُسخ"; }, function () { b.textContent = "انسخه يدويًا"; }); }; }
-  }
 
   if (!C.configured()) { root.innerHTML = '<p class="ad-msg bad">الحسابات غير مفعّلة في هذه النسخة.</p>'; return; }
   C.ready().then(function (client) {
