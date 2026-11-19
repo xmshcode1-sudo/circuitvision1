@@ -125,6 +125,7 @@
       var r = +m[2], c = +m[3], a = "t:" + r + ":" + c, b = m[1] === "h" ? "t:" + r + ":" + (c + 1) : "t:" + (r + 1) + ":" + c;
       /* a hidden fault (troubleshooting practice): broken inside (open), shorted inside, or a block whose real value is not its label */
       var fl = pc.fault;
+      if (pc.t === "S") { if (pc.on) union(a, b); return; }   // a switch (free lab): closed = a wire, open = nothing
       if (pc.t === "W" || (fl && fl.k === "short")) union(a, b);
       else if (fl && fl.k === "open") return;
       else { var fv = fl && fl.k === "value" ? fl.v : null;
@@ -408,7 +409,7 @@
     return { ph: ph, p: P, q: Q, pf: Sa > 1e-9 ? P / Sa : 0 };
   }
   function si(v, u) {
-    var a = Math.abs(v), p = a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "k"] : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e-3, "m"] : a >= 1e-6 ? [1e-6, "µ"] : [1e-9, "n"];
+    var a = Math.abs(v), p = a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "k"] : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e-3, "m"] : a >= 1e-6 ? [1e-6, "µ"] : a >= 1e-9 ? [1e-9, "n"] : [1e-12, "p"];
     var n = v / p[0]; return (Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(2).replace(/\.?0+$/, "")) + " " + p[1] + u;
   }
   CV.clabSim = {

@@ -55,5 +55,21 @@ require("../clab-free.js"); require("../c2lab.js");
   })));
 });
 
+
+/* free lab: a part whose value the student typed, and the switch */
+(function () {
+  const e = exp("exp1"), p = e.procs.find((x) => x.id === "p2"), L = p.layouts[0], base = () => { const s = K.stateFor(L, {}, false); s.inst.ps.on = true; return s; };
+  let s = base(); s.parts = { "h:2:3": { t: "R", v: 100, id: "Radj", tol: 0, adj: true } };
+  check("an adjustable resistor set to 100 Ω", K.wiringReport(e, L, s), true);
+  s = base(); s.parts = { "h:2:3": { t: "R", v: 330, id: "Radj", tol: 0, adj: true } };
+  check("an adjustable resistor set to 330 Ω is a different circuit", K.wiringReport(e, L, s), false);
+  s = base(); s.parts = { "v:2:3": R(100, "R100"), "h:3:3": { t: "S", id: "SW", on: true }, "v:2:4": W };
+  check("a closed switch in series acts as a wire", K.wiringReport(e, L, s), true);
+  s = base(); s.parts = { "v:2:3": R(100, "R100"), "h:3:3": { t: "S", id: "SW", on: false }, "v:2:4": W };
+  check("an open switch breaks the circuit", K.wiringReport(e, L, s), false);
+  const S = CV.clabSim;
+  n++; if (S.si(47e-12, "F") !== "47 pF" || S.si(3.3e3, "Ω") !== "3.3 kΩ") { fail++; console.log("FAIL si pico", S.si(47e-12, "F")); }
+})();
+
 console.log(fail ? fail + " of " + n + " failed" : "equivalence: " + n + "/" + n + " ok (" + ready + " ready circuits)");
 process.exit(fail ? 1 : 0);

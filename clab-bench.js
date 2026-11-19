@@ -71,7 +71,7 @@
       '<ul class="wb-warn" aria-live="polite"></ul><p class="wb-rot">للمساحة الأكبر اقلب الجهاز بالعرض</p></div>';
     var wrap0 = host.querySelector(".wb"); try { if (localStorage.getItem(KEY + ".thin")) { wrap0.classList.add("wb-thin"); var tb = wrap0.querySelector('[data-a="thin"]'); tb.setAttribute("aria-pressed", "true"); tb.classList.add("on"); } } catch (e) {}
     var wrap = host.querySelector(".wb"), svg = host.querySelector(".wb-svg"), stage = host.querySelector(".wb-stage"), pop = host.querySelector(".wb-pop"), tool = host.querySelector(".wb-tool"), toastEl = host.querySelector(".wb-toast"), hint = host.querySelector(".wb-hint");
-    hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها";
+    hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها" + (opts.edit ? " أو تغيير قيمتها" : "");
 
     /* ---------- drawing helpers ---------- */
     var out = [];
@@ -120,7 +120,9 @@
         else if (pc.t === "R") s += '<line class="wb-sym" x1="-21" y1="-4" x2="-10" y2="-4"/><rect class="wb-sym" x="-10" y="-7.5" width="20" height="7"/><line class="wb-sym" x1="10" y1="-4" x2="21" y2="-4"/>';
         else if (pc.t === "L") s += '<path class="wb-sym" d="M-21 -3h7q2.5 -6 5 0q2.5 -6 5 0q2.5 -6 5 0q2.5 -6 5 0h8"/>';
         else if (pc.t === "C") s += '<path class="wb-sym" d="M-21 -4h18M3 -4h18M-3 -9v10M3 -9v10"/>';
-        var lab = pc.name || (pc.t === "R" ? si(pc.v, "Ω") : pc.t === "L" ? si(pc.v, "H") : si(pc.v, "F"));
+        else if (pc.t === "S") s += '<path class="wb-sym" d="M-21 -4h12M9 -4h12' + (pc.on ? "M-9 -4L9 -4" : "M-9 -4L7 -10") + '"/><circle class="wb-sym" cx="-9" cy="-4" r="1.6"/><circle class="wb-sym" cx="9" cy="-4" r="1.6"/>';
+        if (pc.adj && cls === "tray") s += '<circle cx="21" cy="-9.5" r="3.4" fill="#f2b632" stroke="#15181d" stroke-width=".6"/>';
+        var lab = pc.t === "S" ? (pc.on ? "ON" : "OFF") : pc.name || (pc.t === "R" ? si(pc.v, "Ω") : pc.t === "L" ? si(pc.v, "H") : si(pc.v, "F"));
         s += '<text class="wb-pv" x="0" y="' + (pc.bands ? 7.8 : 7.2) + '" text-anchor="middle">' + esc(lab) + '</text>';
       }
       return s + "</g>";
@@ -152,7 +154,7 @@
         var x = TX + 14 + cw * (k % cols) + cw / 2, y = TY + 62 + Math.floor(k / cols) * 62, gone = pc.t !== "W" && used[pc.id];
         TRAY.push({ pc: pc, x: x, y: y, gone: gone });
         o('<g class="wb-tr' + (gone ? " gone" : "") + '" data-t="' + k + '"><rect class="wb-hit" x="' + (x - cw / 2 + 2) + '" y="' + (y - 28) + '" width="' + (cw - 4) + '" height="58"/>' + partSvg(pc, { x: x, y: y - 6, h: true }, "tray") + '</g>');
-        text(pc.t === "W" ? "وصلة" : (pc.name ? pc.name : si(pc.v, pc.t === "R" ? "Ω" : pc.t === "L" ? "H" : "F")) + (pc.n ? " (" + pc.n + ")" : ""), x, y + 22, "wb-tr-t");
+        text(pc.t === "W" ? "وصلة" : pc.tl ? pc.tl : (pc.name ? pc.name : si(pc.v, pc.t === "R" ? "Ω" : pc.t === "L" ? "H" : "F")) + (pc.n ? " (" + pc.n + ")" : ""), x, y + 22, "wb-tr-t");
       });
     }
 
@@ -646,6 +648,19 @@
       if ((m = /^(d[12])\.dial$/.exec(c))) { var dl = DIAL[m[1]]; return { get: function () { return Math.max(0, dl.map(function (x) { return x[0]; }).indexOf(I[m[1]].mode)); }, set: function (v) { I[m[1]].mode = dl[v][0]; delete hold[m[1]]; }, min: 0, max: dl.length - 1, step: 1, px: 0.025, show: function (v) { return dl[v][1] + " · " + DIAL_AR[dl[v][0]]; }, title: DNAME[m[1]] }; }
       return null;
     }
+    /* the value of a part on the board (free lab): the student types any R, L or C, like a decade box or a part from the shop */
+    var PV = {
+      R: { unit: "Ω", min: 0.1, max: 10e6, units: [["Ω", 1], ["kΩ", 1e3], ["MΩ", 1e6]], presets: [10, 47, 100, 220, 470, 1000, 2200, 4700, 10e3, 100e3], title: "المقاومة · R" },
+      C: { unit: "F", min: 1e-12, max: 10e-3, units: [["pF", 1e-12], ["nF", 1e-9], ["µF", 1e-6], ["mF", 1e-3]], presets: [100e-12, 1e-9, 10e-9, 47e-9, 0.1e-6, 1e-6, 10e-6, 100e-6], title: "المكثف · C" },
+      L: { unit: "H", min: 1e-6, max: 10, units: [["µH", 1e-6], ["mH", 1e-3], ["H", 1]], presets: [100e-6, 1e-3, 10e-3, 17.5e-3, 50e-3, 0.1, 0.5, 1], title: "الملف · L" }
+    };
+    function valueSpec(slot) {
+      var pc = state.parts[slot], d = pc && PV[pc.t]; if (!d) return null;
+      return { get: function () { var p = state.parts[slot]; return p ? p.v : pc.v; },
+        set: function (v) { var p = state.parts[slot]; if (!p) return; p.v = v; p.adj = true; p.tol = 0; delete p.name; delete p.bands; delete p.tl; },
+        min: d.min, max: d.max, step: 0, log: true, type: true, unit: d.unit, units: d.units, presets: d.presets, title: d.title,
+        note: "اكتب أي قيمة، مثل 3.3k أو 47n أو 2.5m. القيمة تصير مضبوطة بالضبط (بدون سماحية)." };
+    }
     function ctlValue(c) { var s = ctlSpec(c); return s ? s.get() : 0; }
     function quant(s, v) { v = clamp(v, s.min, s.max); return s.step ? Math.round(v / s.step) * s.step : v; }
     function dragCtl(c, v0, dpx) {
@@ -713,8 +728,8 @@
         if (document.activeElement !== inp) inp.value = String(+(v / k).toPrecision(6));
       }
       function typed() {
-        var raw = String(inp.value).replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).replace(/[٫,]/g, ".").replace(/\s/g, ""), m = /^(\d*\.?\d+)(k|K|M|m)?(hz|Hz|HZ)?$/.exec(raw);
-        var k = usel ? +usel.value : 1; if (m && m[2]) k = { k: 1e3, K: 1e3, M: 1e6, m: 1e-3 }[m[2]];
+        var raw = String(inp.value).replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 1632); }).replace(/[٫,]/g, ".").replace(/\s/g, "").replace(/(hz|ohms?|Ω|[ΩFfHh])$/i, ""), m = /^(\d*\.?\d+)(k|K|M|m|u|µ|μ|n|p)?$/.exec(raw);
+        var k = usel ? +usel.value : 1; if (m && m[2]) k = { k: 1e3, K: 1e3, M: 1e6, m: 1e-3, u: 1e-6, "µ": 1e-6, "μ": 1e-6, n: 1e-9, p: 1e-12 }[m[2]];
         var v = m ? +m[1] * k : NaN;
         if (!(v > 0) || v < s.min || v > s.max) { err.hidden = false; err.textContent = "اكتب رقمًا بين " + (s.log ? si(s.min, s.unit) + " و " + si(s.max, s.unit) : s.min + " و " + s.max + (s.unit ? " " + s.unit : "")) + "."; return; }
         err.hidden = true; inp.blur(); apply(v, true);
@@ -753,7 +768,9 @@
     function placeTool() {
       if (!sel || sel.k === "pt") { tool.hidden = true; markSel(); return; }
       var q, html;
-      if (sel.k === "part") { var g = slotGeom(sel.id); if (!g || !state.parts[sel.id]) { sel = null; tool.hidden = true; return; } q = [g.x, g.y - 30]; html = '<button type="button" data-t="rot">↻ تدوير</button><button type="button" data-t="del" class="bad">حذف</button>'; }
+      if (sel.k === "part") { var g = slotGeom(sel.id); if (!g || !state.parts[sel.id]) { sel = null; tool.hidden = true; return; } q = [g.x, g.y - 30]; var sp = state.parts[sel.id];
+        html = (sp.t === "S" ? '<button type="button" data-t="sw">' + (sp.on ? "افتح المفتاح" : "سكّر المفتاح") + '</button>' : opts.edit && /^[RLC]$/.test(sp.t) ? '<button type="button" data-t="val">✎ القيمة</button>' : "") +
+          '<button type="button" data-t="rot">↻ تدوير</button><button type="button" data-t="del" class="bad">حذف</button>'; }
       else { var l = state.leads[sel.i]; if (!l) { sel = null; tool.hidden = true; return; } var a = P[l[0]], b = P[l[1]]; q = sel.e === undefined ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 10] : [P[l[sel.e]][0], P[l[sel.e]][1] - 26];
         html = '<button type="button" data-t="del" class="bad">افصل السلك</button><button type="button" data-t="col">اللون</button>' + (sel.e !== undefined ? '<button type="button" data-t="more">سلك ثاني من هنا</button>' : ""); }
       tool.innerHTML = html; tool.hidden = false;
@@ -765,6 +782,8 @@
       var b = evt.target.closest("[data-t]"); if (!b || !sel) return; var t = b.dataset.t;
       if (sel.k === "part") {
         if (t === "del") { snap(); delete state.parts[sel.id]; sel = null; return commit(); }
+        if (t === "sw") { snap(); state.parts[sel.id].on = !state.parts[sel.id].on; return commit(); }
+        if (t === "val") { var vs = valueSpec(sel.id); if (vs) openSpec("part", vs, evt); return; }
         var g = slotGeom(sel.id), alt = [], r = g.r, c = g.c;
         (g.h ? [["v", r, c], ["v", r - 1, c], ["v", r, c + 1], ["v", r - 1, c + 1]] : [["h", r, c], ["h", r, c - 1], ["h", r + 1, c], ["h", r + 1, c - 1]]).forEach(function (a) { LANES.forEach(function (ln) { alt.push(a[0] + ":" + a[1] + ":" + a[2] + ln[0]); }); });
         var to = alt.filter(function (id) { return allSlots()[id] && !state.parts[id]; })[0];
