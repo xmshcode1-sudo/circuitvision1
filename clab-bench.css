@@ -233,3 +233,12 @@ html.wb-lock .lg-ref { top: calc(env(safe-area-inset-top, 0px) + 150px); }
 .wb-pop-in select, .wb-pop-in span { min-height: 46px; border-radius: 12px; border: 1px solid var(--line, #cfd6e0); background: var(--surface-2, #fff); color: var(--fg, #172033); font: inherit; font-size: 15px; padding: 0 8px; display: inline-flex; align-items: center; }
 .wb-pop-in button { min-height: 46px; padding: 0 14px; border-radius: 12px; border: 0; background: var(--blue, #2463d6); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .wb-pop-e { color: #c0392b; }
+/* Circuits 2, Lab 10: the LD three-phase transformer, the power meter panel and the load rheostats */
+.wb-tp-pan { fill: #b9c3cc; stroke: #9aa5af; }
+.wb-tp-ln { stroke: #23272e; stroke-width: 2; fill: none; }
+.wb-tp-sym { stroke: #23272e; stroke-width: 2; fill: none; }
+.wb-rocker { fill: #c9541a; stroke: #6b2a0a; stroke-width: 1.5; } .wb-rocker.on { fill: #ff7a1a; filter: drop-shadow(0 0 5px #ff9a3a); }
+.wb-rh-slot { fill: #2b2f36; }
+.wb-rh-bar { fill: #8a8f98; }
+.wb-rh-sl { fill: #1b1d22; stroke: #000; cursor: ew-resize; }
+.wb-rh-tick { stroke: #f2c200; stroke-width: 2; }

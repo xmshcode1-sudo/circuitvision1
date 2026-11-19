@@ -750,3 +750,33 @@
   bi.pattern(/^المقاومة (.+) تسخن: قدرتها (.+) W وهي مصممة لـ (.+) W\. خفّض الجهد\.$/, function (m, a, b, c) { return "The " + a + " resistor is heating up: it dissipates " + b + " W but is rated for " + c + " W. Lower the voltage."; });
   bi.pattern(/^(.+?) · (.+)$/, function (m, a, b) { var x = part(a), y = part(b); return x === null || y === null ? null : x + " · " + y; });
 })();
+
+/* Circuits 2, Lab 10 on the real bench: the LD transformer, the MFA-2001 power meter panel and the load rheostats */
+(function () {
+  var bi = window.CV && window.CV.bi; if (!bi) return;
+  bi.add({
+  "محول ثلاثي الطور منخفض الجهد (LD): نجمة 23 V / 40 V ونجمة 6 V / 10 V، أقصى تيار 4 A في Y": "Three-phase extra-low-voltage transformer (LD): a 23 V / 40 V star and a 6 V / 10 V star, 4 A max in Y",
+  "ثلاث مقاومات متغيرة 1000 Ω، 0.57 A (الحمل)": "Three 1000 Ω, 0.57 A rheostats (the load)",
+  "لوحة قياس القدرة MFA-2001: P و Q و cos φ لكل طور وللمجموع": "MFA-2001 power meter panel: P, Q and cos φ for each phase and for the total",
+  "ملتيميتران (أميتر وفولتميتر)": "Two multimeters (ammeter and voltmeter)",
+  "لوحة القياس فيها محول تيار في كل خط وتقيس جهد كل طور إلى N، فتعرض P و Q و cos φ لكل طور وللمجموع. للحمل المتزن: الكلية = 3 × قدرة الطور.": "The meter panel has a current transformer in each line and measures each phase voltage to N, so it shows P, Q and cos φ for each phase and for the total. For a balanced load: total = 3 × phase power.",
+  "الكتيب يذكر واتميترين ومحولًا بدون جهد محدد، وأسئلة التحضير فيه على 127 V للطور (220 V للخط) و 100 Ω. طاولة المعمل في الجامعة، وهذه الطاولة الافتراضية مثلها، فيها محول LD منخفض الجهد بنجمتين (23 V / 40 V و 6 V / 10 V)، وثلاث مقاومات متغيرة 1000 Ω (0.57 A) تُضبط على 100 Ω، ولوحة قياس القدرة MFA-2001 بدل الواتميتر. لذلك الجداول على 23 V للطور: التيار 0.23 A وقدرة الطور 5.29 W، والتحضير يبقى على أرقام الكتيب. ومعادلات جهود الخط في الكتيب تكتب VBC و VCA باسم Vbn و Vcn (خطأ مطبعي)، والصحيح أن جهود الخط تتقدم جهود الطور بـ 30° في التتابع abc.": "The manual lists two wattmeters and a transformer with no stated voltage, and its prelab uses 127 V per phase (220 V line) and 100 Ω. The university bench, and this virtual bench like it, has an LD extra-low-voltage transformer with two stars (23 V / 40 V and 6 V / 10 V), three 1000 Ω (0.57 A) rheostats set to 100 Ω, and the MFA-2001 power meter panel instead of the wattmeter. So the tables use 23 V per phase: 0.23 A and 5.29 W per phase, while the prelab keeps the manual's numbers. The manual's line-voltage equations also write VBC and VCA as Vbn and Vcn (a typo); line voltages lead phase voltages by 30° in the abc sequence.",
+  "قبل التوصيل: اضبط كل مقاومة متغيرة على 100 Ω بين a و w (حرّك المنزلق)، وتأكد بالأوميتر.": "Before wiring: set each rheostat to 100 Ω between a and w (move the slider), and check with the ohmmeter.",
+  "وصّل نجمة 23 V / 40 V في المحول (L1 L2 L3 N) إلى مداخل لوحة القياس، ومخارج اللوحة إلى طرف a في كل مقاومة، واجمع أطراف w الثلاثة على N.": "Wire the transformer's 23 V / 40 V star (L1 L2 L3 N) to the meter panel's inputs, its outputs to terminal a of each rheostat, and join the three w terminals to N.",
+  "الأميتر على التوالي في الخط L1، والفولتميتر بين L1 و L2 (جهد الخط) ثم بين L1 و N (جهد الطور). صفحة I في اللوحة تعرض تيارات الخطوط الثلاثة. سجّل القراءات.": "The ammeter in series in line L1, the voltmeter between L1 and L2 (line voltage) then between L1 and N (phase voltage). The panel's I page shows the three line currents. Record the readings.",
+  "الإجراء 2 و 3: القدرة من لوحة القياس": "Procedures 2 and 3: Power from the meter panel",
+  "بنفس التوصيل، اضغط ▲ أو ▼ في اللوحة لين تظهر صفحة L1: الأسطر الثلاثة P و Q و cos φ للطور الأول.": "With the same wiring, press ▲ or ▼ on the panel until page L1 shows: the three lines are P, Q and cos φ of the first phase.",
+  "اضرب PL1 في 3، وقارنها بـ 3IA²RA.": "Multiply PL1 by 3 and compare with 3IA²RA.",
+  "انتقل لصفحة Σ: القدرة الكلية للأطوار الثلاثة. قارنها بما حسبت.": "Go to page Σ: the total power of the three phases. Compare it with your calculation.",
+  "اللوحة تقيس جهد كل طور إلى N": "The panel measures each phase voltage to N",
+  "لوحة القياس": "Meter panel",
+  "IA و VAB": "IA and VAB", "IA و VAN": "IA and VAN", "صفحة L1 في اللوحة": "Panel page L1", "صفحة Σ في اللوحة": "Panel page Σ",
+  "المنزلق يقسم الملف: R(a–w) + R(w–b) = 1000 Ω. أقصى تيار 0.57 A.": "The slider splits the winding: R(a–w) + R(w–b) = 1000 Ω. 0.57 A max."
+  });
+  bi.pattern(/^P L1 \(اللوحة\)(.+)$/, function (m, x) { return "P L1 (panel) " + x; });
+  bi.pattern(/^P Σ \(اللوحة\)(.+)$/, function (m, x) { return "P Σ (panel) " + x; });
+  bi.pattern(/^الكلية من اللوحة Σ \(W\)(.*)$/, function (m, x) { return "Total from the panel Σ (W)" + x; });
+  bi.pattern(/^المقاومة المتغيرة (\d) يمر فيها (.+) A وحدها 0\.57 A: بتحترق\. كبّر قيمتها \(حرّك المنزلق\) أو اطفئ المحول\.$/, function (m, k, i) { return "Rheostat " + k + " carries " + i + " A, past its 0.57 A: it will burn. Raise its value (move the slider) or switch the transformer off."; });
+  bi.pattern(/^تيار الخط (\w+) في المحول (.+) A وحده 4 A: فيه قصر أو حمل صغير جدًا\.$/, function (m, l, i) { return "Line " + l + " of the transformer carries " + i + " A, past its 4 A: a short or a load too small."; });
+  bi.pattern(/^وصلت النجمة (.+) في المحول، والمطلوب النجمة (.+)\. انقل الأسلاك لأطراف L1 L2 L3 N في النجمة الثانية\.$/, function (m, a, b) { return "You wired the transformer's " + a + " star; the circuit needs the " + b + " star. Move the wires to L1 L2 L3 N of the other star."; });
+})();

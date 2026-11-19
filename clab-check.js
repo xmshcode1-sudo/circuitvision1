@@ -78,9 +78,9 @@
       if (/\.vin$|^sc\.|^fg\.gnd$|^fg\.r$/.test(e.id)) return;                        // voltmeters, scope, generator internals: not part of the circuit
       if (e.id === "fg") { els.push({ k: "FG", a: e.na, b: e.nb, pol: 1 }); return; }
       if (e.k === "X") { els.push({ k: "K1", a: e.na, b: e.nb, pol: 0, id: e.id }); els.push({ k: "K2", a: e.nc, b: e.nd, pol: 0, id: e.id }); return; }
-      if (e.k === "V") { els.push({ k: e.src === "mn" ? "MN" : e.src === "va" ? "VA" : e.src === "tp" ? "TP" : "PS", a: e.na, b: e.nb, pol: 1 }); return; }
+      if (e.k === "V") { var vx = { k: e.src === "mn" ? "MN" : e.src === "va" ? "VA" : e.src === "tp" ? "TP" : "PS", a: e.na, b: e.nb, pol: 1 }; if (e.src === "tp") vx.v = e.ac; els.push(vx); return; }
       if (e.k === "R" && e.box && e.nom === 0) { u(e.na, e.nb); return; }
-      els.push({ k: e.k, v: e.k === "R" ? (e.nom || e.r) : e.k === "L" ? e.l : e.c, a: e.na, b: e.nb, pol: 0, id: e.id });
+      els.push({ k: e.k, v: e.k === "R" ? (e.nom || e.r) : e.k === "L" ? e.l : e.c, a: e.na, b: e.nb, pol: 0, id: e.id, rh: e.rh });
     });
     // the generator's 50 Ω sits between fg.int and fg.out: treat the FG as a source between fg.out and fg.com
     var fgr = net.els.filter(function (e) { return e.id === "fg.r"; })[0];
@@ -89,7 +89,13 @@
     els = els.filter(function (x) { return x.a !== x.b || x.k === "PS" || x.k === "VA" || x.k === "TP"; });
     // drop parts hanging in the air (both ends touch nothing else)
     var deg = {}; els.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; });
-    return els.filter(function (x) { return deg[x.a] > 1 || deg[x.b] > 1; });
+    els = els.filter(function (x) { return deg[x.a] > 1 || deg[x.b] > 1; });
+    // the unused half of a rheostat (one end free) carries nothing: leave it out; and an unused output of the transformer
+    for (var again = true; again;) {
+      again = false; deg = {}; els.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; });
+      els = els.filter(function (x) { var hang = (x.rh || x.k === "TP") && (deg[x.a] === 1 || deg[x.b] === 1); if (hang) again = true; return !hang; });
+    }
+    return els;
   }
   function same(x, y) { return x.k === y.k && (x.v === undefined || Math.abs(x.v - y.v) <= 0.005 * Math.max(1e-12, Math.abs(x.v))); }
   function iso(T, U) {
@@ -213,6 +219,10 @@
         if (!whole && equiv(want, core(state, e.inst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
       }
     });
+    // the three-phase transformer has two stars: which one is used?
+    var tpv = function (list) { return list.filter(function (x) { return x.k === "TP"; }).map(function (x) { return Math.round(x.v / Math.SQRT2); }); };
+    var tw = tpv(want), tg = tpv(gotCore);
+    if (tw.length && tg.length && tg.some(function (v) { return tw.indexOf(v) < 0; })) say("bad", "وصلت النجمة " + (tg[0] === 6 ? "6 V / 10 V" : "23 V / 40 V") + " في المحول، والمطلوب النجمة " + (tw[0] === 6 ? "6 V / 10 V" : "23 V / 40 V") + ". انقل الأسلاك لأطراف L1 L2 L3 N في النجمة الثانية.");
     if (bad) return { ok: false, msgs: msgs };
     // 1) the circuit itself (meters left out)
     var got = core(state, e.inst);

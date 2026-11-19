@@ -473,48 +473,48 @@
 
   /* ================= Experiment 10 ================= */
   (function () {
-    var R = 100, VP = 127, VL = VP * sqrt(3), I = VP / R;
+    var R = 100, VP = 23, VL = VP * sqrt(3), I = VP / R, VPm = 127, VLm = VPm * sqrt(3), Im = VPm / R;   // VP: the bench transformer (23 V star); VPm: the manual's prelab (127 V)
     // Y load: lines A, B, C end on three 100 Ω resistors that meet at the star point N (bottom row)
     function yFig(watt) {
       var ed = [Wr([3, 2], [3, 4]), Wr([3, 1], [3, 2])];
       [["A", 0, 4], ["B", 1, 3], ["C", 2, 2]].forEach(function (l) {
         var r = l[1], cEnd = l[2];
-        if (watt && r === 0) ed.push(Wr([0, 0], [0, 1]), Am([0, 1], [0, 2], "W (تيار)"), Wr([0, 2], [0, cEnd]));
+        if (watt && r === 0) ed.push(Wr([0, 0], [0, 1]), Am([0, 1], [0, 2], "لوحة القياس"), Wr([0, 2], [0, cEnd]));
         else if (watt) ed.push(Wr([r, 0], [r, cEnd]));
         else ed.push(Wr([r, 0], [r, 1]), Am([r, 1], [r, 2], "I" + l[0]), Wr([r, 2], [r, cEnd]));
         ed.push(E([r, cEnd], [3, cEnd], "R", "R" + l[0], { vtext: "100 Ω" }));
       });
       return fig(4, 5, ed, { nodeLabels: [{ at: [0, 0], text: "A" }, { at: [1, 0], text: "B" }, { at: [2, 0], text: "C" }, { at: [3, 1], text: "N" }],
-        notes: watt ? [{ at: [1.5, 1], text: "ملف الجهد: A–N", dx: 0 }] : [] });
+        notes: watt ? [{ at: [1.5, 1], text: "اللوحة تقيس جهد كل طور إلى N", dx: 0 }] : [] });
     }
     EXPS.push({ id: "c2e10", n: 10, en: "Three Phase AC Circuits", title: "الدوائر ثلاثية الطور",
       objective: ["التعرف على توصيلات ثلاثي الطور والعلاقات بين الجهود والتيارات.", "دراسة الدوائر ثلاثية الطور المتزنة.", "قياس القدرة ثلاثية الطور."],
-      equipment: ["ثلاث مقاومات حمل متماثلة", "ثلاثة أميترات وفولتميتران", "واتميتران ومحول ثلاثي الطور"],
+      equipment: ["محول ثلاثي الطور منخفض الجهد (LD): نجمة 23 V / 40 V ونجمة 6 V / 10 V، أقصى تيار 4 A في Y", "ثلاث مقاومات متغيرة 1000 Ω، 0.57 A (الحمل)", "لوحة قياس القدرة MFA-2001: P و Q و cos φ لكل طور وللمجموع", "ملتيميتران (أميتر وفولتميتر)"],
       theory: [
         "المولد ثلاثي الطور: ثلاثة ملفات بينها 120°. " + "<span class='ltr'>van = √2 V sin ωt</span>" + "، " + "<span class='ltr'>vbn = √2 V sin(ωt − 120°)</span>" + "، " + "<span class='ltr'>vcn = √2 V sin(ωt − 240°)</span>" + ".",
         "حمل Y متزن: " + "<span class='ltr'>IL = IP</span>" + " و " + "<span class='ltr'>VL = √3 VP</span>" + ". حمل Δ متزن: " + "<span class='ltr'>VL = VP</span>" + " و " + "<span class='ltr'>IL = √3 IP</span>" + ".",
         "في الحالتين: " + "<span class='ltr'>P = √3 VL IL cos θ = 3 VP IP cos θ</span>" + "، و θ الزاوية بين جهد الطور وتياره (صفر للمقاومات).",
-        "واتميتر واحد على طور واحد يقيس P<sub>φ</sub>، والكلية 3P<sub>φ</sub> للحمل المتزن فقط."
+        "لوحة القياس فيها محول تيار في كل خط وتقيس جهد كل طور إلى N، فتعرض P و Q و cos φ لكل طور وللمجموع. للحمل المتزن: الكلية = 3 × قدرة الطور."
       ],
-      note: "الكتيب لا يحدد جهد المحول في الخطوات؛ استخدمنا نفس قيم التحضير: VAN = 127 V (أي VL = 220 V). ومعادلات جهود الخط في الكتيب تكتب VBC و VCA باسم Vbn و Vcn (خطأ مطبعي)، والصحيح أن جهود الخط تتقدم جهود الطور بـ 30° في التتابع abc.",
+      note: "الكتيب يذكر واتميترين ومحولًا بدون جهد محدد، وأسئلة التحضير فيه على 127 V للطور (220 V للخط) و 100 Ω. طاولة المعمل في الجامعة، وهذه الطاولة الافتراضية مثلها، فيها محول LD منخفض الجهد بنجمتين (23 V / 40 V و 6 V / 10 V)، وثلاث مقاومات متغيرة 1000 Ω (0.57 A) تُضبط على 100 Ω، ولوحة قياس القدرة MFA-2001 بدل الواتميتر. لذلك الجداول على 23 V للطور: التيار 0.23 A وقدرة الطور 5.29 W، والتحضير يبقى على أرقام الكتيب. ومعادلات جهود الخط في الكتيب تكتب VBC و VCA باسم Vbn و Vcn (خطأ مطبعي)، والصحيح أن جهود الخط تتقدم جهود الطور بـ 30° في التتابع abc.",
       prelab: [
         { q: "(4.1) حمل Δ، 100 Ω لكل طور، VAB = 220∠0° V: مقدار IAB.", a: 2.2, u: [["A", 1]], sol: "220/100 = 2.2 A (∠0°)، و IBC = 2.2∠−120°، و ICA = 2.2∠120°." },
         { q: "تيار الخط في نفس الحمل.", a: 2.2 * sqrt(3), u: [["A", 1]], sol: "√3 × 2.2 = 3.81 A." },
         { q: "القدرة الكلية لحمل Δ.", a: 3 * 220 * 220 / 100, u: [["W", 1], ["kW", 1e3]], sol: "3 × 220²/100 = 1452 W." },
-        { q: "(4.2) حمل Y، 100 Ω، VAN = 127∠0° V: مقدار VAB.", a: VL, u: [["V", 1]], tol: 0.002, sol: "√3 × 127 = 219.97 V، و VAB = 219.97∠30° V." },
-        { q: "IAN.", a: I, u: [["A", 1]], sol: "127/100 = 1.27 A ∠0°." },
-        { q: "القدرة الكلية لحمل Y.", a: 3 * VP * VP / R, u: [["W", 1]], tol: 0.002, sol: "3 × 127²/100 = 483.9 W." }
+        { q: "(4.2) حمل Y، 100 Ω، VAN = 127∠0° V: مقدار VAB.", a: VLm, u: [["V", 1]], tol: 0.002, sol: "√3 × 127 = 219.97 V، و VAB = 219.97∠30° V." },
+        { q: "IAN.", a: Im, u: [["A", 1]], sol: "127/100 = 1.27 A ∠0°." },
+        { q: "القدرة الكلية لحمل Y.", a: 3 * VPm * VPm / R, u: [["W", 1]], tol: 0.002, sol: "3 × 127²/100 = 483.9 W." }
       ],
       procs: [
-        { id: "p1", title: "الإجراء 1: حمل Y متزن (100 Ω لكل طور)", steps: ["وصّل الحمل Y على المحول، واضبط المقاومات الثلاث على 100 Ω بالملتيميتر.", "سجّل قراءات الأميترات الثلاثة والفولتميترين (خط وطور)."],
+        { id: "p1", title: "الإجراء 1: حمل Y متزن (100 Ω لكل طور)", steps: ["قبل التوصيل: اضبط كل مقاومة متغيرة على 100 Ω بين a و w (حرّك المنزلق)، وتأكد بالأوميتر.", "وصّل نجمة 23 V / 40 V في المحول (L1 L2 L3 N) إلى مداخل لوحة القياس، ومخارج اللوحة إلى طرف a في كل مقاومة، واجمع أطراف w الثلاثة على N.", "الأميتر على التوالي في الخط L1، والفولتميتر بين L1 و L2 (جهد الخط) ثم بين L1 و N (جهد الطور). صفحة I في اللوحة تعرض تيارات الخطوط الثلاثة. سجّل القراءات."],
           fig: yFig(false),
           inst: { read: function () { return { meters: [["IA", sig(I, 3), "A"], ["IB", sig(I, 3), "A"], ["IC", sig(I, 3), "A"], ["VL (AB)", sig(VL, 3), "V"], ["VP (AN)", VP, "V"]] }; } },
           tables: [{ title: "الحمل المتزن", rows: ["—"], cols: [{ h: "", k: "n", src: "row" }, { h: "IA (A)", k: "IA", src: "meas" }, { h: "IB (A)", k: "IB", src: "meas" }, { h: "IC (A)", k: "IC", src: "meas" }, { h: "VL (V)", k: "VL", src: "meas" }, { h: "VP (V)", k: "VP", src: "meas" }, { h: "VL/VP", k: "r", src: "calc" }],
             model: function () { return { n: "—", IA: sig(I, 3), IB: sig(I, 3), IC: sig(I, 3), VL: sig(VL, 3), VP: VP, r: sig(VL, 3) / VP }; } }] },
-        { id: "p2", title: "الإجراء 2 و 3: القدرة بواتميتر واحد ثم بقراءة الكلية", steps: ["وصّل الواتميتر: ملف التيار في الخط A وملف الجهد بين A والمحايد.", "اقرأ P<sub>A</sub> واضربها في 3، وقارنها بـ 3IA²RA.", "اضغط مفتاح القدرة الكلية في الواتميتر وقارن."],
+        { id: "p2", title: "الإجراء 2 و 3: القدرة من لوحة القياس", steps: ["بنفس التوصيل، اضغط ▲ أو ▼ في اللوحة لين تظهر صفحة L1: الأسطر الثلاثة P و Q و cos φ للطور الأول.", "اضرب P<sub>L1</sub> في 3، وقارنها بـ 3IA²RA.", "انتقل لصفحة Σ: القدرة الكلية للأطوار الثلاثة. قارنها بما حسبت."],
           fig: yFig(true),
-          inst: { read: function () { return { meters: [["PA (واتميتر)", sig(VP * I, 4), "W"], ["الكلية (المفتاح)", sig(3 * VP * I, 4), "W"], ["IA", sig(I, 3), "A"]] }; } },
-          tables: [{ title: "القدرة", rows: ["—"], cols: [{ h: "", k: "n", src: "row" }, { h: "PA (W)", k: "PA", src: "meas" }, { h: "3 PA (W)", k: "P3", src: "calc" }, { h: "3 IA² RA (W)", k: "Pi", src: "calc" }, { h: "الكلية من الواتميتر (W)", k: "PT", src: "meas" }],
+          inst: { read: function () { return { meters: [["P L1 (اللوحة)", sig(VP * I, 4), "W"], ["P Σ (اللوحة)", sig(3 * VP * I, 4), "W"], ["cos φ", 1, ""], ["IA", sig(I, 3), "A"]] }; } },
+          tables: [{ title: "القدرة", rows: ["—"], cols: [{ h: "", k: "n", src: "row" }, { h: "PA (W)", k: "PA", src: "meas" }, { h: "3 PA (W)", k: "P3", src: "calc" }, { h: "3 IA² RA (W)", k: "Pi", src: "calc" }, { h: "الكلية من اللوحة Σ (W)", k: "PT", src: "meas" }],
             model: function () { var PA = sig(VP * I, 4), Ia = sig(I, 3); return { n: "—", PA: PA, P3: 3 * PA, Pi: 3 * Ia * Ia * R, PT: sig(3 * VP * I, 4) }; } }] }
       ]
     });
@@ -575,10 +575,13 @@
     [lay("L2", "المنفذ 2 مقصور", tParts({ "v:2:1": P("R10", "Rs"), "v:1:3": BR }), drive1, tSet)],
     [lay("L3", "المنفذ 1 مفتوح", tParts({ "v:2:3": P("R10", "Rs") }), drive2, tSet)],
     [lay("L4", "المنفذ 1 مقصور", tParts({ "v:2:3": P("R10", "Rs"), "v:1:1": BR }), drive2, tSet)]]);
-  // Lab 10: Y load RA (v:1:2), RB (v:1:4), RC (v:1:6), star point on row 2, neutral to N
-  var yParts = { "v:1:2": P("RA", "RA"), "v:1:4": P("RB", "RB"), "v:1:6": P("RC", "RC"), "h:2:2": BR, "h:2:3": BR, "h:2:4": BR, "h:2:5": BR };
-  B(10, ["tp", "wm", "d1", "d2"], ["RA", "RB", "RC"], [
-    [lay("L1", "IA و VAB", yParts, [["tp.A", "d1.A"], ["d1.COM", "t:1:2:3"], ["tp.B", "t:1:4:3"], ["tp.C", "t:1:6:3"], ["tp.N", "t:2:2:5"], ["d2.V", "t:1:2:1"], ["d2.COM", "t:1:4:1"]], { tp: { on: true }, d1: { mode: "aac" }, d2: { mode: "vac" } })],
-    [lay("L2", "واتميتر على الطور A", yParts, [["tp.A", "wm.I"], ["wm.I'", "t:1:2:3"], ["tp.B", "t:1:4:3"], ["tp.C", "t:1:6:3"], ["tp.N", "t:2:2:5"], ["wm.V", "t:1:2:1"], ["wm.V'", "t:2:2:3"], ["d1.V", "t:1:2:7"], ["d1.COM", "t:2:2:7"]], { tp: { on: true }, wm: { tot: false }, d1: { mode: "vac" } })]]);
+  // Lab 10: the real bench: the 23 V star of the LD transformer → the power meter panel → the three rheostats (a–w = 100 Ω), sliders joined on N
+  var rh100 = { tp: { on: true }, r1: { x: 100 }, r2: { x: 100 }, r3: { x: 100 } };
+  var yLeads = [["tp.B", "pm.2"], ["tp.C", "pm.3"], ["tp.N", "pm.N"], ["pm.1'", "r1.a"], ["pm.2'", "r2.a"], ["pm.3'", "r3.a"], ["r1.w", "pm.N'"], ["r2.w", "pm.N'"], ["r3.w", "pm.N'"]];
+  B(10, ["tp", "pm", "d1", "d2", "r1", "r2", "r3"], [], [
+    [lay("L1", "IA و VAB", {}, [["tp.A", "d1.A"], ["d1.COM", "pm.1"]].concat(yLeads, [["d2.V", "pm.1'"], ["d2.COM", "pm.2'"]]), mix(rh100, { d1: { mode: "aac" }, d2: { mode: "vac" }, pm: { pg: 5 } })),
+     lay("L1b", "IA و VAN", {}, [["tp.A", "d1.A"], ["d1.COM", "pm.1"]].concat(yLeads, [["d2.V", "pm.1'"], ["d2.COM", "pm.N'"]]), mix(rh100, { d1: { mode: "aac" }, d2: { mode: "vac" }, pm: { pg: 4 } }))],
+    [lay("L2", "صفحة L1 في اللوحة", {}, [["tp.A", "pm.1"]].concat(yLeads), mix(rh100, { pm: { pg: 0 } })),
+     lay("L3", "صفحة Σ في اللوحة", {}, [["tp.A", "pm.1"]].concat(yLeads), mix(rh100, { pm: { pg: 3 } }))]]);
   CV.c2lab = { PIECES: PIECES, list: EXPS, sig: sig, Cx: Cx, rcSquare: rcSquare, rlcSquare: rlcSquare, coil: COIL };
 })(typeof window !== "undefined" ? window : globalThis);

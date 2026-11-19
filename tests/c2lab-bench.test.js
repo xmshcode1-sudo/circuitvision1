@@ -41,8 +41,13 @@ x = sol(L[5], 0, 0); out.push(["e6 I 1k mA", x.r.d2.val * 1e3, row(L[5].procs[0]
 [0, 1, 2, 3].forEach(function (pi) { x = sol(L[8], pi, 0); var V1 = S.vBetween(x.s, "t:1:1", "t:2:1").ac, V2 = S.vBetween(x.s, "t:1:3", "t:2:3").ac, T = L[8].procs[pi].tables[0];
   out.push(["e9 p" + (pi + 1) + " |V1|", S.mag(V1) / Math.SQRT2, row(T, "V1").m]); out.push(["e9 p" + (pi + 1) + " |V2|", S.mag(V2) / Math.SQRT2, row(T, "V2").m]); });
 // e10
-x = sol(L[9], 0, 0); out.push(["e10 IA", x.r.d1.val, 1.27]); out.push(["e10 VAB", x.r.d2.val, 219.97]);
-x = sol(L[9], 1, 0); out.push(["e10 PA", x.r.wm.p, 161.29]); out.push(["e10 tot", x.r.wm.tot, 483.87]);
+// e10 on the real bench: 23 V star, rheostats at 100 Ω, the MFA-2001 power meter panel
+var T10 = L[9].procs, m1 = T10[0].tables[0].model("—"), m2 = T10[1].tables[0].model("—");
+x = sol(L[9], 0, 0); out.push(["e10 IA", x.r.d1.val, m1.IA]); out.push(["e10 VAB", x.r.d2.val, m1.VL]); ["1", "2", "3"].forEach(function (k, i) { out.push(["e10 pm I" + k, x.r.pm.ph[i].i, m1["I" + "ABC"[i]]]); });
+x = sol(L[9], 0, 1); out.push(["e10 VAN", x.r.d2.val, m1.VP]);
+x = sol(L[9], 1, 0); out.push(["e10 P L1", x.r.pm.ph[0].p, m2.PA]); out.push(["e10 P total", x.r.pm.p, m2.PT]); out.push(["e10 cos", x.r.pm.ph[0].pf, 1]);
+// a rheostat turned down to 20 Ω passes 1.15 A, past its 0.57 A: the bench must say so
+x = sol(L[9], 1, 0, { r1: { x: 20 } }); if (!x.r.warn.some(function (w) { return w.k === "rheo" && w.id === "r1"; })) { console.log("FAIL: no rheostat warning at 20 Ω"); process.exitCode = 1; }
 var bad = 0; out.forEach(function (o) { var d = isFinite(o[2]) ? Math.abs(o[1] - o[2]) / Math.max(Math.abs(o[2]), 0.05) : 0; if (d > 0.02) { bad++; console.log("FAIL: " + o[0] + "  bench " + (+o[1].toPrecision(5)) + "  table " + (+(+o[2]).toPrecision(5))); } });
 var wired = 0, nl = 0;
 L.forEach(function (e) { e.procs.forEach(function (p) { p.layouts.forEach(function (Lx) { nl++; var r = K.wiringReport(e, Lx, K.stateFor(Lx, {}, false)); if (r.ok) wired++; else { bad++; console.log("FAIL wiring " + e.id + " " + p.id + " " + Lx.id + ": " + r.msgs.map(function (m) { return m.t; }).join(" | ")); } }); }); });

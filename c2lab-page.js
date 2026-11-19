@@ -25,7 +25,7 @@
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (id === "free" && CV.clabFree) {
       bench = CV.clabFree.show(root, { key: "c2-free", code: "EE 2020 · Electric Circuits II Lab", title: "معمل الدوائر الكهربائية 2", exps: EXP, rbDigits: 5,
-        inst: ["ps", "fg", "sc", "d1", "d2", "rb", "lb", "cb", "va", "cc", "tp", "wm"], kit: CV.clabFree.kitFrom(CV.c2lab.PIECES) });
+        inst: ["ps", "fg", "sc", "d1", "d2", "rb", "lb", "cb", "va", "cc", "tp", "pm", "r1", "r2", "r3"], kit: CV.clabFree.kitFrom(CV.c2lab.PIECES) });
       window.scrollTo(0, 0); return;
     }
     if (e) showExp(e); else showIndex();

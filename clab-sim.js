@@ -85,7 +85,7 @@
   function defaults() {
     return {
       ps: ps0(), fg: { on: false, f: 1000, vpp: 0, w: "sin" },
-      va: { on: false, v: 0 }, tp: { on: false }, wm: { tot: false },
+      va: { on: false, v: 0 }, tp: { on: false }, wm: { tot: false }, pm: { pg: 0 }, r1: { x: 1000 }, r2: { x: 1000 }, r3: { x: 1000 },
       d1: { mode: "off" }, d2: { mode: "off", fuse: true },
       sc: { on: true, c1: { vd: 2, cp: "DC", on: true }, c2: { vd: 2, cp: "DC", on: true }, td: 0.0002, x1: 3, x2: 5, cur: false, math: false, meas: true },
       rb: { d: [0, 1, 0, 0] }, lb: { d: [1, 7, 5] }, cb: { d: [0, 0] }, mn: { on: false }
@@ -102,8 +102,13 @@
      terminal B of coil 2 (the student finds the second one in Procedure 3). */
   var COILS = { r1: 11.6, r2: 3.1, l1: 0.42, l2: 0.105, k: 0.92, skin: 1.15 };
   COILS.m = COILS.k * Math.sqrt(COILS.l1 * COILS.l2);
-  /* Circuits 2, Lab 10: the three-phase transformer (secondary in star, 127 V per phase → 220 V line, 60 Hz, sequence ABC) */
-  var TP = { v: 127, f: 60 };
+  /* Circuits 2, Lab 10: the bench's three-phase extra-low-voltage transformer (LD), as in the university lab: two star outputs with
+     one neutral, printed on its panel as 23 V / 40 V (L1, L2, L3, N → tp.A, tp.B, tp.C, tp.N) and 6 V / 10 V (tp.a, tp.b, tp.c),
+     Imax 4 A in star. 60 Hz, sequence L1 L2 L3. The panel values are nominal; the model uses the phase voltages 23 V and 6 V. */
+  var TP = { v: 23, vlo: 6, f: 60, imax: 4 };
+  /* Circuits 2, Lab 10: the three load rheostats (1000 Ω, 0.57 A each). Terminals a (red) and b (black) are the two ends of the
+     winding, w (yellow) is the slider: R(a–w) = x and R(w–b) = 1000 − x. */
+  var RH = { r: 1000, imax: 0.57 };
 
   /* ---------- netlist ---------- */
   function build(state, opt) {
@@ -157,8 +162,21 @@
     if (on("cc")) els.push({ k: "X", a: "cc.1", b: "cc.1'", c: "cc.B", d: "cc.A", id: "cc" });
     if (on("tp") && inst.tp) {   // three-phase supply: A, B, C and the neutral N (earthed)
       union("tp.N", "earth");
-      if ((inst.tp.on || opt.allSrc) && !opt.dead) [["A", 0], ["B", -120], ["C", 120]].forEach(function (q) { els.push({ k: "V", a: "tp." + q[0], b: "tp.N", ac: TP.v * Math.SQRT2, ph: q[1], f: TP.f, id: "tp." + q[0], src: "tp" }); });
+      union("tp.n", "tp.N");   // the two stars share the neutral (drawn joined on the panel)
+      if ((inst.tp.on || opt.allSrc) && !opt.dead) [["A", 0], ["B", -120], ["C", 120]].forEach(function (q) {
+        els.push({ k: "V", a: "tp." + q[0], b: "tp.N", ac: TP.v * Math.SQRT2, ph: q[1], f: TP.f, id: "tp." + q[0], src: "tp" });
+        var lo = q[0].toLowerCase(); els.push({ k: "V", a: "tp." + lo, b: "tp.N", ac: TP.vlo * Math.SQRT2, ph: q[1], f: TP.f, id: "tp." + lo, src: "tp" });
+      });
     }
+    if (on("pm")) {   // the MFA-2001 power meter panel: L1 L2 L3 N in (left) → out (right); a current sensor in each line, N straight through
+      ["1", "2", "3"].forEach(function (k) { els.push({ k: "R", a: "pm." + k, b: "pm." + k + "'", r: 0.005, id: "pm." + k + ".sh" }); });
+      union("pm.N", "pm.N'");
+    }
+    ["r1", "r2", "r3"].forEach(function (k) {
+      if (!on(k)) return; var x = Math.min(RH.r, Math.max(0, inst[k] ? inst[k].x : RH.r));
+      els.push({ k: "R", a: k + ".a", b: k + ".w", r: Math.max(x, 0.05), nom: x, id: k + ".aw", rh: k });
+      els.push({ k: "R", a: k + ".w", b: k + ".b", r: Math.max(RH.r - x, 0.05), nom: RH.r - x, id: k + ".wb", rh: k });
+    });
     if (on("wm")) { els.push({ k: "R", a: "wm.I", b: "wm.I'", r: 0.005, id: "wm.sh" }); els.push({ k: "R", a: "wm.V", b: "wm.V'", r: 10e6, id: "wm.vin" }); }
     if (on("sc")) { els.push({ k: "R", a: "sc.1", b: "earth", r: 1e6, id: "sc.1r" }); els.push({ k: "R", a: "sc.2", b: "earth", r: 1e6, id: "sc.2r" });
       els.push({ k: "R", a: "sc.1g", b: "earth", r: 0.01, id: "sc.1gr" }); els.push({ k: "R", a: "sc.2g", b: "earth", r: 0.01, id: "sc.2gr" }); }
@@ -338,6 +356,11 @@
       var i = iElem(s, e), p = e.r * (i.dc * i.dc + mag(i.ac) * mag(i.ac) / 2);
       if (p > (e.pmax || 2)) warn.push({ k: "hot", id: e.id, nom: e.nom, p: p, pmax: e.pmax || 2 });
     });
+    // rheostats past 0.57 A, the transformer past 4 A per line
+    var rhw = {};
+    s.net.els.forEach(function (e) { if (!e.rh) return; var i = iElem(s, e), ir = Math.sqrt(i.dc * i.dc + mag(i.ac) * mag(i.ac) / 2); if (ir > RH.imax && (!rhw[e.rh] || ir > rhw[e.rh])) rhw[e.rh] = ir; });
+    Object.keys(rhw).forEach(function (k) { warn.push({ k: "rheo", id: k, i: rhw[k] }); });
+    s.net.els.forEach(function (e) { if (e.src !== "tp" || !s.ac) return; var ir = mag(s.ac.Iv[e.id] || Z0) / Math.SQRT2; if (ir > TP.imax) warn.push({ k: "tpmax", id: e.id, i: ir }); });
     // earth loop through the scope or generator ground
     ["sc.1gr", "sc.2gr", "fg.gnd"].forEach(function (id) {
       var e = elById(s, id); if (!e) return; var i = iElem(s, e);
@@ -348,6 +371,7 @@
     out.sc = scope(s);
     out.mn = mains(s);
     out.wm = watt(s);
+    out.pm = pmeter(s);
     return out;
   }
 
@@ -372,6 +396,17 @@
     sol.net.els.forEach(function (e) { if (e.src !== "tp") return; var vv = sub(sol.ac.V[e.na], sol.ac.V[e.nb]), ii = sol.ac.Iv[e.id] || Z0; tot += -mul(vv, cx(ii.re, -ii.im)).re / 2; });
     return { p: S1.re / 2, tot: tot };
   }
+  /* the power meter panel: per line the rms voltage to N, the rms current, P, Q and cos φ; and the sums */
+  function pmeter(sol) {
+    if (!elById(sol, "pm.1.sh") || !sol.ac) return null;
+    var ph = ["1", "2", "3"].map(function (k) {
+      var i = iElem(sol, elById(sol, "pm." + k + ".sh")).ac, v = vBetween(sol, "pm." + k, "pm.N").ac, S1 = mul(v, cx(i.re, -i.im));
+      var V = mag(v) / Math.SQRT2, I = mag(i) / Math.SQRT2, P = S1.re / 2, Q = S1.im / 2;
+      return { v: V, i: I, p: P, q: Q, pf: V * I > 1e-9 ? P / (V * I) : 0 };
+    });
+    var P = 0, Q = 0, Sa = 0; ph.forEach(function (x) { P += x.p; Q += x.q; Sa += x.v * x.i; });
+    return { ph: ph, p: P, q: Q, pf: Sa > 1e-9 ? P / Sa : 0 };
+  }
   function si(v, u) {
     var a = Math.abs(v), p = a >= 1e6 ? [1e6, "M"] : a >= 1e3 ? [1e3, "k"] : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e-3, "m"] : a >= 1e-6 ? [1e-6, "µ"] : [1e-9, "n"];
     var n = v / p[0]; return (Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(2).replace(/\.?0+$/, "")) + " " + p[1] + u;
@@ -380,7 +415,7 @@
     si: si,
     cx: cx, add: add, sub: sub, mul: mul, div: div, mag: mag, ang: ang,
     solveMNA: solveMNA, build: build, solve: solve, read: read, vNode: vNode, vBetween: vBetween, iElem: iElem, elById: elById,
-    ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP, COILS: COILS, TP: TP, acRms: acRms, at: at, NH: NH,
+    ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP, COILS: COILS, TP: TP, RH: RH, acRms: acRms, at: at, NH: NH,
     fmtV: fmtV, fmtA: fmtA, fmtMA: fmtMA, fmtR: fmtR
   };
 })(typeof window !== "undefined" ? window : globalThis);

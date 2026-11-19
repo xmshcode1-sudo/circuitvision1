@@ -48,11 +48,13 @@
     var kit = (opts.kit || []).slice(), MAINS = inst.indexOf("mn") > -1, H = MAINS ? 560 : 950;
     var TCOLS = 4, TROWS = Math.max(4, Math.ceil((kit.length + 1) / TCOLS)), TRAY_H = Math.max(278, 50 + TROWS * 62);
     if (!MAINS) {
+      var top3 = ["fg", "ps", "sc"].some(function (k) { return inst.indexOf(k) > -1; });
       var rightN = ["rb", "lb", "cb", "va", "cc"].filter(function (k) { return inst.indexOf(k) > -1; }).length +
-        (["fg", "ps", "sc"].some(function (k) { return inst.indexOf(k) > -1; }) ? ["tp", "wm"].filter(function (k) { return inst.indexOf(k) > -1; }).length : 0);
-      H = Math.max(H, 282 + rightN * 214 + 10, 654 + TRAY_H + 16);
+        (top3 ? ["tp", "wm"].filter(function (k) { return inst.indexOf(k) > -1; }).length + (inst.indexOf("pm") > -1 ? 236 / 214 : 0) : 0);
+      var rhN = ["r1", "r2", "r3"].filter(function (k) { return inst.indexOf(k) > -1; }).length;
+      H = Math.max(H, 282 + rightN * 214 + rhN * 164 + 10, 654 + TRAY_H + 16);
     }
-    var W = MAINS || ["rb", "lb", "cb", "sc", "va", "cc", "tp", "wm"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
+    var W = MAINS || ["rb", "lb", "cb", "sc", "va", "cc", "tp", "wm", "pm", "r1"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
     var marks = [], state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
     var vb = { x: 0, y: 0, w: W, h: H };
     function fresh() { return { parts: {}, leads: [], inst: S.defaults() }; }
@@ -343,11 +345,60 @@
       jack("cc.A", x + 326, y + 76, "red", "", 0); jack("cc.B", x + 326, y + 146, "black", "", 0);
       text("A", x + 352, y + 80, "wb-lbl"); text("B", x + 352, y + 150, "wb-lbl");
     }
+    var LTR = ' direction="ltr" unicode-bidi="embed"';
+    /* the LD three-phase extra-low-voltage transformer of the lab: two stars (6 V / 10 V and 23 V / 40 V) with one neutral */
     function drawTP(x, y) {
-      var tp = I.tp; box(x, y, "3-PHASE SUPPLY · ثلاثي الطور", "Y 220/127 V · 60 Hz · ABC");
-      button("tp.on", x + 22, y + 52, 52, 28, tp.on ? "ON" : "OFF", "mnkey" + (tp.on ? " in" : "")); led(x + 92, y + 66, tp.on, "red");
-      [["A", "red"], ["B", "yellow"], ["C", "blue"], ["N", "black"]].forEach(function (q, k) { jack("tp." + q[0], x + 60 + k * 82, y + 136, q[1] === "yellow" ? "red" : q[1], q[0], 30); });
-      text("VAN = 127 V ∠0° · VBN ∠−120° · VCN ∠+120°", x + 189, y + 104, "wb-tiny");
+      var tp = I.tp, w = 378, h = 214;
+      rect(x + 3, y + 5, w, h, "wb-sh", 10); rect(x, y, w, h, "wb-case", 10); rect(x + 12, y + 40, w - 24, h - 52, "wb-tp-pan", 6);
+      text("3-PHASE TRANSFORMER · محول ثلاثي الطور", x + 16, y + 26, "wb-lbl", "start"); text("LD · 60 Hz", x + w - 14, y + 26, "wb-tiny", "end");
+      o('<g class="wb-ctl" data-c="tp.on"><rect class="wb-rocker' + (tp.on ? " on" : "") + '" x="' + (x + 22) + '" y="' + (y + 50) + '" width="24" height="36" rx="4"/></g>');
+      o('<path class="wb-tp-sym" d="M' + (x + 150) + ' ' + (y + 62) + 'h22M' + (x + 206) + ' ' + (y + 62) + 'h22M' + (x + 153) + ' ' + (y + 68) + 'l6 -12M' + (x + 159) + ' ' + (y + 68) + 'l6 -12M' + (x + 165) + ' ' + (y + 68) + 'l6 -12M' + (x + 209) + ' ' + (y + 68) + 'l6 -12M' + (x + 215) + ' ' + (y + 68) + 'l6 -12M' + (x + 221) + ' ' + (y + 68) + 'l6 -12"/><circle class="wb-tp-sym" cx="' + (x + 182) + '" cy="' + (y + 62) + '" r="11"/><circle class="wb-tp-sym" cx="' + (x + 196) + '" cy="' + (y + 62) + '" r="11"/>');
+      text("Imax 4 A Y · 2.3 A Δ", x + 189, y + 92, "wb-tiny");
+      function star(cx, cy, k, vl, vp) {
+        var p2 = [cx, cy - 52], pn = [cx, cy], p1 = [cx - 50, cy + 36], p3 = [cx + 50, cy + 36], ln = function (a, b) { o('<line class="wb-tp-ln" x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '"/>'); };
+        ln(p1, p2); ln(p2, p3); ln(p3, p1); ln(pn, p1); ln(pn, p2); ln(pn, p3);
+        text(vl, (p1[0] + p2[0]) / 2 - 18, (p1[1] + p2[1]) / 2, "wb-tiny", "middle", LTR); text(vl, (p1[0] + p3[0]) / 2, p1[1] + 14, "wb-tiny", "middle", LTR); text(vp, cx + 8, cy - 28, "wb-tiny", "start", LTR);
+        jack("tp." + k[1], p2[0], p2[1], "black", "", 0); jack("tp." + k[3], pn[0], pn[1], "blue", "", 0); jack("tp." + k[0], p1[0], p1[1], "black", "", 0); jack("tp." + k[2], p3[0], p3[1], "black", "", 0);
+        text("L2", p2[0] - 20, p2[1] + 4, "wb-tiny", "end"); text("N", pn[0] + 16, pn[1] + 18, "wb-tiny", "start"); text("L1", p1[0] - 16, p1[1] + 4, "wb-tiny", "end"); text("L3", p3[0] + 16, p3[1] + 4, "wb-tiny", "start");
+      };
+      o('<line class="wb-tp-ln" x1="' + (x + 96) + '" y1="' + (y + 150) + '" x2="' + (x + 282) + '" y2="' + (y + 150) + '"/>');
+      star(x + 96, y + 150, ["a", "b", "c", "n"], "10 V", "6 V"); star(x + 282, y + 150, ["A", "B", "C", "N"], "40 V", "23 V");
+    }
+    /* the MFA-2001 power meter panel: L1 L2 L3 N in on the left, out on the right, a current transformer in each line */
+    var PM_PG = ["L1", "L2", "L3", "Σ", "U", "I"];
+    function drawPM(x, y) {
+      var w = 400, h = 222, m = R.pm, pg = (I.pm && I.pm.pg) || 0;
+      rect(x + 3, y + 5, w, h, "wb-sh", 10); rect(x, y, w, h, "wb-case", 10);
+      text("POWER METER · لوحة قياس القدرة", x + 16, y + 22, "wb-lbl", "start"); text("CAT II · 400 V", x + w - 14, y + 22, "wb-tiny", "end");
+      var ys = [y + 44, y + 68, y + 92, y + 118], nm = ["L1", "L2", "L3", "N"], id = ["1", "2", "3", "N"];
+      ys.forEach(function (yy, k) {
+        o('<line class="wb-tp-ln" x1="' + (x + 30) + '" y1="' + yy + '" x2="' + (x + w - 30) + '" y2="' + yy + '"/>');
+        jack("pm." + id[k], x + 30, yy, k === 3 ? "blue" : "black", "", 0); jack("pm." + id[k] + "'", x + w - 30, yy, k === 3 ? "blue" : "black", "", 0);
+        text(nm[k], x + 50, yy - 5, "wb-tiny", "start"); if (k < 3) text("max. 10 A", x + w - 50, yy - 5, "wb-tiny", "end");
+        if (k < 3) { var cx = x + 150 + k * 50; o('<circle class="wb-tp-sym" cx="' + cx + '" cy="' + yy + '" r="8"/><line class="wb-tp-ln" x1="' + cx + '" y1="' + (yy + 8) + '" x2="' + cx + '" y2="' + ys[3] + '"/>'); }
+      });
+      rect(x + 112, y + 132, 172, 84, "wb-lcd", 4);
+      var rows, units, f = function (v, d) { var a = Math.abs(v); return a >= 1000 ? v.toFixed(0) : a >= 100 ? v.toFixed(1) : v.toFixed(d === undefined ? 2 : d); };
+      if (!m) rows = ["0.00", "0.00", "0.00"], units = ["", "", ""];
+      else if (pg < 3) { var q = m.ph[pg]; rows = [f(q.p), f(q.q), q.pf.toFixed(2)]; units = ["W", "var", "PF"]; }
+      else if (pg === 3) { rows = [f(m.p), f(m.q), m.pf.toFixed(2)]; units = ["W", "var", "PF"]; }
+      else if (pg === 4) { rows = m.ph.map(function (q) { return f(q.v, 1); }); units = ["V", "V", "V"]; }
+      else { rows = m.ph.map(function (q) { return f(q.i, 3); }); units = ["A", "A", "A"]; }
+      rows.forEach(function (t, k) { o(seg7(t, x + 250, y + 137 + k * 26, 17, "#1a2016", "")); text(units[k], x + 280, y + 152 + k * 26, "wb-lcd-u", "end", LTR); });
+      text(PM_PG[pg] + (pg < 3 || pg === 3 ? "" : pg === 4 ? " L–N" : ""), x + 122, y + 150, "wb-lcd-u", "start");
+      text("MFA-2001", x + 56, y + 160, "wb-tiny"); text("PROGRAMM", x + 334, y + 140, "wb-tiny");
+      button("pm.up", x + 314, y + 148, 40, 26, "▲", "pkkey"); button("pm.dn", x + 314, y + 182, 40, 26, "▼", "pkkey");
+    }
+    /* a load rheostat: 1000 Ω, 0.57 A; ends a and b, slider w */
+    function drawRH(k, x, y) {
+      var w = 378, h = 150, v = I[k].x, sx = x + 70 + 238 * v / 1000;
+      rect(x + 3, y + 5, w, h, "wb-sh", 10); rect(x, y, w, h, "wb-case", 10);
+      text("RHEOSTAT " + k.slice(1) + " · مقاومة متغيرة", x + 16, y + 24, "wb-lbl", "start"); text("1000 Ω · 0.57 A", x + w - 14, y + 24, "wb-tiny", "end");
+      for (var i = 0; i < 14; i++) rect(x + 56 + i * 19, y + 40, 9, 40, "wb-rh-slot", 3);
+      rect(x + 60, y + 84, 258, 6, "wb-rh-bar", 3);
+      o('<g class="wb-ctl" data-c="' + k + '.x" data-drag="1"><rect class="wb-rh-sl" x="' + (sx - 26) + '" y="' + (y + 70) + '" width="52" height="30" rx="4"/><line class="wb-rh-tick" x1="' + sx + '" y1="' + (y + 74) + '" x2="' + sx + '" y2="' + (y + 96) + '"/></g>');
+      text("R(a–w) = " + si(v, "Ω"), x + 189, y + 118, "wb-val", "middle", LTR);
+      jack(k + ".a", x + 36, y + 120, "red", "a", 26); jack(k + ".w", x + 300, y + 120, "yellow", "w", 26); jack(k + ".b", x + 344, y + 120, "black", "b", 26);
     }
     function drawWM(x, y) {
       var w = R.wm, tot = I.wm.tot; box(x, y, "WATTMETER · واتميتر", "");
@@ -386,8 +437,9 @@
 
     /* ---------- leads ---------- */
     function ptKind(p) {
-      if (/\.(m|s)\+$|\.V$|\.A$|\.10A$|\.mA$|fg\.out|sc\.[12]$|\.a$|mn\.L|va\.L|cc\.1$|tp\.[ABC]$|wm\.I$/.test(p)) return "red";
-      if (/sc\.[12]g|fg\.com|\.COM$|tp\.N|wm\.[IV]'|cc\.1'|cc\.B/.test(p)) return "black";
+      if (/tp\.[Nn]$|pm\.N'?$|r\d\.w$/.test(p)) return "blue";
+      if (/\.(m|s)\+$|\.V$|\.A$|\.10A$|\.mA$|fg\.out|sc\.[12]$|\.a$|mn\.L|va\.L|cc\.1$|tp\.[ABCabc]$|pm\.[123]'?$|wm\.I$/.test(p)) return "red";
+      if (/sc\.[12]g|fg\.com|\.COM$|wm\.[IV]'|cc\.1'|cc\.B/.test(p)) return "black";
       if (/\.(m|s)-$|\.b$|mn\.N|va\.N/.test(p)) return "blue";
       if (/\.e$/.test(p)) return "green";
       return "";
@@ -416,6 +468,8 @@
       ohmLive: function () { return ["warn", "لا تقيس المقاومة والدائرة موصولة بمصدر شغال: القراءة غلط وقد تتلف الجهاز. افصل المصدر أو أطفئه أولًا."]; },
       noJack: function () { return ["info", "المفتاح على التيار، لكن ما فيه سلك في مدخل A أو mA."]; },
       hot: function (w) { return ["warn", "المقاومة " + si(w.nom, "Ω") + " تسخن: قدرتها " + w.p.toFixed(2) + " W وهي مصممة لـ " + w.pmax + " W. خفّض الجهد."]; },
+      rheo: function (w) { return ["bad", "المقاومة المتغيرة " + w.id.slice(1) + " يمر فيها " + w.i.toFixed(2) + " A وحدها 0.57 A: بتحترق. كبّر قيمتها (حرّك المنزلق) أو اطفئ المحول."]; },
+      tpmax: function (w) { return ["bad", "تيار الخط " + w.id.slice(3).toUpperCase() + " في المحول " + w.i.toFixed(2) + " A وحده 4 A: فيه قصر أو حمل صغير جدًا."]; },
       twoAC: function () { return ["warn", "شغّال أكثر من مصدر متردد بترددات مختلفة: المحاكي يحسب على تردد واحد. شغّل مصدرًا مترددًا واحدًا (أو بنفس التردد)."]; },
       earth: function (w) { return ["bad", "تيار يمر في أرضي " + (w.id === "fg.gnd" ? "مولد الإشارة" : "الأوسيلوسكوب") + ": المشبك الأسود على عقدة غير عقدة الأرضي (الطرف الأسود للمولد). كل المشابك السوداء لازم تكون على نفس العقدة."]; }
     };
@@ -449,8 +503,10 @@
         if (has("va")) { drawVariac(1206, by); by += 214; }
         if (has("cc")) { drawCoils(1206, by); by += 214; }
         var shelf = !has("fg") && !has("ps") && !has("sc");   // an empty top shelf: the three-phase supply and the wattmeter go there
-        if (has("tp")) { if (shelf) drawTP(420, 40); else { drawTP(1206, by); by += 214; } }
+        if (has("tp")) { if (shelf) drawTP(420, 36); else { drawTP(1206, by); by += 228; } }
         if (has("wm")) { if (shelf) drawWM(830, 40); else { drawWM(1206, by); by += 214; } }
+        if (has("pm")) { if (shelf) drawPM(830, 36); else { drawPM(1196, by); by += 236; } }
+        ["r1", "r2", "r3"].forEach(function (k) { if (has(k)) { drawRH(k, 1206, by); by += 164; } });
       }
       drawLeads();
       marks.forEach(function (m) {   // orange rings used by the explainer videos (api.mark)
@@ -582,6 +638,7 @@
       if (c === "sc.t") return { get: function () { return TDIV.indexOf(I.sc.td); }, set: function (v) { I.sc.td = TDIV[v]; }, min: 0, max: TDIV.length - 1, step: 1, px: 0.04, show: function (v) { return si(TDIV[v], "s") + "/div"; }, title: "SEC/DIV" };
       if ((m = /^sc\.(c[12])\.pos$/.exec(c))) return { get: function () { return I.sc[m[1]].pos || 0; }, set: function (v) { I.sc[m[1]].pos = v; }, min: -4, max: 4, step: 0.1, px: 0.03, unit: "div", title: "VERTICAL POSITION" };
       if (c === "sc.hpos") return { get: function () { return I.sc.hpos || 0; }, set: function (v) { I.sc.hpos = v; }, min: -6, max: 6, step: 0.1, px: 0.04, unit: "div", title: "HORIZONTAL POSITION" };
+      if ((m = /^(r[123])\.x$/.exec(c))) return { get: function () { return I[m[1]].x; }, set: function (v) { I[m[1]].x = v; }, min: 0, max: 1000, step: 1, px: 2, unit: "Ω", type: true, presets: [100, 200, 500, 1000], title: "RHEOSTAT " + m[1].slice(1) + " · R بين a و w", note: "المنزلق يقسم الملف: R(a–w) + R(w–b) = 1000 Ω. أقصى تيار 0.57 A." };
       if (c === "va.v") return { get: function () { return I.va.v; }, set: function (v) { I.va.v = v; }, min: 0, max: 30, step: 0.1, px: 0.05, unit: "V rms", title: "VARIAC · جهد الخرج (60 Hz)" };
       if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) { var DL = { rb: rbLabels(I.rb.d.length), lb: ["×10 mH", "×1 mH", "×0.1 mH"], cb: ["×1 µF", "×0.1 µF"] }[m[1]];
         return { get: function () { return I[m[1]].d[+m[2]]; }, set: function (v) { I[m[1]].d[+m[2]] = v; }, min: 0, max: 9, step: 1, px: 0.035, title: { rb: "صندوق المقاومات", lb: "صندوق المحاثة", cb: "صندوق المكثفات" }[m[1]], tag: DL[+m[2]],
@@ -610,6 +667,7 @@
       if (c === "va.on") { snap(); I.va.on = !I.va.on; return commit(); }
       if (c === "tp.on") { snap(); I.tp.on = !I.tp.on; return commit(); }
       if (c === "wm.tot") { I.wm.tot = !I.wm.tot; return commit(); }
+      if (c === "pm.up" || c === "pm.dn") { I.pm.pg = ((I.pm.pg || 0) + (c === "pm.up" ? 5 : 1)) % 6; return commit(); }
       if ((m = /\.soon:(.+)$/.exec(c))) return toast("زر " + m[1] + ": قيد الإعداد");
       if ((m = /^(d[12])\.hold$/.exec(c))) { if (hold[m[1]]) delete hold[m[1]]; else hold[m[1]] = R[m[1]]; return render(); }
       if ((m = /^(d[12])\.mode:(\w+)$/.exec(c))) { snap(); I[m[1]].mode = m[2]; delete hold[m[1]]; return commit(); }
