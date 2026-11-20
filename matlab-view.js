@@ -36,7 +36,7 @@
     o = o || {}; if (!M) return null;
     var id = M.id, vd = CV.videoDur && CV.videoDur[id];
     return '<div class="ml-box">' +
-      (vd || o.video ? '<div class="ss-vid"><video controls playsinline preload="none" poster="' + id + '.jpg" src="' + id + '.mp4"></video>' + (vd ? '<span class="muted small">المدة ' + vd + "</span>" : "") + "</div>" : "") +
+      (vd || o.video ? '<div class="ss-vid"><video controls playsinline preload="none" poster="' + id + '.jpg" src="' + id + '.mp4">' + (((window.CV || {}).videoAr || []).indexOf(id) > -1 ? '<track kind="subtitles" srclang="ar" label="العربية" src="' + id + '.ar.vtt">' : '') + '</video>' + (vd ? '<span class="muted small">المدة ' + vd + "</span>" : "") + "</div>" : "") +
       '<div class="ml-head"><div><b>' + esc(M.ar) + '</b><span class="muted small ltr">' + esc(M.title) + '</span></div><a class="btn btn-ghost btn-sm" href="' + M.file + '" download>تحميل السكربت ' + id + '.m</a></div>' +
       '<p class="muted small">كل قسم يبدأ بـ %% في MATLAB: شغّله وحده بـ Ctrl+Enter (أو Run Section). المخرجات والرسوم هنا من تشغيل السكربت فعلًا' + (M.checks ? "، وفيه " + M.checks + " اختبارًا يتأكد من أرقام الدرس" : "") + '. أول مرة مع MATLAB؟ ابدأ بسلسلة <a href="matlab.html">MATLAB من الصفر</a>.</p>' +
       M.sections.map(section).join("") + "</div>";
