@@ -314,9 +314,14 @@
       '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>المشروع الهندسي · قيد التسجيل</b>فيديو يمشي معك في مشروع الدرس من التصميم إلى القياس. سيظهر هنا عند رفعه.</p></div></div>');
     toc.push(["video", "الفيديوهات"]);
 
+    // the lesson keeps only the explanation: its exercise, quiz and generated practice are solved in the question bank
+    // (they are still built here, hidden, so the lesson's completion reads the same saved progress)
+    var nEx = (L.practice ? 1 : 0) + L.quiz.length + (L.generator ? 1 : 0);
+    body += '<a class="card l-more-link" href="bank.html#' + (L.practice ? "p-" : "q-") + L.id + (L.practice ? "" : "-0") + '"><b>تمرين الدرس واختباره (' + nEx + ' أسئلة)</b><span class="muted small">في بنك الأسئلة، مع مساحة الحل ←</span></a>';
+    body += moreWhen;
+    body += '<div hidden class="l-ex-hidden">';
     body += sec("practice", "تمرين مع Smart Feedback", "Guided Practice",
       '<div id="problem"></div><div class="pb-allok">✓ حللت التمرين كاملًا.</div><div id="workspace"></div>', '<span class="sf-badge">يشرح لك أين أخطأت ولماذا</span>');
-    toc.push(["practice", "التمرين"]);
 
     var qz = L.quiz.map(function (q, qi) {
       return '<div class="qz" data-q="' + qi + '"><p class="qz-q"><span class="n">' + (qi + 1) + '.</span>' + q.q + '</p><div class="qz-opts">' +
@@ -324,13 +329,11 @@
         '</div><div class="qz-fb" hidden aria-live="polite"></div></div>';
     }).join("");
     body += sec("quiz", "اختبار قصير", "Quick Check", '<div style="display:grid; gap:10px">' + qz + '</div>');
-    body += moreWhen;
-    toc.push(["quiz", "الاختبار"]);
 
     if (L.generator) {
       body += sec("generated", L.generator.title, "Generated Practice", '<p class="muted">كل دائرة هنا يولّدها المحرك بشكل مختلف ويحلها قبل عرضها. هذه التمارين إضافية ولا تؤثر على إكمال الدرس.</p><div id="gen-practice"></div>');
-      toc.push(["generated", "تمارين مولّدة"]);
     }
+    body += '</div>';
 
     var mlId = "ml-" + L.id, hasMl = CV.matlabIndex && CV.matlabIndex[mlId];
     body += sec("matlab", "الدرس في MATLAB", "MATLAB", hasMl ? '<div id="ml-slot" data-id="' + mlId + '"></div>' :
@@ -372,7 +375,7 @@
     if (curChap && chapsRow) chapsRow.scrollLeft += curChap.getBoundingClientRect().left - chapsRow.getBoundingClientRect().left - (chapsRow.clientWidth - curChap.offsetWidth) / 2;
 
     // Practice
-    problemCtl = CV.feedback.renderProblem(document.getElementById("problem"), L.practice, it.id, { onChange: updateReq, focus: true, title: L.ar });
+    problemCtl = CV.feedback.renderProblem(document.getElementById("problem"), L.practice, it.id, { onChange: updateReq, focus: false, title: L.ar });
 
     // the exercise's circuit, when it is a DC circuit the solver can solve: the workspace then checks every written step on it
     var pc = L.practice.circuit, pctx = pc && CV.stepcheck ? CV.stepcheck.contextFor(pc) : null;
@@ -437,7 +440,7 @@
       var ft = document.getElementById("finish-title"), fx = document.getElementById("finish-text");
       if (done) { ft.textContent = "✓ أكملت هذا الدرس"; fx.textContent = "يمكنك مراجعته في أي وقت."; btn.textContent = next ? "الدرس التالي" : "العودة للوحة الطالب"; btn.disabled = false; btn.onclick = function () { if (next) location.hash = next.id; else location.href = "dashboard.html"; }; }
       else if (pOk && qOk) { ft.textContent = "جاهز لإنهاء الدرس"; fx.textContent = "حللت التمرين وأجبت عن الاختبار."; btn.textContent = "أكملت هذا الدرس"; btn.disabled = false; }
-      else { ft.textContent = "لم يُسجَّل الدرس في تقدمك بعد"; fx.textContent = "حل التمرين وأجب عن أسئلة الاختبار ليُحسب الدرس في تقدمك. يمكنك الانتقال لأي درس آخر في أي وقت."; btn.textContent = "أكملت هذا الدرس"; btn.disabled = true; }
+      else { ft.textContent = "لم يُسجَّل الدرس في تقدمك بعد"; fx.textContent = "حل تمرين الدرس واختباره في بنك الأسئلة ليُحسب الدرس في تقدمك. يمكنك الانتقال لأي درس آخر في أي وقت."; btn.textContent = "أكملت هذا الدرس"; btn.disabled = true; }
     }
   }
 

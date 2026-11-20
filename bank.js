@@ -16,11 +16,14 @@
   function diff(n) { return n <= 2 ? 0 : n <= 4 ? 1 : 2; }
 
   /* ---------- catalogue ---------- */
-  var Q = [], chapterOf = {}, course = CV.courses[0];
-  course.chapters.forEach(function (ch) { ch.lessons.forEach(function (l) { chapterOf[l.id] = ch; }); });
-  course.chapters.forEach(function (ch) {
+  // every course's lesson exercises and quizzes live here (the lessons themselves keep only the explanation)
+  var ALL = (CV.allCourses || CV.courses).filter(function (c) { return c.chapters.some(function (ch) { return ch.lessons.some(function (l) { return CV.lessons[l.id]; }); }); });
+  var Q = [], chapterOf = {}, course = ALL[0], coOf = {};
+  ALL.forEach(function (co) { co.chapters.forEach(function (ch) { coOf[ch.id] = co.id; ch.lessons.forEach(function (l) { chapterOf[l.id] = ch; }); }); });
+  var chapters = []; ALL.forEach(function (co) { chapters = chapters.concat(co.chapters); });
+  ALL.forEach(function (co) { co.chapters.forEach(function (ch) {
     ch.lessons.forEach(function (l) {
-      var L = CV.lessons[l.id]; if (!L) return;
+      var L = CV.lessons[l.id]; if (!L || l.published === false) return;
       if (L.practice) Q.push({ id: "p-" + l.id, src: "lesson", lesson: l.id, ch: ch.id, title: L.ar, text: L.practice.prompt, steps: L.practice.steps.length, problem: L.practice, lid: l.id });
       (L.quiz || []).forEach(function (q, i) {
         Q.push({ id: "q-" + l.id + "-" + i, src: "quiz", lesson: l.id, ch: ch.id, title: L.ar, text: q.q, steps: 1, quiz: i, lid: "quiz:" + l.id + ":" + i,
@@ -28,7 +31,8 @@
       });
       if (L.generator) Q.push({ id: "g-" + l.id, src: "gen", lesson: l.id, ch: ch.id, title: L.ar, text: L.generator.title, steps: 0, gen: L.generator, lid: "bank-gen-" + l.id });
     });
-  });
+  }); });
+  Q.forEach(function (q) { q.co = coOf[q.ch] || "circuits-1"; });
   (CV.projectOrder || []).forEach(function (pid) {
     var p = CV.projects[pid], ch = chapterOf[p.lessons[0]];
     Q.push({ id: "d-" + pid, src: "project", lesson: p.lessons[0], ch: ch ? ch.id : "", title: p.ar, text: p.design.prompt, steps: p.design.steps.length, problem: p.design, lid: "proj-" + pid, project: pid });
@@ -47,9 +51,10 @@
   var ST = { "new": ["لم تحلّه", "chip-plan"], started: ["بدأت فيه", "chip-build"], wrong: ["أخطأت فيه", "chip-bad"], solved: ["محلول", "chip-ok"], "solved-after": ["محلول بعد خطأ", "chip-ok"] };
 
   /* ---------- filters ---------- */
-  var F0 = { ch: "", src: "", diff: "", st: "", q: "" }, flt = Object.assign({}, F0);
+  var F0 = { co: "circuits-1", ch: "", src: "", diff: "", st: "", q: "" }, flt = Object.assign({}, F0);
   try { var sv = JSON.parse(sessionStorage.getItem("cv.bank.f")); if (sv) flt = Object.assign(flt, sv); } catch (e) {}
   function match(q) {
+    if ((q.co || "circuits-1") !== (flt.co || "circuits-1")) return false;
     if (flt.ch && q.ch !== flt.ch) return false;
     if (flt.src && q.src !== flt.src) return false;
     if (flt.diff !== "" && (q.src === "gen" || String(diff(q.steps)) !== flt.diff)) return false;
@@ -62,15 +67,17 @@
   }
 
   function list() {
+    course = ALL.filter(function (c) { return c.id === flt.co; })[0] || ALL[0];
     document.title = "بنك الأسئلة — CircuitVision";
     var counts = {}; Q.forEach(function (q) { counts[q.src] = (counts[q.src] || 0) + 1; });
     var solvedN = Q.filter(function (q) { return /solved/.test(status(q)); }).length;
     root.innerHTML =
       '<header class="b-head"><span class="eyebrow ltr" style="justify-self:start">Question Bank</span><h1>بنك الأسئلة</h1>' +
-      '<p>كل أسئلة Circuits 1 في مكان واحد، مع Smart Feedback في كل سؤال. تقدمك هنا هو نفسه في الدروس والمشاريع.</p></header>' +
+      '<p>كل أسئلة المقررات وتمارين الدروس واختباراتها في مكان واحد، مع Smart Feedback في كل سؤال. تقدمك هنا هو نفسه في الدروس والمشاريع.</p></header>' +
       '<div class="b-stats">' + [["كل الأسئلة", Q.filter(function (q) { return q.src !== "gen"; }).length], ["محلولة", solvedN], ["مسائل الدروس", counts.lesson || 0], ["اختيار من متعدد", counts.quiz || 0], ["مسائل تصميم", counts.project || 0], ["مولّدات (لا نهائية)", counts.gen || 0]].map(function (x) { return '<div class="card"><b class="mono">' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join("") + '</div>' +
       '<a class="card b-adv" href="practice.html#advanced"><b>المسائل المركّبة (المستوى المتقدم)</b><span class="muted">دائرة واحدة وعدة أجزاء، كل جزء يحتاج درسًا مختلفًا.</span></a>' +
       '<form class="b-flt card" id="flt" role="search" onsubmit="return false">' +
+      sel("co", "المقرر", ALL.map(function (c) { return [c.id, c.ar]; })) +
       sel("ch", "الفصل", [["", "كل الفصول"]].concat(course.chapters.map(function (c, i) { return [c.id, (i + 1) + ". " + c.ar]; }))) +
       sel("src", "المصدر", [["", "كل المصادر"]].concat(Object.keys(SRC).map(function (k) { return [k, SRC[k]]; }))) +
       sel("diff", "الصعوبة", [["", "الكل"], ["0", "سهل"], ["1", "متوسط"], ["2", "صعب"]]) +
@@ -82,6 +89,7 @@
       '<div class="pending card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg></span><p><b>مسائل الكتب (Nilsson 10e و Sadiku 5e)</b>' +
       ((counts.textbook || 0) ? counts.textbook + " مسألة مضافة." : "لم تُضف بعد. لا نكتب مسائل منسوبة للكتب من الذاكرة؛ تُضاف فقط من نص المسألة الأصلي برقمها، ثم تظهر هنا مع اسم الكتاب ورقم المسألة.") + '</p></div>';
     ["ch", "src", "diff", "st"].forEach(function (k) { $("f-" + k).addEventListener("change", function () { flt[k] = this.value; keep(); draw(); }); });
+    $("f-co").addEventListener("change", function () { flt.co = this.value; flt.ch = ""; keep(); list(); });
     $("f-q").addEventListener("input", function () { flt.q = this.value; keep(); draw(); });
     $("clr").addEventListener("click", function () { flt = Object.assign({}, F0); keep(); list(); });
     $("rnd").addEventListener("click", function () {
@@ -109,8 +117,9 @@
 
   /* ---------- one question ---------- */
   function show(q) {
+    if (q.co && q.co !== flt.co) { flt.co = q.co; flt.ch = ""; keep(); }
     document.title = q.title + " — بنك الأسئلة";
-    var ch = course.chapters.filter(function (c) { return c.id === q.ch; })[0], idx = Q.filter(match), pos = idx.indexOf(q);
+    var ch = chapters.filter(function (c) { return c.id === q.ch; })[0], idx = Q.filter(match), pos = idx.indexOf(q);
     var prev = pos > 0 ? idx[pos - 1] : null, next = pos > -1 && pos < idx.length - 1 ? idx[pos + 1] : null;
     var back = q.src === "project" ? '<a class="lk" href="academy.html#' + q.project + '">افتح المشروع كاملًا</a>' : q.lesson ? '<a class="lk" href="lesson.html#' + q.lesson + '">راجع الدرس: ' + CV.lessons[q.lesson].ar + '</a>' : "";
     root.innerHTML = '<nav class="crumbs"><a href="#">بنك الأسئلة</a><span>/</span><span>' + (ch ? ch.ar : "") + '</span></nav>' +
