@@ -214,11 +214,12 @@
   var CV = window.CV, $ = function (id) { return document.getElementById(id); };
   var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020", "matlab": "MATLAB", "circuits-1": "الدوائر الكهربائية 1 EE 2010" };
   function fit(el, min) { var fs = parseFloat(getComputedStyle(el).fontSize); while (el.scrollHeight > el.clientHeight + 2 && fs > min) { fs -= 1; el.style.fontSize = fs + "px"; } }
+  window.coOf = function (id) { var L = CV.lessons[id] || {}; return (CV.allCourses || []).filter(function (c) { return c.id === L.course || (c.chapters || []).some(function (h) { return (h.lessons || []).some(function (x) { return x.id === id; }); }); })[0]; };
   window.show = function (id, i, prog) {
     var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");
     $("crs").textContent = NAME[L.course] || "";
     $("hdr-l").textContent = (all[0].eyebrow || "").split(" · ").slice(1).join(" · ");
-    if (EN) { var co = (CV.allCourses || []).filter(function (c) { return c.id === L.course; })[0]; $("crs").textContent = co ? co.code + (co.level ? " · " + String(co.level).split(" ·")[0] : "") : (NAME[L.course] || "");
+    if (EN) { var co = window.coOf(id); $("crs").textContent = co ? co.code + (function () { var lv = String(co.level || "").split(" ·")[0]; if (!lv || /[\u0600-\u06ff]/.test(lv)) { var m = (NAME[co.id] || "").match(/EE \d+/); lv = m ? m[0] : ""; } return lv ? " · " + lv : ""; })() : (NAME[L.course] || "");
       var chp = co && co.chapters.filter(function (c) { return c.lessons.some(function (x) { return x.id === id; }); })[0]; $("hdr-l").textContent = chp ? chp.en : ($("hdr-l").textContent); }
     $("prog").style.width = (prog * 100).toFixed(2) + "%";
     if (s.kind === "card") {
@@ -264,7 +265,7 @@
     show0(id, i, prog);
     if (EN) {
       var s = CV.ssVideo[id][i];
-      if (s.kind === "card") { var co = (CV.allCourses || []).filter(function (c) { return c.id === CV.lessons[id].course; })[0]; var e = document.querySelector("#card .eb"); if (co && e) e.textContent = co.code + " · " + document.getElementById("hdr-l").textContent; }
+      if (s.kind === "card") { var co = window.coOf(id); var e = document.querySelector("#card .eb"); if (co && e) e.textContent = co.code + " · " + document.getElementById("hdr-l").textContent; }
       if (CV.bi && CV.bi.apply) CV.bi.apply(document.getElementById("frame"));
     }
   };
