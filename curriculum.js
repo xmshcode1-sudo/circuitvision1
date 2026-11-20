@@ -52,7 +52,7 @@
       id: "circuits-2",
       code: "Circuits 2",
       ar: "الدوائر الكهربائية 2",
-      level: "EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، والاستجابة الترددية",
+      level: "EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، الاستجابة الترددية، وشبكات المنفذين",
       thumb: "ac", lab: "lab2.html", labNote: "معمل EE 2020: 10 تجارب مع مقاطع شرح",
       chapters: [
         ch("c2-lc", "الملفات والمكثفات", "Inductance and Capacitance", [
@@ -157,4 +157,16 @@
   window.CV.statusLabel = statusLabel;
   window.CV.currentStep = 2;
   window.CV.stepNote = "الدروس التفاعلية و Smart Feedback. مقرر Circuits 1 كامل (41 درسًا) مع مولّد التمارين، وأكاديمية المشاريع بستة مشاريع، والمعمل الذكي مع محاكي Arduino و40 تجربة موجّهة للدروس، وبنك الأسئلة، والتحديات، والمعلم الذكي، والنادي الطلابي (المعلم يحتاج مفتاح Gemini، والنادي يحتاج Supabase). ومقرر Circuits 2 (EE 2020): 23 درسًا من المحاضرات مع مقاطع الشرح، ومعمله بعشر تجارب (شبكات المنفذين النظرية قيد الإعداد).";
+  /* English for every chapter and lesson title, from the curriculum itself (ch.en) and from the lessons (L.en), so the
+     English and bilingual modes never show an Arabic title alone */
+  (function () {
+    var bi = window.CV.bi; if (!bi) return;
+    var m = {};
+    (window.CV.allCourses || []).forEach(function (c) { if (c.ar && c.en) m[c.ar] = c.en; c.chapters.forEach(function (ch) { if (ch.ar && ch.en) m[ch.ar] = ch.en; }); });
+    m["EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، الاستجابة الترددية، وشبكات المنفذين"] = "EE 2020 · from the course lectures: inductors and capacitors, transformers, transient response, three-phase, frequency response, and two-port networks";
+    m["اكتب اسمك كما تحب أن يظهر في لوحتك."] = "Write your name as you want it to appear on your dashboard.";
+    bi.add(m);
+    function lessons() { var o = {}, L = window.CV.lessons || {}; Object.keys(L).forEach(function (k) { if (L[k].ar && L[k].en) o[L[k].ar] = L[k].en; }); bi.add(o); if (bi.apply && document.body) bi.apply(document.body); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", lessons); else setTimeout(lessons, 0);
+  })();
 })();

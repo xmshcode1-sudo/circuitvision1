@@ -157,6 +157,7 @@
     "عرض الفصول": "Show chapters",
     "المحتوى قيد الإعداد": "Content in preparation",
     "الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، والاستجابة الترددية · # فصول · # موضوعًا": "Inductors and capacitors, transformers, transient response, three-phase, and frequency response · # chapters · # topics",
+    "الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، الاستجابة الترددية، وشبكات المنفذين · # فصول · # موضوعًا": "Inductors and capacitors, transformers, transient response, three-phase, frequency response, and two-port networks · # chapters · # topics",
     "# مواضيع · قيد الإعداد": "# topics · in preparation",
 
     /* name + settings */
@@ -963,7 +964,7 @@
   "القيمة القياسية الأكبر (E12):": "Next standard value up (E12):",
   "وقدرة المقاومة": "and the resistor’s power",
   "معمل الدوائر 1: 10 تجارب، والمعمل الحر ←": "Circuits 1 lab: 10 experiments, and the free lab ←",
-  "EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، والاستجابة الترددية · 7 فصول · 26 موضوعًا": "EE 2020 · from the course lectures: inductors and capacitors, transformers, transient response, three-phase, and frequency response · 7 chapters · 26 topics",
+  "EE 2020 · من محاضرات المقرر: الملفات والمكثفات، المحولات، الاستجابة العابرة، ثلاثي الطور، الاستجابة الترددية، وشبكات المنفذين · 7 فصول · 27 موضوعًا": "EE 2020 · from the course lectures: inductors and capacitors, transformers, transient response, three-phase, frequency response, and two-port networks · 7 chapters · 27 topics",
   "معمل EE 2020: 10 تجارب مع مقاطع شرح ←": "EE 2020 lab: 10 experiments with explainer videos ←",
   "دروس EE 2111 من محاضرات المقرر، ولكل درس مقطع شرح وتمرين واختبار قصير، ومعه معمل الـ Trainer.": "EE 2111 lessons from the course lectures; each lesson has an explainer video, an exercise and a short quiz, plus the Trainer lab.",
   "EE 2111 · من محاضرات المقرر: الأعداد الثنائية، الجبر البولياني، خرائط كارنو، الدوائر التوافقية والتتابعية · 5 فصول · 26 موضوعًا": "EE 2111 · from the course lectures: binary numbers, Boolean algebra, Karnaugh maps, combinational and sequential circuits · 5 chapters · 26 topics",
