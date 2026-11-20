@@ -200,11 +200,12 @@
 <script src="../../ld-ch1.js"></script><script src="../../ld-ch2.js"></script><script src="../../ld-ch3.js"></script><script src="../../ld-ch4.js"></script><script src="../../ld-ch5.js"></script>
 <script src="../../c2-ch1.js"></script><script src="../../c2-ch2.js"></script><script src="../../c2-ch3.js"></script>
 <script src="../../clab-sim.js"></script><script src="../../clab-bench.js"></script><script src="../../clab-check.js"></script><script src="../../c2lab.js"></script><script src="c2lab-video.js"></script>
+<script src="../../gen.js"></script><script src="../../analysis.js"></script><script src="../../c1-variables.js"></script><script src="../../c1-elements.js"></script><script src="../../c1-resistive.js"></script><script src="../../c1-techniques.js"></script><script src="../../c1-sinusoidal.js"></script><script src="../../c1-power.js"></script><script src="c1-video.js"></script>
 <script src="../../matlab-data.js"></script><script src="../../matlab-view.js"></script><script src="ml-titles.js"></script><script src="matlab-video.js"></script>
 <script>
 (function () {
   var CV = window.CV, $ = function (id) { return document.getElementById(id); };
-  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020", "matlab": "MATLAB" };
+  var NAME = { "signals-systems": "تحليل الإشارات والنظم EE 3010", "logic-design": "التصميم المنطقي EE 2111", "circuits-2": "الدوائر الكهربائية 2 EE 2020", "circuits-2-lab": "معمل الدوائر الكهربائية 2 EE 2020", "matlab": "MATLAB", "circuits-1": "الدوائر الكهربائية 1 EE 2010" };
   function fit(el, min) { var fs = parseFloat(getComputedStyle(el).fontSize); while (el.scrollHeight > el.clientHeight + 2 && fs > min) { fs -= 1; el.style.fontSize = fs + "px"; } }
   window.show = function (id, i, prog) {
     var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");
