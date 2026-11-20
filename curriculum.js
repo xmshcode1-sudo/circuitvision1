@@ -7,7 +7,7 @@
   "use strict";
 
   /* Chapters whose lessons are written and tested. Add a chapter id here when its lesson file is done. */
-  var PUBLISHED = { "c2-lc": true, "c2-coupled": true, "c2-first-order": true, "c2-rlc": true, "c2-three-phase": true, "c2-frequency": true, "ld-ch1": true, "ld-ch2": true, "ld-ch3": true, "ld-ch4": true, "ld-ch5": true, "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
+  var PUBLISHED = { "c2-lc": true, "c2-coupled": true, "c2-first-order": true, "c2-rlc": true, "c2-three-phase": true, "c2-frequency": true, "c2-two-port": true, "ld-ch1": true, "ld-ch2": true, "ld-ch3": true, "ld-ch4": true, "ld-ch5": true, "ss-ch1": true, "ss-ch2": true, "ss-ch3": true, "ss-ch4": true, "ss-ch5": true, "ss-ch6": true, "ss-ch7": true, "c1-variables": true, "c1-elements": true, "c1-resistive": true, "c1-techniques": true, "c1-sinusoidal": true, "c1-power": true };
 
   function ch(id, ar, en, topics) {
     return {
@@ -70,8 +70,8 @@
           "Power Calculations in Balanced Three-Phase Circuits", "Unbalanced Three-Phase Systems"]),
         ch("c2-frequency", "الاستجابة الترددية", "Frequency Response", [
           "Transfer Function and the Decibel Scale", "Bode Plots", "Series and Parallel Resonance", "Passive Filters"]),
-        ch("c2-two-port", "شبكات المنفذين (قيد الإعداد: تُضاف عند وصول محاضرتها)", "Two-Port Networks", [
-          "The Terminal Equations", "The Two-Port Parameters", "Analysis of the Terminated Two-Port Circuit"])
+        ch("c2-two-port", "شبكات المنفذين (Two-Port)", "Two-Port Networks", [
+          "Two-Port Networks and Impedance (z) Parameters", "Admittance (y) Parameters", "Hybrid (h) Parameters", "Inverse Hybrid (g) Parameters"])
       ]
     },
     /* Courses with a place reserved on the platform. Their chapters are added only from the department's course

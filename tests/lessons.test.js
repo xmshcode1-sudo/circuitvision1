@@ -6,7 +6,7 @@ var fs = require("fs"), path = require("path"), vm = require("vm");
 var root = path.join(__dirname, "..");
 var win = { CV: {} }; win.window = win;
 var ctx = vm.createContext({ window: win, globalThis: win, console: console, Math: Math, JSON: JSON });
-["curriculum.js", "mna.js", "ac.js", "draw.js", "sig-plot.js", "lg-draw.js", "ss-build.js", "feedback.js", "ss-ch1.js", "ss-ch2.js", "ss-ch3.js", "ss-ch4.js", "ss-ch5.js", "ss-ch6.js", "ss-ch7.js", "ld-ch1.js", "ld-ch2.js", "ld-ch3.js", "ld-ch4.js", "ld-ch5.js", "c2-ch1.js", "c2-ch2.js", "c2-ch3.js"].forEach(function (f) {
+["curriculum.js", "mna.js", "ac.js", "draw.js", "sig-plot.js", "lg-draw.js", "ss-build.js", "feedback.js", "ss-ch1.js", "ss-ch2.js", "ss-ch3.js", "ss-ch4.js", "ss-ch5.js", "ss-ch6.js", "ss-ch7.js", "ld-ch1.js", "ld-ch2.js", "ld-ch3.js", "ld-ch4.js", "ld-ch5.js", "c2-ch1.js", "c2-ch2.js", "c2-ch3.js", "c2-ch4.js"].forEach(function (f) {
   try { vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), ctx, { filename: f }); } catch (e) { if (f !== "feedback.js") throw e; }
 });
 var CV = win.CV, fails = 0, n = 0;
@@ -17,7 +17,7 @@ var ids = [], NCH = { "signals-systems": 7, "logic-design": 5, "circuits-2": 7 }
 Object.keys(NCH).forEach(function (cid) {
   var course = CV.courses.filter(function (c) { return c.id === cid; })[0];
   ok(course && course.chapters.length === NCH[cid], cid + " chapters");
-  course.chapters.forEach(function (ch) { ch.lessons.forEach(function (l) { if (ch.id === "c2-two-port") { ok(!l.published, "two-port stays in preparation"); return; } ids.push(l.id); ok(l.published, l.id + " published"); ok(CV.lessons[l.id] && CV.lessons[l.id].course === cid, l.id + " course"); }); });
+  course.chapters.forEach(function (ch) { ch.lessons.forEach(function (l) { ids.push(l.id); ok(l.published, l.id + " published"); ok(CV.lessons[l.id] && CV.lessons[l.id].course === cid, l.id + " course"); }); });
 });
 ids.forEach(function (id) {
   var L = CV.lessons[id];
@@ -50,7 +50,9 @@ ids.forEach(function (id) {
   ok(V && V.length > 6, id + " video scenes");
   V.forEach(function (sc, i) { ok(sc.dur > 0 && sc.dur < 20, id + " scene " + i + " duration"); });
 });
-ok(ids.length === 39 + 26 + 23, "88 lessons (" + ids.length + ")");
+ok(ids.length === 39 + 26 + 27, "92 lessons (" + ids.length + ")");
+// two-port (lecture 11): the lecture's numbers, recomputed
+var TP = CV.c2tp; ok(Math.abs(TP.y11 - 0.75) < 1e-12 && TP.y12 === -0.5 && Math.abs(TP.y22 - 0.625) < 1e-12, "y-parameter example (0.75, −0.5, 0.625 S)"); ok(TP.g22at1 === 1.5, "g22(1) = 1.5 Ω");
 
 /* ---- numeric checks of the worked results ---- */
 function conv(x, h) { var y = {}; Object.keys(x).forEach(function (a) { Object.keys(h).forEach(function (b) { y[+a + +b] = (y[+a + +b] || 0) + x[a] * h[b]; }); }); return y; }
