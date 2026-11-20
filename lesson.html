@@ -300,7 +300,8 @@
     var body = "";
     var toc = [];
     var SUM = (CV.lessonSum || {})[L.id];
-    order.forEach(function (k) { var s = byId[k]; if (!s) return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
+    var moreWhen = "";   // «متى ولماذا» lives in its own folded box at the end, so the lesson itself stays short
+    order.forEach(function (k) { var s = byId[k]; if (!s) return; if (k === "when") { moreWhen = '<details class="l-sec card l-more" id="sec-when"><summary class="sec-h"><h2>' + s.title + '</h2>' + (s.en ? '<span class="en">' + s.en + '</span>' : '') + '<span class="muted small">اضغط للعرض</span></summary>' + short(s, SUM) + '</details>'; return; } body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
     if ((L.course === "signals-systems" || L.course === "logic-design" || L.course === "circuits-2") && CV.bi && CV.bi.mode() === "en") body = '<div class="card no-bi" style="padding:12px 16px" dir="ltr">English text for these lessons is in preparation (قيد الإعداد); the equations, drawings and videos below are language-neutral.</div>' + body;
     if (!L.video && /^c1-/.test(L.id) && CV.videoDur && CV.videoDur[L.id]) { L.video = L.id + ".mp4"; L.videoDur = CV.videoDur[L.id]; }
@@ -322,6 +323,7 @@
         '</div><div class="qz-fb" hidden aria-live="polite"></div></div>';
     }).join("");
     body += sec("quiz", "اختبار قصير", "Quick Check", '<div style="display:grid; gap:10px">' + qz + '</div>');
+    body += moreWhen;
     toc.push(["quiz", "الاختبار"]);
 
     if (L.generator) {

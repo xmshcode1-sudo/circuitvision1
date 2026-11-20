@@ -716,3 +716,5 @@ html.wb-lock .lg-ref { right: calc(env(safe-area-inset-right, 0px) + 14px) !impo
 .ml-fig { margin: 0; } .ml-fig img { width: 100%; max-width: 760px; height: auto; display: block; margin: 0 auto; border: 1px solid #e3e3dc; border-radius: 8px; background: #fff; }
 [data-theme="dark"] .ml-code { background: #1e1e1e; color: #e6e6e6; border-color: #333; } [data-theme="dark"] .ml-c { color: #6a9955; } [data-theme="dark"] .ml-s { color: #ce9178; } [data-theme="dark"] .ml-k { color: #569cd6; } [data-theme="dark"] .ml-n { color: #b5cea8; }
 .crumbs { font-size: 13px; color: var(--fg-3); display: flex; gap: 8px; flex-wrap: wrap; }
+.l-more > summary { cursor: pointer; list-style: none; } .l-more > summary::-webkit-details-marker { display: none; }
+.l-more > summary::after { content: "▾"; margin-inline-start: auto; color: var(--fg-3); } .l-more[open] > summary::after { content: "▴"; }

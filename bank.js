@@ -115,11 +115,21 @@
     var back = q.src === "project" ? '<a class="lk" href="academy.html#' + q.project + '">افتح المشروع كاملًا</a>' : q.lesson ? '<a class="lk" href="lesson.html#' + q.lesson + '">راجع الدرس: ' + CV.lessons[q.lesson].ar + '</a>' : "";
     root.innerHTML = '<nav class="crumbs"><a href="#">بنك الأسئلة</a><span>/</span><span>' + (ch ? ch.ar : "") + '</span></nav>' +
       '<header class="b-head"><div class="bq-top"><span class="chip chip-src">' + SRC[q.src] + '</span>' + (q.ref ? '<span class="chip chip-plan">' + q.ref + '</span>' : "") + '</div><h1>' + q.title + '</h1><p>' + back + '</p></header>' +
-      '<section class="card b-q" id="b-q"></section>' +
+      '<section class="card b-q" id="b-q"></section><section class="card b-ws" id="b-ws"></section>' +
       '<nav class="b-nav">' + (prev ? '<a class="btn btn-ghost btn-sm" href="#' + prev.id + '">→ السابق</a>' : "<span></span>") + '<a class="btn btn-ghost btn-sm" href="#">كل الأسئلة</a>' + (next ? '<a class="btn btn-primary btn-sm" href="#' + next.id + '">التالي ←</a>' : "<span></span>") + '</nav>';
     var box = $("b-q");
     if (q.src === "gen") { box.innerHTML = '<p class="muted">' + q.gen.title + '. كل سؤال هنا دائرة جديدة يحلها المحرك قبل عرضها.</p><div id="gen"></div>'; CV.practice.mount($("gen"), Object.assign({}, q.gen, { lessonId: q.lid })); return; }
     F.renderProblem(box, q.problem, q.lid, { onChange: function (s) { if (q.src === "quiz" && s && s.solved) S.recordQuiz(q.lesson, q.quiz); }, focus: false, title: q.title });
+    // the solution workspace, as in the lessons: pen, keyboard, or a photo of the notebook
+    var ws = $("b-ws");
+    if (CV.workspace && q.problem && q.problem.steps) {
+      var pc = q.problem.circuit, pctx = pc && CV.stepcheck ? CV.stepcheck.contextFor(pc) : null;
+      CV.workspace.mount(ws, { key: "bank-" + q.id, lessonId: q.lid || "bank",
+        context: plain(q.problem.prompt || q.title),
+        circuit: pctx ? function () { return pctx; } : null,
+        tutor: pctx && CV.tutor ? function () { return CV.tutor.fromProblem(q.problem, q.lid, q.title); } : null,
+        onAnswer: function (v) { var st = box.querySelector(".pb-step[data-state='active']"); return !!st && CV.workspace.fillAnswer(st.querySelector(".pb-input"), st.querySelector(".pb-unit"), v); } });
+    } else ws.remove();
   }
 
   function route() {
