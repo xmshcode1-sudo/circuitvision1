@@ -45,6 +45,10 @@
   #card .en { position: absolute; top: 560px; width: 100%; font-size: 25px; color: #9fb0d0; direction: ltr; }
   #card .ls { position: absolute; top: 625px; width: 100%; font-size: 25px; line-height: 1.75; color: #dfe6f3; }
   #card .ft { position: absolute; bottom: 48px; width: 100%; font-size: 22px; color: #7b88a6; direction: ltr; }
+  html[lang=en] #hdr-r, html[lang=en] #side, html[lang=en] table.tb, html[lang=en] #card, html[lang=en] table.tb td.l { direction: ltr; }
+  html[lang=en] .sub, html[lang=en] table.tb td.l { text-align: left; }
+  html[lang=en] ol.steps { padding: 0 0 0 26px; }
+  html[lang=en] .t { border-right: 0; padding-right: 0; border-left: 6px solid #ff8a1f; padding-left: 18px; }
 </style>
 </head>
 <body>
@@ -56,12 +60,15 @@
   <div id="card"><div class="eb"></div><div class="ti"></div><div class="en"></div><div class="ls"></div><div class="ft">CircuitVision · circuitvision1.vercel.app</div></div>
   <div id="prog"></div>
 </div>
+<script>window.EN = /lang=en/.test(location.search); if (window.EN) { document.documentElement.dir = "ltr"; document.documentElement.lang = "en"; document.addEventListener("DOMContentLoaded", function () { var h = document.getElementById("hdr-r"); if (h) h.innerHTML = "<b>CircuitVision</b> · Circuits 1 Lab · EE 2010"; }); }</script>
 <script>window.CV_CONFIG = {}; try { localStorage.clear(); } catch (e) {}</script>
+<script>if (window.EN) try { localStorage.setItem("cv.lang", "en"); localStorage.setItem("cv.lang2", "solo"); } catch (e) {}</script>
 <script src="../../draw.js"></script>
 <script src="../../ac.js"></script>
 <script src="../../clab-sim.js"></script>
 <script src="../../clab-bench.js"></script>
 <script src="../../clab-exps.js"></script>
+<script>if (window.EN) { document.write('<script src="../../bi.js"><\/script><script src="../../ui.en.js"><\/script><script src="../../labs.en.js"><\/script>'); }</script>
 <script>
 (function () {
   "use strict";
@@ -111,7 +118,7 @@
     var n = t.rows.length, hl = -1; t.rows.forEach(function (r, k) { if (r.on) hl = k; });
     var from = 0, to = n, MAX = 11;
     if (n > MAX) { from = Math.max(0, Math.min(n - MAX, (hl < 0 ? 0 : hl) - 5)); to = from + MAX; }
-    var ncol = t.head.length, h = '<div class="tb-t">' + esc(t.title) + (n > MAX ? " · الصفوف " + (from + 1) + "–" + to + " من " + n : "") + '</div><table class="tb' + (n > 7 || ncol > 4 ? " small" : "") + '"><tr>' + t.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr>";
+    var ncol = t.head.length, h = '<div class="tb-t">' + esc(t.title) + (n > MAX ? (window.EN ? " · rows " + (from + 1) + "–" + to + " of " + n : " · الصفوف " + (from + 1) + "–" + to + " من " + n) : "") + '</div><table class="tb' + (n > 7 || ncol > 4 ? " small" : "") + '"><tr>' + t.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") + "</tr>";
     for (var k = from; k < to; k++) {
       var r = t.rows[k], cells = [];
       for (var c = 1; c < ncol; c++) cells.push(r.cells[c - 1] === undefined ? "·" : r.cells[c - 1]);
@@ -120,7 +127,7 @@
     return h + "</table>";
   }
   window.show = function (scene, meta) {
-    document.getElementById("hdr-l").textContent = meta.label || "التجربة " + meta.n;
+    document.getElementById("hdr-l").textContent = meta.label || (window.EN ? "Experiment " : "التجربة ") + meta.n;
     document.getElementById("prog").style.width = (meta.progress * 100).toFixed(2) + "%";
     var card = document.getElementById("card");
     if (scene.kind === "card") {
@@ -150,6 +157,15 @@
     if (p.note) h += '<div class="note">' + esc(p.note) + "</div>";
     if (p.table) h += "<div>" + tableHtml(p.table) + "</div>";
     document.getElementById("side").innerHTML = h;
+    if (window.EN) {
+      if (CV.bi && CV.bi.apply) CV.bi.apply(document.getElementById("bench"));
+      var M = { "وصلة": "Link", "القطع": "Parts", "مقاومة": "Resistor", "صندوق المقاومات": "Resistance box", "صندوق المكثفات": "Capacitance box", "صندوق المحاثة": "Inductance box", "مولد الإشارة": "Signal generator" };
+      var w = document.createTreeWalker(document.getElementById("bench"), NodeFilter.SHOW_TEXT), nd, left = [];
+      while ((nd = w.nextNode())) { var tx = nd.nodeValue; if (!/[\u0600-\u06ff]/.test(tx)) continue;
+        var t2 = tx.replace(/PARTS\s*·\s*القطع/, "PARTS").replace("CAP · متقدم", "CAP · leading").replace("مجس + مشبك أسود", "probe + black clip").replace("IND · متأخر", "IND · lagging").replace("(مع الملف الخانق)", "(with ballast)").replace("POWER METER · عدّاد القدرة", "POWER METER").replace("الخرج بعد العدّاد", "Output after the meter").replace("في Fluke 115 سلك في مدخل التيار (A أو mA) والمفتاح على غير التيار. مدخل التيار مقاومته شبه صفر: لو لمست به جهدًا تعمل قصرًا.", "On the Fluke 115 a wire is in the current input (A or mA) while the switch is not on current. The current input has almost zero resistance: touching a voltage with it makes a short."); Object.keys(M).forEach(function (k) { if (t2.trim() === k) t2 = M[k]; });
+        nd.nodeValue = t2; if (/[\u0600-\u06ff]/.test(t2) && nd.parentNode && getComputedStyle(nd.parentNode).display !== "none") left.push(t2); }
+      window.benchLeft = left;
+    }
     return true;
   };
 })();

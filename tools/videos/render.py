@@ -50,10 +50,50 @@ def encode(files, out):
         prev = cur
     pr.stdin.close(); pr.wait()
 
+import re
+AR = re.compile("[\u0600-\u06ff]")
+def tr(o, D, miss, key=None):
+    if key == "state": return o
+    if isinstance(o, str):
+        if not AR.search(o): return o
+        if o in D: return D[o]
+        miss.add(o); return o
+    if isinstance(o, list): return [tr(v, D, miss, key) for v in o]
+    if isinstance(o, dict): return {k: tr(v, D, miss, k) for k, v in o.items()}
+    return o
+def artext(s):
+    p = s.get("panel") or {}
+    if s.get("kind") == "card": parts = [s.get("title", "")] + list(s.get("lines") or [])
+    else: parts = [p.get("title", ""), p.get("sub", "")] + list(p.get("lines") or []) + list(p.get("steps") or []) + [p.get("note", "")]
+    return " — ".join(x for x in parts if x)
+def vtt(plan_ar, out):
+    def ts(t): return "%02d:%02d:%06.3f" % (int(t // 3600), int(t % 3600 // 60), t % 60)
+    L = ["WEBVTT", ""]; t = 0; k = 0
+    for s in plan_ar["scenes"]:
+        txt = artext(s).strip(); d = s["dur"]
+        if txt:
+            ch = []; cur = ""
+            for w in re.split(r"(?<=[.:؟!])\s+", txt):
+                if cur and len(cur) + len(w) > 84: ch.append(cur); cur = w
+                else: cur = (cur + " " + w).strip()
+            if cur: ch.append(cur)
+            for j, c in enumerate(ch):
+                a = t + d * j / len(ch); b = t + d * (j + 1) / len(ch); k += 1
+                L += [str(k), ts(a) + " --> " + ts(b), c, ""]
+        t += d
+    open(out, "w").write("\n".join(L))
+
 def main():
-    plans = json.load(open(sys.argv[1], encoding="utf8"))
-    for eid in sys.argv[2:]:
-        plan = plans[eid]; n = plan["n"]
+    global URL
+    args = sys.argv[1:]; en = "--en" in args; args = [a for a in args if a != "--en"]
+    plans = json.load(open(args[0], encoding="utf8"))
+    D = json.load(open("/tmp/i18n/clab-dict.json")) if en else {}
+    if en: URL = URL + "?lang=en"
+    for eid in args[1:]:
+        plan = plans[eid]; n = plan["n"]; plan_ar = plan
+        if en:
+            miss = set(); plan = tr(plan, D, miss)
+            if miss: print(eid, "SKIP missing", len(miss), list(miss)[:3]); continue
         outdir = "/tmp/clab-frames/" + eid; os.makedirs(outdir, exist_ok=True)
         for f in os.listdir(outdir): os.remove(os.path.join(outdir, f))
         files = asyncio.run(shoot(plan, outdir))
@@ -62,6 +102,7 @@ def main():
         encode(files, out)
         Image.open(files[0][0]).convert("RGB").resize((1280, 720)).save(os.path.join(ROOT, name + ".jpg"), quality=82)
         d = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration,size", "-of", "csv=p=0", out], capture_output=True, text=True).stdout.strip()
+        if en: vtt(plan_ar, out[:-4] + ".ar.vtt")
         print(eid, "→", os.path.basename(out), d)
 
 if __name__ == "__main__":

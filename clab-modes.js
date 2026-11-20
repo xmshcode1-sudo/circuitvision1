@@ -245,7 +245,7 @@
       (flog.length ? '<p class="muted small">حلّيت ' + flog.filter(function (x) { return x.ok; }).length + " من " + flog.length + " أعطال.</p>" : "") + '</section>' +
       '</div>' +
       '<section class="card lg-sec"><h2>🎬 تعرّف على أجهزة المعمل</h2>' +
-      (vids.length ? '<div class="md-vids">' + vids.map(function (v) { return '<figure class="md-vid"><video controls playsinline preload="none" poster="clab-inst-' + v[0] + '.jpg" src="clab-inst-' + v[0] + '.mp4"></video><figcaption><b>' + esc(v[1]) + '</b> <span class="muted small ltr">' + VID_DUR[v[0]] + '</span><span class="muted small">' + bd(esc(v[2])) + "</span></figcaption></figure>"; }).join("") + "</div>"
+      (vids.length ? '<div class="md-vids">' + vids.map(function (v) { return '<figure class="md-vid"><video controls playsinline preload="none" poster="clab-inst-' + v[0] + '.jpg" src="clab-inst-' + v[0] + '.mp4"><track kind="subtitles" srclang="ar" label="العربية" src="clab-inst-' + v[0] + '.ar.vtt"></video><figcaption><b>' + esc(v[1]) + '</b> <span class="muted small ltr">' + VID_DUR[v[0]] + '</span><span class="muted small">' + bd(esc(v[2])) + "</span></figcaption></figure>"; }).join("") + "</div>"
         : '<p class="muted">قيد الإعداد</p>') + '</section>';
   }
   function wireIndex(root) {
