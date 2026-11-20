@@ -219,7 +219,7 @@
     var L = CV.lessons[id], all = CV.ssVideo[id], s = all[i], card = $("card");
     $("crs").textContent = NAME[L.course] || "";
     $("hdr-l").textContent = (all[0].eyebrow || "").split(" · ").slice(1).join(" · ");
-    if (EN) { var co = window.coOf(id); $("crs").textContent = co ? co.code + (function () { var lv = String(co.level || "").split(" ·")[0]; if (!lv || /[\u0600-\u06ff]/.test(lv)) { var m = (NAME[co.id] || "").match(/EE \d+/); lv = m ? m[0] : ""; } return lv ? " · " + lv : ""; })() : (NAME[L.course] || "");
+    if (EN) { var co = window.coOf(id); $("crs").textContent = co ? co.code + (function () { var lv = String(co.level || "").split(" ·")[0]; if (!lv || /[\u0600-\u06ff]/.test(lv)) { var m = (NAME[co.id] || "").match(/EE \d+/); lv = m ? m[0] : ""; } return lv ? " · " + lv : ""; })() : ({ "circuits-2-lab": "Circuits 2 Lab · EE 2020", "matlab": "MATLAB" }[L.course] || NAME[L.course] || "");
       var chp = co && co.chapters.filter(function (c) { return c.lessons.some(function (x) { return x.id === id; }); })[0]; $("hdr-l").textContent = chp ? chp.en : ($("hdr-l").textContent); }
     $("prog").style.width = (prog * 100).toFixed(2) + "%";
     if (s.kind === "card") {
