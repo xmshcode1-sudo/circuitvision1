@@ -88,6 +88,7 @@
         drive("MONOQ", R.monoOn, "mono"); drive("MONOQN", R.monoOn ? 0 : 1, "mono");
       }
       var socks = Object.keys(S.chips), outs = {}, val = {}, issues = [], powered = {};
+      socks.forEach(function (s) { if (!R.ff[s]) R.ff[s] = CV.chips.newState(S.chips[s]); }); // a chip set straight into the state (several flip-flop chips loaded at once)
       function resolve() {
         val = {}; var shorts = {};
         var all = {}; for (var n in fixed) all[n] = fixed[n].slice();

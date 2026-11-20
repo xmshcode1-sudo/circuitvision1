@@ -224,6 +224,48 @@
     return d.svg(430, 210);
   };
 
+  /* Lab#7: the 74194 and the two counters (Figures 1 to 4 of the sheet) */
+  function r194(fig4) {
+    var d = new D(), P = d.block(150, 40, 150, 200, "74194", [["CLR", "l", 1], ["SR", "l"], ["A", "l"], ["B", "l"], ["C", "l"], ["D", "l"], ["SL", "l"], ["QA", "r"], ["QB", "r"], ["QC", "r"], ["QD", "r"], ["S1", "b"], ["S0", "b"], ["CLK ▷", "b"]], "Shift register");
+    if (!fig4) return d.svg(430, 290);
+    [["A", "+5V"], ["B", "0V"], ["C", "0V"], ["D", "0V"]].forEach(function (k) { d.text(k[1], P[k[0]][0] - 6, P[k[0]][1] + 4, "end", "lf-sm"); });
+    var qa = P.QA, qd = P.QD, sl = P.SL, sr = P.SR;
+    d.wire([qa, [qa[0] + 30, qa[1]], [qa[0] + 30, 18], [60, 18], [60, sl[1]], sl]).dot(qa[0], qa[1]);
+    d.wire([qd, [qd[0] + 50, qd[1]], [qd[0] + 50, 275], [40, 275], [40, sr[1]], sr]);
+    d.text("SL = QA", 60, 12, "middle", "lf-sm").text("SR = QD", 100, 288, "middle", "lf-sm");
+    return d.svg(430, 295);
+  }
+  F["exp7:b194"] = function () { return r194(false); };
+  F["exp7:bfig4"] = function () { return r194(true); };
+  function counter(sync, down) {
+    var d = new D(), FF = [];
+    for (var i = 0; i < 4; i++) FF.push(d.block(70 + i * 160, 90, 96, 100, "JK", [["J", "l"], ["CLK ▷", "l", 1], ["K", "l"], ["Q", "r"], ["Q̄", "r", 1], ["CLR", "b", 1]], "L" + (i + 1)));
+    d.wire([[18, 225], [700, 225]]).text("SW1 (CLEAR)", 18, 240, "start", "lf-sm");
+    FF.forEach(function (P) { d.wire([P.CLR, [P.CLR[0], 225]]).dot(P.CLR[0], 225); });
+    FF.forEach(function (P, i) { d.text("L" + (i + 1), P.Q[0] + 4, P.Q[1] - 8, "start", "lf-sm"); });
+    if (!sync) {
+      FF.forEach(function (P) { d.wire([P.J, [P.J[0] - 6, P.J[1]], [P.J[0] - 6, 60]]).wire([P.K, [P.K[0] - 6, P.K[1]], [P.K[0] - 6, P.J[1]]]).text("5V", P.J[0] - 6, 54, "middle", "lf-sm"); });
+      d.text("CLK", FF[0]["CLK ▷"][0] - 4, FF[0]["CLK ▷"][1] + 4, "end", "lf-sm");
+      for (var k = 1; k < 4; k++) { var a = FF[k - 1][down ? "Q̄" : "Q"], c = FF[k]["CLK ▷"]; d.wire([a, [a[0] + 12, a[1]], [a[0] + 12, c[1]], c]); }
+      return d.svg(720, 255);
+    }
+    d.wire([[18, 248], [700, 248]]).text("CLK", 18, 262, "start", "lf-sm");
+    FF.forEach(function (P) { var c = P["CLK ▷"]; d.wire([c, [c[0] - 10, c[1]], [c[0] - 10, 248]]).dot(c[0] - 10, 248); });
+    var q1 = FF[0].Q, q2 = FF[1].Q, q3 = FF[2].Q;
+    function jk(P, y, lbl) { d.wire([P.J, [P.J[0] - 6, P.J[1]], [P.J[0] - 6, y]]).wire([P.K, [P.K[0] - 6, P.K[1]], [P.K[0] - 6, P.J[1]]]); if (lbl) d.text(lbl, P.J[0] - 6, y - 6, "middle", "lf-sm"); }
+    jk(FF[0], 60, "5V");
+    jk(FF[1], 70); d.wire([q1, [q1[0] + 6, q1[1]], [q1[0] + 6, 70], [FF[1].J[0] - 6, 70]]);
+    var g1 = d.gate("AND", 360, 20, 2), g2 = d.gate("AND", 520, 20, 2);
+    d.wire([[q1[0] + 6, 70], [q1[0] + 6, g1.in[0][1]], g1.in[0]]).wire([q2, [q2[0] + 6, q2[1]], [q2[0] + 6, g1.in[1][1]], g1.in[1]]);
+    jk(FF[2], 70); d.wire([g1.out, [g1.out[0] + 6, g1.out[1]], [g1.out[0] + 6, 70], [FF[2].J[0] - 6, 70]]);
+    d.wire([[g1.out[0] + 6, g1.out[1]], [g1.out[0] + 6, g2.in[0][1]], g2.in[0]]).wire([q3, [q3[0] + 6, q3[1]], [q3[0] + 6, g2.in[1][1]], g2.in[1]]);
+    jk(FF[3], 70); d.wire([g2.out, [g2.out[0] + 6, g2.out[1]], [g2.out[0] + 6, 70], [FF[3].J[0] - 6, 70]]);
+    return d.svg(720, 270);
+  }
+  F["exp7:bru"] = function () { return counter(false, false); };
+  F["exp7:brd"] = function () { return counter(false, true); };
+  F["exp7:bsy"] = function () { return counter(true, false); };
+
   /* pinout of a chip, drawn from chips.js (same labels the trainer uses) */
   function pinout(id) {
     var c = CV.chips.get(id); if (!c) return "";
@@ -238,7 +280,7 @@
     return d.svg(380, h + 40);
   }
 
-  var TITLES = { "exp2:nand": "الدالة المطلوبة", "exp2:nor": "الدالة المطلوبة", "exp5:b151a": "الناخب 74151 (8:1)", "exp5:b151b": "الناخب 74151 (8:1)", "exp5:b18": "الدائرة 74155" };
+  var TITLES = { "exp7:b194": "المسجّل 74194", "exp7:bfig4": "الشكل 4", "exp7:bru": "الشكل 2: العدّاد التموّجي", "exp7:brd": "العدّاد التموّجي التنازلي", "exp7:bsy": "الشكل 3: العدّاد المتزامن", "exp2:nand": "الدالة المطلوبة", "exp2:nor": "الدالة المطلوبة", "exp5:b151a": "الناخب 74151 (8:1)", "exp5:b151b": "الناخب 74151 (8:1)", "exp5:b18": "الدائرة 74155" };
   CV.logicFigs = {
     get: function (expId, task) {
       var f = F[expId + ":" + task.id];

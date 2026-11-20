@@ -1,4 +1,4 @@
-/* CircuitVision — Logic Design Lab page: the six EE2111 experiments, each with its explanation, the student's own
+/* CircuitVision — Logic Design Lab page: the seven EE2111 experiments, each with its explanation, the student's own
    exercises (the sheet's tables, expressions and questions, checked on the spot) and wiring tasks checked on the
    IC trainer by running the circuit through every input combination. */
 (function () {
@@ -92,7 +92,7 @@
   function showIndex() {
     document.title = "معمل التصميم المنطقي — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1>معمل التصميم المنطقي</h1>' +
-      '<p>تجارب المعمل الست كما في أوراق القسم. كل تجربة: الهدف والقطع، ثم الشرح خطوة بخطوة، ثم تحلّها بنفسك: تكمل جداولها، وتوصّلها على جهاز IC Trainer مطابق لجهاز المعمل، والموقع يفحص توصيلك بتجربة كل حالات المداخل.</p>' +
+      '<p>تجارب المعمل السبع كما في أوراق القسم. كل تجربة: الهدف والقطع، ثم الشرح خطوة بخطوة، ثم تحلّها بنفسك: تكمل جداولها، وتوصّلها على جهاز IC Trainer مطابق لجهاز المعمل، والموقع يفحص توصيلك بتجربة كل حالات المداخل.</p>' +
       '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بـ Lab#1</a><a class="btn btn-ghost" href="trainer.html">الجهاز للتجريب الحر</a></div></div>' +
       '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + (free(e) ? e.n : "🔒") + '</span><div><b class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
       '<p class="muted small">ما زالت دروس النظرية لمقرر Logic Design قيد الإعداد؛ هذه الصفحة للجزء العملي.</p>';
@@ -294,7 +294,7 @@
           return;
         }
       }
-      mark(e.id, t.id, 1); out.className = "lg-out ok"; out.innerHTML = "توصيلك صحيح ✓ القلّاب مرّ بكل الخطوات: " + t.steps.map(function (s) { return s.say; }).filter(Boolean).map(esc).join(" ← ") + ".";
+      mark(e.id, t.id, 1); out.className = "lg-out ok"; out.innerHTML = "توصيلك صحيح ✓ الدائرة مرّت بكل الخطوات: " + t.steps.map(function (s) { return s.say; }).filter(Boolean).map(esc).join(" ← ") + ".";
       if (el) res(el, true, "تم على الجهاز ✓"); return;
     }
     var ins = t.inputs.map(function (x) { return x[0]; }), rows = trainer.table(ins, outs, t.fn), bad = rows.filter(function (r) { return !r.ok; });

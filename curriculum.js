@@ -77,7 +77,7 @@
     /* Courses with a place reserved on the platform. Their chapters are added only from the department's course
        description when the founder provides it, so nothing here is guessed. */
     {
-      id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "ld", thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 6 تجارب عملية مع جهاز IC Trainer",
+      id: "logic-design", code: "Logic Design", ar: "التصميم المنطقي", group: "ld", thumb: "logic", lab: "logic.html", labNote: "معمل EE2111: 7 تجارب عملية مع جهاز IC Trainer",
       level: "EE 2111 · من محاضرات المقرر: الأعداد الثنائية، الجبر البولياني، خرائط كارنو، الدوائر التوافقية والتتابعية",
       chapters: [
         ch("ld-ch1", "الأنظمة الرقمية والأعداد الثنائية", "Digital Systems and Binary Numbers", [

@@ -87,6 +87,23 @@
           s.clk = c;
         });
         return ch;
+      } },
+    "74194": { pins: 16, vcc: 16, gnd: 8, seq: true, ar: "مسجّل إزاحة شامل 4 بت (يمين ويسار وتحميل متوازي)", en: "4-bit bidirectional universal shift register",
+      labels: { 1: "CLR", 2: "SR", 3: "A", 4: "B", 5: "C", 6: "D", 7: "SL", 8: "GND", 9: "S0", 10: "S1", 11: "CLK", 12: "QD", 13: "QC", 14: "QB", 15: "QA", 16: "VCC" },
+      ff: [{}],
+      eval: function (g, st) { // CLR is asynchronous and active low
+        var s = st[0] || {}; if (!s.r) s.r = [0, 0, 0, 0];
+        if (!g(1)) s.r = [0, 0, 0, 0];
+        return { 15: s.r[0], 14: s.r[1], 13: s.r[2], 12: s.r[3] };
+      },
+      edge: function (g, st) { // on the rising clock edge, S1 S0 pick: 00 hold · 01 shift right (QA←SR) · 10 shift left (QD←SL) · 11 parallel load
+        var s = st[0], c = g(11), ch = false; if (!s.r) s.r = [0, 0, 0, 0];
+        if (s.clk === 0 && c === 1 && g(1)) {
+          var r = s.r, m = 2 * g(10) + g(9), n = m === 3 ? [g(3), g(4), g(5), g(6)] : m === 1 ? [g(2), r[0], r[1], r[2]] : m === 2 ? [r[1], r[2], r[3], g(7)] : r;
+          ch = n.some(function (v, i) { return v !== r[i]; }); s.r = n.slice();
+        }
+        s.clk = c;
+        return ch;
       } }
   };
   function ffOut(ffs, g, st) { // PRE and CLR are asynchronous and active low; both low gives Q = Q̄ = 1 (not stable)

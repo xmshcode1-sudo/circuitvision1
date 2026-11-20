@@ -1,4 +1,4 @@
-/* CircuitVision — EE2111 Logic Design Lab: the six experiments of the course sheets (First Term 2026/2027).
+/* CircuitVision — EE2111 Logic Design Lab: the seven experiments of the course sheets (First Term 2026/2027).
    Every table, function and question below comes from the sheets; the answers are computed, not typed.
    Wiring endpoints: "V5" +5V rail · "G0" 0V rail · "sw:a" switch a · "led:a" LED a · "5.14" socket 5 pin 14 · "pls" pulse button. */
 (function (root) {
@@ -422,7 +422,156 @@
           { sw: { c: 0 }, want: [1, 0], say: "PRE = 0: Q = 1 فورًا" }
         ],
         sol: { chips: { 5: "7476" }, wires: pw(5, 5, 13).concat([["sw:a", "5.4"], ["sw:b", "5.16"], ["sw:c", "5.2"], ["sw:d", "5.3"], ["pls", "5.1"], ["5.15", "led:a"], ["5.14", "led:b"]]) } }
-    ] }
+    ] },
+
+  /* ===================================================================== 7 */
+  { id: "exp7", n: 7, title: "مسجّل الإزاحة الشامل والعدّادات", en: "Universal Shift Register and Counter",
+    objective: ["تنفيذ مسجّل الإزاحة الشامل ثنائي الاتجاه 74194.", "تنفيذ العدّاد التموّجي (غير المتزامن) والعدّاد المتزامن بالقلّابات JK."],
+    chips: ["74194", "7476", "7408"],
+    note: "تحتاج دائرتي 7476 للعدّادات (كل دائرة فيها قلّابان)، ودائرة 7408 للعدّاد المتزامن.",
+    parts: [
+      { id: "p1", title: "مسجّل الإزاحة الشامل 74194", steps: [
+        "فيه 4 قلّابات مخارجها <span class='ltr'>QA QB QC QD</span>، ويتغير عند <b>الحافة الصاعدة</b> للساعة.",
+        "المدخلان <span class='ltr'>S1 S0</span> يحددان العمل: <span class='ltr'>00</span> ثبات (لا تغيير)، و <span class='ltr'>01</span> إزاحة لليمين (من QA باتجاه QD)، و <span class='ltr'>10</span> إزاحة لليسار (من QD باتجاه QA)، و <span class='ltr'>11</span> تحميل متوازي.",
+        "في الإزاحة لليمين يدخل البت الجديد من <b>SR</b> إلى QA. وفي الإزاحة لليسار يدخل من <b>SL</b> إلى QD.",
+        "في التحميل المتوازي تنتقل المداخل <span class='ltr'>A B C D</span> إلى <span class='ltr'>QA QB QC QD</span> مع الحافة.",
+        "<b>CLEAR</b> فعّال منخفض وغير متزامن: لما يكون 0 تصير كل المخارج 0 فورًا بدون ساعة.",
+        "الأرجل: CLR (1) و SR (2) و A..D (3 إلى 6) و SL (7) و S0 (9) و S1 (10) و CLK (11) و QD..QA (12 إلى 15). التغذية 16 و 8."
+      ] },
+      { id: "p2", title: "توزيع المفاتيح في التجربة", steps: [
+        "المداخل A و B و C و D على المفاتيح a و b و c و d.",
+        "S0 على المفتاح e، و S1 على المفتاح f، و CLEAR على المفتاح g.",
+        "SL على المفتاح h، و SR على مفتاح H/L السفلي (الجهاز فيه 8 مفاتيح فقط، والورقة تطلب 9).",
+        "CLK على زر النبضة ⎍: الضغط = حافة صاعدة، فالمسجّل يتغير لحظة الضغط.",
+        "QA و QB و QC و QD على LED a و b و c و d."
+      ] },
+      { id: "p3", title: "العدّاد التموّجي (Ripple / Asynchronous)", steps: [
+        "4 قلّابات JK كل واحد <span class='ltr'>J = K = 1</span>، يعني كل قلّاب ينقلب (Toggle) مع كل نزول لساعته.",
+        "الساعة الخارجية تدخل القلّاب الأول فقط. ومخرج Q لكل قلّاب هو ساعة القلّاب اللي بعده.",
+        "القلّاب في 7476 يتغير عند <b>نزول</b> الساعة. فلما ينزل Q من 1 إلى 0 ينقلب القلّاب التالي: هذا عدّ تصاعدي <span class='ltr'>0000 → 0001 → … → 1111 → 0000</span>.",
+        "L1 هو البت الأصغر (Q للقلّاب الأول)، و L4 الأكبر.",
+        "كل مداخل CLEAR موصولة بالمفتاح SW1: لما يكون 0 يتصفّر العداد. ارفعه إلى 1 قبل العدّ.",
+        "للعدّ التنازلي: خذ ساعة كل قلّاب من <b>Q̄</b> للقلّاب اللي قبله بدل Q، وخلّ الـ LED على Q.",
+        "عيبه: التغيير ينتقل من قلّاب لقلّاب (يتموّج)، فالتأخير يتجمع، مثلًا في الانتقال من 0111 إلى 1000."
+      ] },
+      { id: "p4", title: "العدّاد المتزامن (Synchronous)", steps: [
+        "نفس الساعة تدخل كل القلّابات، فكلها تتغير في نفس اللحظة.",
+        "القلّاب الأول <span class='ltr'>J = K = 1</span>: ينقلب كل نبضة.",
+        "القلّاب الثاني <span class='ltr'>J = K = Q1</span>: ينقلب لما Q1 = 1.",
+        "القلّاب الثالث <span class='ltr'>J = K = Q1·Q2</span> (بوابة AND)، والرابع <span class='ltr'>J = K = Q1·Q2·Q3</span> (بوابة AND ثانية تأخذ مخرج الأولى و Q3).",
+        "يعني كل بت ينقلب لما كل البتات الأصغر منه تساوي 1، وهذا هو العدّ الثنائي."
+      ] },
+      { id: "p5", title: "أرجل 7476 في العدّادات", steps: [
+        "القلّاب الأول: CLK (1) و PRE (2) و CLR (3) و J (4) و K (16) و Q (15) و Q̄ (14).",
+        "القلّاب الثاني: CLK (6) و PRE (7) و CLR (8) و J (9) و K (12) و Q (11) و Q̄ (10).",
+        "<b>التغذية على الرجل 5 (VCC) والرجل 13 (GND)</b>. و PRE نتركها بدون توصيل (العائم = 1 في TTL)."
+      ] }
+    ],
+    tasks: (function () {
+      var FN = ["مسح (Clear)", "تحميل متوازي (Parallel load)", "إزاحة لليمين (Shift right)", "إزاحة لليسار (Shift left)", "ثبات (Hold)"];
+      var LBL = ["البداية", "↑1", "↑2", "↑3", "↑4", "↑5", "↑6", "↑7", "↑8"];
+      function str(b) { return b.join(""); }
+      /* the register, clocked step by step: [S1, S0, clear, SL, SR, ABCD] → QA..QD */
+      function reg(r, s1, s0, clr, sl, sr, abcd) { if (!clr) return [0, 0, 0, 0]; var m = 2 * s1 + s0; return m === 3 ? abcd.slice() : m === 1 ? [sr, r[0], r[1], r[2]] : m === 2 ? [r[1], r[2], r[3], sl] : r; }
+      /* Table 2/3: load 1000, three shifts right with SR = 1, three shifts left with SL = 0 */
+      var T2 = [["x", "x", 0, "x", "x", "x", "xxxx"], [1, 1, 1, "↑", "x", "x", "1000"], [0, 1, 1, "↑", "x", 1, "xxxx"], [0, 1, 1, "↑", "x", 1, "xxxx"], [0, 1, 1, "↑", "x", 1, "xxxx"], [1, 0, 1, "↑", 0, "x", "xxxx"], [1, 0, 1, "↑", 0, "x", "xxxx"], [1, 0, 1, "↑", 0, "x", "xxxx"]];
+      var t2 = [], r = [0, 0, 0, 0];
+      T2.forEach(function (row, i) { r = i === 0 ? [0, 0, 0, 0] : reg(r, row[0], row[1], 1, 0, 1, [1, 0, 0, 0]); t2.push(r); });
+      var t2fn = [FN[0], FN[1], FN[2], FN[2], FN[2], FN[3], FN[3], FN[3]];
+      /* Table 4 (Figure 4): SL = QA and SR = QD, so shifting right rotates the bits */
+      var T4 = [[0, 0, 0, "x"], [1, 1, 1, "↑"], [1, 1, 1, "↑"], [1, 1, 1, "↑"], [0, 1, 1, "↑"], [0, 1, 1, "↑"], [0, 1, 1, "↑"], [0, 1, 1, "↑"], [0, 1, 1, "↑"]];
+      var t4 = []; r = [0, 0, 0, 0];
+      T4.forEach(function (row, i) { r = i === 0 ? [0, 0, 0, 0] : reg(r, row[0], row[1], 1, r[0], r[3], [1, 0, 0, 0]); t4.push(r); });
+      var t4fn = [FN[0], FN[1], FN[1], FN[1], FN[2], FN[2], FN[2], FN[2], FN[2]];
+      /* counters: 16 pulses after the clear */
+      function cnt(k, down) { return bin(down ? (16 - k) % 16 : k % 16, 4); }
+      function ctable(down) { var rows = [["البداية", 0, "x"]]; for (var k = 1; k <= 16; k++) rows.push(["↓" + k, 1, "↓"]); return rows; }
+      function csteps(down) {
+        var st = [{ sw: { a: 0 }, want: [0, 0, 0, 0], say: "SW1 = 0 يصفّر العداد" }, { sw: { a: 1 }, want: [0, 0, 0, 0] }];
+        for (var k = 1; k <= 16; k++) {
+          st.push({ pulse: 1, want: cnt(k - 1, down) });
+          var s = { pulse: 0, want: cnt(k, down) };
+          if (k === 1) s.say = "النبضة 1: " + str(cnt(1, down)); else if (k === 2) s.say = "النبضة 2: " + str(cnt(2, down)); else if (k === 8) s.say = "النبضة 8: " + str(cnt(8, down)); else if (k === 16) s.say = "النبضة 16: يرجع " + str(cnt(16, down));
+          st.push(s);
+        }
+        return st;
+      }
+      var COUT = [["d", "L4"], ["c", "L3"], ["b", "L2"], ["a", "L1"]];
+      var A = "5", B = "6";   // the two 7476 in sockets 5 and 6: L1 = 5/FF1, L2 = 5/FF2, L3 = 6/FF1, L4 = 6/FF2
+      var base = pw(A, 5, 13).concat(pw(B, 5, 13), [["sw:a", A + ".3"], ["sw:a", A + ".8"], ["sw:a", B + ".3"], ["sw:a", B + ".8"],
+        [A + ".15", "led:a"], [A + ".11", "led:b"], [B + ".15", "led:c"], [B + ".11", "led:d"]]);
+      var jk1 = [["V5", A + ".4"], ["V5", A + ".16"], ["V5", A + ".9"], ["V5", A + ".12"], ["V5", B + ".4"], ["V5", B + ".16"], ["V5", B + ".9"], ["V5", B + ".12"]];
+      var ripple = function (q) { return base.concat(jk1, [["pls", A + ".1"], [A + "." + (q ? 15 : 14), A + ".6"], [A + "." + (q ? 11 : 10), B + ".1"], [B + "." + (q ? 15 : 14), B + ".6"]]); };
+      return [
+        { type: "pins", id: "p194", title: "Pre-Lab — الجدول 1: أرقام أرجل 74194.", rows: [["Shift left serial input (SL)", [7]], ["Parallel inputs A B C D", [3, 4, 5, 6]], ["Shift right serial input (SR)", [2]], ["Clock", [11]], ["Outputs QA QB QC QD", [15, 14, 13, 12]], ["Clear", [1]], ["S1, S0", [10, 9]]] },
+        { type: "table", id: "t2", title: "Pre-Lab — الجدول 2 (ونفسه الجدول 3): أكمل المخارج QA QB QC QD (مثل 1000) والعملية لكل سطر.", text: true,
+          cols: ["", "S1", "S0", "Clear", "Clk", "Left", "Right", "ABCD", "QA QB QC QD", "Function"], nin: 8,
+          rows: T2.map(function (row, i) { return [LBL[i]].concat(row); }), options: { 9: FN },
+          answer: function (row, i) { return [str(t2[i]), t2fn[i]]; } },
+        { type: "seq", id: "b194", title: "الإجراء A: وصّل 74194 ونفّذ الجدول 3 على الجهاز.", note: "A..D على a..d، و S0 على e، و S1 على f، و CLEAR على g، و SL على h، و SR على مفتاح H/L السفلي. CLK على زر النبضة. QA..QD على LED a..d.",
+          inputs: [["a", "A"], ["b", "B"], ["c", "C"], ["d", "D"], ["e", "S0"], ["f", "S1"], ["g", "CLEAR"], ["h", "SL"], ["i", "SR"]],
+          outputs: [["a", "QA"], ["b", "QB"], ["c", "QC"], ["d", "QD"]],
+          steps: [
+            { sw: { a: 1, b: 0, c: 0, d: 0, e: 1, f: 1, g: 0, h: 0, i: 1 }, want: [0, 0, 0, 0], say: "CLEAR = 0: كل المخارج 0" },
+            { sw: { g: 1 }, want: [0, 0, 0, 0] },
+            { pulse: 1, want: [1, 0, 0, 0], say: "S1 S0 = 11: تحميل متوازي 1000" },
+            { pulse: 0, sw: { f: 0 }, want: [1, 0, 0, 0] },
+            { pulse: 1, want: [1, 1, 0, 0], say: "S1 S0 = 01 و SR = 1: إزاحة لليمين 1100" }, { pulse: 0, want: [1, 1, 0, 0] },
+            { pulse: 1, want: [1, 1, 1, 0] }, { pulse: 0, want: [1, 1, 1, 0] },
+            { pulse: 1, want: [1, 1, 1, 1], say: "1111" },
+            { pulse: 0, sw: { f: 1, e: 0 }, want: [1, 1, 1, 1] },
+            { pulse: 1, want: [1, 1, 1, 0], say: "S1 S0 = 10 و SL = 0: إزاحة لليسار 1110" }, { pulse: 0, want: [1, 1, 1, 0] },
+            { pulse: 1, want: [1, 1, 0, 0] }, { pulse: 0, want: [1, 1, 0, 0] },
+            { pulse: 1, want: [1, 0, 0, 0], say: "1000" }
+          ],
+          sol: { chips: { 5: "74194" }, wires: pw(5, 16, 8).concat([["sw:a", "5.3"], ["sw:b", "5.4"], ["sw:c", "5.5"], ["sw:d", "5.6"], ["sw:e", "5.9"], ["sw:f", "5.10"], ["sw:g", "5.1"], ["sw:h", "5.7"], ["sw:i", "5.2"], ["pls", "5.11"],
+            ["5.15", "led:a"], ["5.14", "led:b"], ["5.13", "led:c"], ["5.12", "led:d"]]) } },
+        { type: "table", id: "t4", title: "الإجراء B — الجدول 4: حلّل دائرة الشكل 4 (SL = QA و SR = QD) وأكمل الجدول.", text: true,
+          cols: ["", "S1", "S0", "Clear", "Clk", "ABCD", "QA QB QC QD", "Left SL=QA", "Right SR=QD", "Function"], nin: 6,
+          rows: T4.map(function (row, i) { return [LBL[i]].concat(row, ["1000"]); }), options: { 9: FN },
+          answer: function (row, i) { return [str(t4[i]), String(t4[i][0]), String(t4[i][3]), t4fn[i]]; },
+          say: "في الشكل 4 السلك من QD (الرجل 12) إلى SR (الرجل 2)، فالإزاحة لليمين تدوّر البتات: البت اللي يطلع من QD يرجع يدخل QA. عنوان العمود في الورقة مكتوب SR=QB، لكن الرسمة توصله بـ QD." },
+        { type: "mcq", id: "ring", title: "بعد التحميل (1000) والإزاحة لليمين في دائرة الشكل 4، كم نبضة يرجع فيها المسجّل إلى 1000؟",
+          options: ["نبضتان", "3 نبضات", "4 نبضات", "ما يرجع، يصير 0000"], answer: 2, why: "QD يرجع إلى QA، فالـ 1 يدور على 4 مواقع: 0100 ← 0010 ← 0001 ← 1000. هذا عدّاد حلقي (Ring counter)." },
+        { type: "seq", id: "bfig4", title: "الإجراء B: وصّل دائرة الشكل 4 وتحقق من الجدول 4.", note: "A على +5V، و B و C و D على 0V. SL (7) ← QA (15)، و SR (2) ← QD (12). S0 على e، و S1 على f، و CLEAR على g، و CLK على زر النبضة. QA..QD على LED a..d.",
+          inputs: [["e", "S0"], ["f", "S1"], ["g", "CLEAR"]],
+          outputs: [["a", "QA"], ["b", "QB"], ["c", "QC"], ["d", "QD"]],
+          steps: (function () {
+            var st = [{ sw: { e: 0, f: 0, g: 0 }, want: [0, 0, 0, 0], say: "CLEAR = 0" }, { sw: { e: 1, f: 1, g: 1 }, want: [0, 0, 0, 0] }];
+            for (var i = 1; i < t4.length; i++) {
+              var s = { pulse: 0, want: t4[i - 1] }; if (i === 4) s.sw = { f: 0 }; if (i > 1) st.push(s);
+              var u = { pulse: 1, want: t4[i] }; if (i === 1) u.say = "تحميل 1000"; if (i === 4) u.say = "إزاحة لليمين: 0100"; if (i === 7) u.say = "رجع 1000"; st.push(u);
+            }
+            return st;
+          })(),
+          sol: { chips: { 5: "74194" }, wires: pw(5, 16, 8).concat([["V5", "5.3"], ["G0", "5.4"], ["G0", "5.5"], ["G0", "5.6"], ["5.15", "5.7"], ["5.12", "5.2"], ["sw:e", "5.9"], ["sw:f", "5.10"], ["sw:g", "5.1"], ["pls", "5.11"],
+            ["5.15", "led:a"], ["5.14", "led:b"], ["5.13", "led:c"], ["5.12", "led:d"]]) } },
+        { type: "table", id: "tru", title: "الإجراء A للعدّاد — العدّاد التموّجي التصاعدي: سجّل L4 L3 L2 L1 بعد كل نزول للساعة.", cols: ["", "SW1", "Clk", "L4", "L3", "L2", "L1"], nin: 3,
+          rows: ctable(false), answer: function (row, i) { return cnt(i, false); } },
+        { type: "mcq", id: "jk", title: "في العدّاد التموّجي (الشكل 2)، كم قيمة J و K لكل القلّابات (J4 K4 J3 K3 J2 K2)؟",
+          options: ["كلها 0", "كلها 1", "J = 1 و K = 0", "J = Q و K = Q̄"], answer: 1, why: "J و K كلها على 5V، فكل قلّاب ينقلب (Toggle) مع كل نزول لساعته." },
+        { type: "seq", id: "bru", title: "وصّل العدّاد التموّجي التصاعدي (الشكل 2) بدائرتي 7476.", note: "SW1 (CLEAR) على المفتاح a، و CLK على زر النبضة. L1..L4 على LED a..d. كل J و K على +5V. التغذية: 5 إلى +5V و 13 إلى 0V.",
+          inputs: [["a", "SW1"]], outputs: COUT, steps: csteps(false), sol: { chips: { 5: "7476", 6: "7476" }, wires: ripple(true) } },
+        { type: "table", id: "trd", title: "الإجراء B — العدّاد التموّجي التنازلي (الساعة من Q̄): سجّل L4 L3 L2 L1.", cols: ["", "SW1", "Clk", "L4", "L3", "L2", "L1"], nin: 3,
+          rows: ctable(true), answer: function (row, i) { return cnt(i, true); } },
+        { type: "seq", id: "brd", title: "حوّل العدّاد إلى تنازلي: ساعة كل قلّاب من Q̄ للقلّاب اللي قبله.", note: "نفس التوصيل، لكن ساعة القلّابات 2 و 3 و 4 من Q̄ (الرجل 14 أو 10) بدل Q. الـ LED تبقى على Q.",
+          inputs: [["a", "SW1"]], outputs: COUT, steps: csteps(true), sol: { chips: { 5: "7476", 6: "7476" }, wires: ripple(false) } },
+        { type: "table", id: "tsy", title: "الإجراء C — العدّاد المتزامن (الشكل 3): سجّل L4 L3 L2 L1.", cols: ["", "SW1", "Clk", "L4", "L3", "L2", "L1"], nin: 3,
+          rows: ctable(false), answer: function (row, i) { return cnt(i, false); } },
+        { type: "mcq", id: "jk3", title: "من جدول الانتقال وجدول إثارة JK: متى لازم ينقلب القلّاب الثالث (L3)؟",
+          options: ["كل نبضة", "لما L1 = 1", "لما L1 = 1 و L2 = 1", "لما L4 = 1"], answer: 2,
+          why: "L3 ينقلب مثلًا من 0011 إلى 0100 ومن 0111 إلى 1000، يعني لما البتين الأصغر 1. لذلك J3 = K3 = Q1·Q2، وهي بوابة AND الأولى." },
+        { type: "seq", id: "bsy", title: "وصّل العدّاد المتزامن (الشكل 3) بدائرتي 7476 ودائرة 7408.", note: "CLK من زر النبضة لكل القلّابات. J1 = K1 = +5V، و J2 = K2 = Q1، و J3 = K3 = Q1·Q2، و J4 = K4 = (Q1·Q2)·Q3. SW1 على a، و L1..L4 على LED a..d.",
+          inputs: [["a", "SW1"]], outputs: COUT, steps: csteps(false),
+          sol: { chips: { 1: "7408", 5: "7476", 6: "7476" }, wires: pw(1).concat(base, [["pls", A + ".1"], ["pls", A + ".6"], ["pls", B + ".1"], ["pls", B + ".6"],
+            ["V5", A + ".4"], ["V5", A + ".16"], [A + ".15", A + ".9"], [A + ".15", A + ".12"],
+            [A + ".15", "1.1"], [A + ".11", "1.2"], ["1.3", B + ".4"], ["1.3", B + ".16"], ["1.3", "1.4"], [B + ".15", "1.5"], ["1.6", B + ".9"], ["1.6", B + ".12"]]) } },
+        { type: "mcq", id: "fast", title: "ليش العدّاد المتزامن أسرع من التموّجي؟",
+          options: ["لأنه يستخدم قلّابات أقل", "لأن كل القلّابات تأخذ نفس الساعة وتتغير مع بعض، فما يتجمع التأخير", "لأن J و K فيه دائمًا 1", "لأنه ما يحتاج CLEAR"], answer: 1,
+          why: "في التموّجي كل قلّاب ينتظر اللي قبله، فالتأخير يتجمع (أسوأه من 0111 إلى 1000). في المتزامن التأخير تقريبًا تأخير قلّاب واحد وبوابة." }
+      ];
+    })() }
+
   ];
   CV.logicLab = { experiments: EXP, rows: rows };
 })(typeof window !== "undefined" ? window : globalThis);
