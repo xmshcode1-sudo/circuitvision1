@@ -9,6 +9,7 @@ if sys.argv[1] == "dump":
     for f in sorted(glob.glob("/tmp/missing/*.json")):
         for t in json.load(open(f)):
             if t not in seen: seen.add(t); todo.append(t)
+    todo = [t for t in todo if not any(t != u and t in u for u in todo)]
     json.dump(todo, open("/tmp/i18n/todo.json", "w"), ensure_ascii=False, indent=0)
     for i, t in enumerate(todo): print(i, t)
 else:
