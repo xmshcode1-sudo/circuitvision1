@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>CircuitVision · video studio (Logic Design lab)</title>
+<!-- Renders the frames of a Logic Design lab video (logic-lab<n>.mp4) from the page's own experiment, trainer and solutions.
+     Driven by tools/videos/logic-render.py: window.plan(expId) → [{ dur }…], then window.show(i) for i = 0, 1, 2… in order. Not part of the site. -->
+<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../lg.css">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050914; }
+  body, body * { font-family: "DejaVu Sans", sans-serif !important; }
+  #frame { position: relative; width: 1920px; height: 1080px; background: #050914; color: #e9eef7; }
+  #hdr-r { position: absolute; top: 20px; right: 28px; font-size: 22px; color: #9aa6bb; direction: rtl; }
+  #hdr-r b { color: #ff8a1f; font-weight: 700; }
+  #hdr-l { position: absolute; top: 20px; left: 28px; font-size: 21px; color: #9aa6bb; direction: rtl; }
+  #dev { position: absolute; left: 28px; top: 70px; width: 1300px; height: 975px; border-radius: 22px; background: #121927; overflow: hidden; }
+  #tr .tr-bar, #tr .tr-info, #tr .tr-issues { display: none !important; }
+  #tr .tr-scroll { max-height: none; border-radius: 0; background: transparent; overflow: hidden; }
+  #tr .tr-svg { width: 1300px; height: 975px; }
+  #side { position: absolute; left: 1352px; top: 70px; width: 540px; height: 975px; direction: rtl; display: flex; flex-direction: column; gap: 16px; }
+  .t { border-right: 6px solid #ff8a1f; padding-right: 18px; font-size: 32px; font-weight: 700; line-height: 1.32; color: #fff; }
+  .sub { font-size: 26px; font-weight: 700; color: #ff9f43; }
+  .ln { font-size: 23px; line-height: 1.6; color: #c3cbda; }
+  .ln .ltr, .ltr { direction: ltr; unicode-bidi: isolate; }
+  .note { font-size: 20px; color: #8f9bb0; }
+  .fig { background: #fff; border-radius: 14px; padding: 10px; display: flex; justify-content: center; }
+  .fig svg { width: 100%; height: auto; max-height: 330px; }
+  ol.steps { margin: 0; padding: 0 26px 0 0; font-size: 21px; line-height: 1.55; color: #c3cbda; }
+  ol.steps li { margin-bottom: 8px; }
+  .leds { display: flex; gap: 14px; direction: ltr; justify-content: flex-end; }
+  .leds span { display: grid; place-items: center; width: 92px; height: 92px; border-radius: 16px; background: #182235; border: 2px solid #2a3a58; font-size: 20px; color: #9aa6bb; }
+  .leds span b { font-size: 40px; color: #556; font-family: "DejaVu Sans Mono", monospace !important; }
+  .leds span.on { border-color: #ff4b3a; } .leds span.on b { color: #ff5a46; }
+  table.tb { border-collapse: collapse; width: 100%; font-size: 20px; direction: ltr; }
+  table.tb th { background: #1d3f91; color: #dbe6ff; padding: 6px 8px; border: 1px solid #2a3f6e; }
+  table.tb td { padding: 5px 8px; border: 1px solid #22304b; color: #dbe3f0; text-align: center; font-family: "DejaVu Sans Mono", monospace !important; }
+  table.tb tr.on td { background: #1d3f91; color: #fff; font-weight: 700; }
+  #prog { position: absolute; left: 0; bottom: 0; height: 8px; background: #ff8a1f; }
+  #card { position: absolute; inset: 0; display: none; background: radial-gradient(1100px 700px at 70% 22%, #11307a 0%, #0a1a45 38%, #050914 78%); text-align: center; direction: rtl; }
+  #card .eb { position: absolute; top: 300px; width: 100%; font-size: 26px; color: #ff9f43; }
+  #card .ti { position: absolute; top: 350px; width: 100%; font-size: 56px; font-weight: 700; color: #fff; }
+  #card .en { position: absolute; top: 445px; width: 100%; font-size: 25px; color: #9fb0d0; direction: ltr; }
+  #card .ls { position: absolute; top: 520px; width: 100%; font-size: 26px; line-height: 1.75; color: #dfe6f3; }
+  #card .ft { position: absolute; bottom: 48px; width: 100%; font-size: 22px; color: #7b88a6; direction: ltr; }
+  .hl { fill: none; stroke: #ff8a1f; stroke-width: 4; }
+</style>
+<script>window.CV_CONFIG = {}; try { localStorage.clear(); } catch (e) {}</script>
+<script src="../../chips.js"></script>
+<script src="../../trainer.js"></script>
+<script src="../../logic-exps.js"></script>
+<script src="../../figs.js"></script>
+</head>
+<body>
+<div id="frame">
+  <div id="hdr-r"><b>CircuitVision</b> · معمل التصميم المنطقي EE2111</div>
+  <div id="hdr-l"></div>
+  <div id="dev"><div id="tr"></div></div>
+  <div id="side"></div>
+  <div id="card"><div class="eb"></div><div class="ti"></div><div class="en"></div><div class="ls"></div><div class="ft">CircuitVision · circuitvision1.vercel.app</div></div>
+  <div id="prog"></div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function ltr(s) { return esc(s).replace(/([A-Za-z0-9][A-Za-z0-9_'⊕+=<>·̄.\-]*(?: [A-Za-z0-9][A-Za-z0-9_'⊕+=<>·̄.\-]*)*)/g, '<bdi dir="ltr">$1</bdi>'); }
+  var tr = CV.trainer.mount($("#tr"), {}), S = tr.state, L = CV.trainer.layout(), E, SC = [];
+
+  /* same hole choice as the lab page (logic.js holesFor) */
+  function holesFor(wires) {
+    var cnt = {};
+    function pick(ep) {
+      var k = cnt[ep] = (cnt[ep] || 0) + 1, m;
+      if (ep === "V5") return "p5t" + ((k * 2 + 1) % 41);
+      if (ep === "G0") return "gnd" + (k * 2 % 37);
+      if ((m = /^sw:([a-i])$/.exec(ep))) return "sw" + m[1] + (k % 2);
+      if ((m = /^led:([a-h])$/.exec(ep))) return "led" + m[1] + (k % 2);
+      if (ep === "pls") return "pls" + (k % 2);
+      if ((m = /^(\d+)\.(\d+)$/.exec(ep))) return "s" + m[1] + "p" + m[2] + (k % 2 ? "a" : "b");
+      return ep;
+    }
+    return wires.map(function (w) { return [pick(w[0]), pick(w[1])]; });
+  }
+  function epName(ep, chips) {
+    var m;
+    if (ep === "V5") return "+5V"; if (ep === "G0") return "0V";
+    if (ep === "sw:i") return "مفتاح H/L السفلي";
+    if ((m = /^sw:([a-h])$/.exec(ep))) return "المفتاح " + m[1];
+    if ((m = /^led:([a-h])$/.exec(ep))) return "LED " + m[1];
+    if (ep === "pls") return "زر النبضة ⎍";
+    if ((m = /^(\d+)\.(\d+)$/.exec(ep))) { var c = CV.chips.get(chips[m[1]]); return "الرجل " + m[2] + " (" + (c ? c.labels[m[2]] : "") + ") في " + chips[m[1]] + " (المقبس " + m[1] + ")"; }
+    return ep;
+  }
+  /* wires shown together: power, J/K tied high, the shared CLEAR, LEDs; everything else one by one */
+  function kind(w, chips) {
+    var m = /^(\d+)\.(\d+)$/.exec(w[1]), c = m && CV.chips.get(chips[m[1]]), lab = c ? c.labels[m[2]] : "";
+    if ((w[0] === "V5" || w[0] === "G0") && c && (+m[2] === c.vcc || +m[2] === c.gnd)) return "التغذية: VCC على +5V و GND على 0V";
+    if (w[0] === "V5" && /J|K/.test(lab)) return "كل J و K على +5V (Toggle)";
+    if (w[0] === "sw:a" && /CLR/.test(lab) && chips[m[1]] === "7476") return "CLEAR لكل القلّابات على المفتاح a (SW1)";
+    if (/^led:/.test(w[1])) return "المخارج على الـ LED";
+    return null;
+  }
+
+  function card(eb, ti, en, lines, dur) { SC.push({ dur: dur, card: { eb: eb, ti: ti, en: en, lines: lines || [] } }); }
+  function scene(o) { SC.push(o); }
+
+  window.plan = function (id) {
+    E = CV.logicLab.experiments.filter(function (x) { return x.id === id; })[0]; SC = [];
+    $("#hdr-l").textContent = "التجربة " + E.n;
+    card("معمل التصميم المنطقي · التجربة " + E.n, E.title, "Lab#" + E.n + ": " + E.en, E.objective, 7);
+    scene({ dur: 7, side: { t: "المتطلبات", lines: ["جهاز IC Trainer وأسلاك، والدوائر:"].concat(E.chips.map(function (c) { return c + ": " + CV.chips.get(c).ar; })), note: E.note } });
+    E.parts.forEach(function (p) { scene({ dur: Math.min(16, 4 + p.steps.length * 2.3), side: { t: p.title, steps: p.steps } }); });
+    card("التجربة " + E.n, "التطبيق العملي", "Procedure", [], 4);
+    E.tasks.filter(function (t) { return t.type === "seq" || t.type === "build"; }).forEach(function (t) {
+      var fig = CV.logicFigs.get(E.id, t);
+      scene({ dur: 7, reset: true, side: { t: t.title, lines: [t.note || ""], fig: fig && fig.svg } });
+      scene({ dur: 3.5, chips: t.sol.chips, side: { t: t.title, sub: "ركّب الدوائر", lines: Object.keys(t.sol.chips).map(function (s) { return t.sol.chips[s] + " في المقبس " + s; }) } });
+      var holes = holesFor(t.sol.wires), i = 0, n = t.sol.wires.length;
+      while (i < n) {
+        var k = kind(t.sol.wires[i], t.sol.chips), j = i + 1;
+        if (k) while (j < n && kind(t.sol.wires[j], t.sol.chips) === k) j++;
+        var ws = t.sol.wires.slice(i, j), hs = holes.slice(i, j);
+        scene({ dur: k ? 3.6 : 2.2, add: hs, side: { t: t.title, sub: (j - i > 1 ? "الأسلاك " + (i + 1) + " إلى " + j : "سلك " + j) + " من " + n,
+          lines: k ? [k].concat(j - i <= 6 ? ws.map(function (w) { return epName(w[0], t.sol.chips) + " ← " + epName(w[1], t.sol.chips); }) : []) : [epName(ws[0][0], t.sol.chips) + " ← " + epName(ws[0][1], t.sol.chips)] } });
+        i = j;
+      }
+      if (t.type === "seq") {
+        var outs = t.outputs, many = t.steps.length > 20, rows = [];
+        t.steps.forEach(function (st, k2) {
+          var show = !many || st.pulse !== 1;   // long counters: show the count after each falling edge
+          scene({ dur: show ? (many ? 1.7 : 2.6) : 0, step: st, quiet: !show, outs: outs, side: { t: t.title, sub: "خطوة " + (k2 + 1) + " من " + t.steps.length, say: st.say || "",
+            sw: st.sw, pulse: st.pulse } });
+        });
+      } else {
+        scene({ dur: 6, table: t, side: { t: t.title, sub: "جرّب كل الحالات" } });
+      }
+      scene({ dur: 3.5, side: { t: t.title, sub: "✓ التوصيل صحيح", lines: ["هذا نفس الحل في زر «اعرض الحل على الجهاز» بالصفحة."] } });
+    });
+    card("التجربة " + E.n, "جرّبها بنفسك", "Lab#" + E.n + " · circuitvision1.vercel.app/logic.html#" + E.id, ["أكمل الجداول، ووصّل كل دائرة على الجهاز، والموقع يفحص توصيلك."], 5);
+    return SC.map(function (s) { return { dur: s.dur }; });
+  };
+
+  var hlHoles = [];
+  function highlight() {
+    var svg = document.querySelector("#tr svg"), g = svg.querySelector("#hlg"); if (g) g.remove();
+    g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.id = "hlg"; svg.appendChild(g);
+    hlHoles.forEach(function (id) { var h = L.byId[id]; if (!h) return; var c = document.createElementNS("http://www.w3.org/2000/svg", "circle"); c.setAttribute("cx", h.x); c.setAttribute("cy", h.y); c.setAttribute("r", 13); c.setAttribute("class", "hl"); g.appendChild(c); });
+  }
+  function swText(sw, pulse) {
+    var out = [];
+    Object.keys(sw || {}).forEach(function (k) { out.push("المفتاح " + (k === "i" ? "H/L السفلي" : k) + " = " + sw[k]); });
+    if (pulse === 1) out.push("اضغط زر النبضة ⎍ (حافة صاعدة)"); else if (pulse === 0) out.push("ارفع إصبعك (حافة نازلة)");
+    return out;
+  }
+
+  window.show = function (i, progress) {
+    var s = SC[i]; hlHoles = [];
+    if (s.reset) { tr.reset(); }
+    if (s.chips) Object.keys(s.chips).forEach(function (k) { tr.placeChip(k, s.chips[k]); });
+    if (s.add) { s.add.forEach(function (w) { tr.addWire(w[0], w[1]); hlHoles.push(w[0], w[1]); }); tr.update(); }
+    if (s.step) { Object.keys(s.step.sw || {}).forEach(function (k) { tr.setSwitch(k, s.step.sw[k]); }); if (s.step.pulse !== undefined) tr.pulse(s.step.pulse); tr.update(); }
+    if (s.quiet) return;
+    $("#prog").style.width = (progress * 1920) + "px";
+    var c = $("#card");
+    if (s.card) {
+      c.style.display = "block";
+      c.querySelector(".eb").textContent = s.card.eb; c.querySelector(".ti").textContent = s.card.ti; c.querySelector(".en").textContent = s.card.en;
+      c.querySelector(".ls").innerHTML = s.card.lines.map(function (l) { return "<div>" + ltr(l) + "</div>"; }).join("");
+      return;
+    }
+    c.style.display = "none";
+    highlight();
+    var p = s.side, h = '<div class="t">' + ltr(p.t) + '</div>';
+    if (p.sub) h += '<div class="sub">' + ltr(p.sub) + '</div>';
+    if (p.fig) h += '<div class="fig">' + p.fig + '</div>';
+    if (p.steps) h += '<ol class="steps">' + p.steps.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ol>';
+    if (p.lines) h += '<div class="ln">' + p.lines.filter(Boolean).map(function (l) { return "<div>" + ltr(l) + "</div>"; }).join("") + '</div>';
+    if (s.step) {
+      var sw = swText(p.sw, p.pulse); if (sw.length) h += '<div class="ln">' + sw.map(function (l) { return "<div>" + ltr(l) + "</div>"; }).join("") + '</div>';
+      h += '<div class="leds">' + s.outs.map(function (o) { var v = tr.led(o[0]); return '<span class="' + (v ? "on" : "") + '"><b>' + v + '</b>' + esc(o[1]) + '</span>'; }).join("") + '</div>';
+      if (p.say) h += '<div class="sub">' + ltr(p.say) + '</div>';
+    }
+    if (s.table) {
+      var t = s.table, ins = t.inputs.map(function (x) { return x[0]; }), outs = t.outputs.map(function (x) { return x[0]; }), rows = tr.table(ins, outs, t.fn);
+      h += '<table class="tb"><tr>' + t.inputs.concat(t.outputs).map(function (x) { return "<th>" + esc(x[1]) + "</th>"; }).join("") + '</tr>' + rows.map(function (r) { return "<tr>" + r.in.concat(r.got).map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr>"; }).join("") + '</table>';
+    }
+    if (p.note) h += '<div class="note">' + ltr(p.note) + '</div>';
+    $("#side").innerHTML = h;
+  };
+})();
+</script>
+</body>
+</html>

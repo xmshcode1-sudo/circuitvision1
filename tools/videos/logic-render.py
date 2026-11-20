@@ -1,0 +1,48 @@
+"""CircuitVision — render a Logic Design lab video from the lab page's own experiment, trainer and solutions.
+   1) python3 -m http.server 8765   (from the repository root)
+   2) python3 tools/videos/logic-render.py exp7 [exp… ]
+   Writes logic-lab<n>.mp4 (1920×1080, 30 fps, silent) and logic-lab<n>.jpg (poster) in the repository root.
+   Needs: playwright (chromium), ffmpeg, numpy, pillow."""
+import sys, os, asyncio, subprocess
+from PIL import Image
+from playwright.async_api import async_playwright
+sys.path.insert(0, os.path.dirname(__file__))
+from render import encode, ROOT
+
+URL = "http://localhost:8765/tools/videos/logic-studio.html"
+
+async def shoot(eid, outdir):
+    async with async_playwright() as p:
+        b = await p.chromium.launch(channel="chrome", args=["--no-sandbox"])
+        pg = await b.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=1)
+        errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        await pg.goto(URL, wait_until="load")
+        await pg.wait_for_timeout(400)
+        plan = await pg.evaluate("(id) => window.plan(id)", eid)
+        total = sum(s["dur"] for s in plan); t = 0; files = []
+        for k, s in enumerate(plan):
+            await pg.evaluate("([i, p]) => window.show(i, p)", [k, t / total])
+            if s["dur"] <= 0: continue
+            await pg.wait_for_timeout(40)
+            f = os.path.join(outdir, "%04d.png" % k)
+            await pg.screenshot(path=f)
+            files.append((f, s["dur"])); t += s["dur"]
+        await b.close()
+        if errs: print("page errors:", errs[:5])
+        return files
+
+def main():
+    for eid in sys.argv[1:]:
+        n = int(eid.replace("exp", ""))
+        outdir = "/tmp/logic-frames/" + eid; os.makedirs(outdir, exist_ok=True)
+        for f in os.listdir(outdir): os.remove(os.path.join(outdir, f))
+        files = asyncio.run(shoot(eid, outdir))
+        out = os.path.join(ROOT, "logic-lab%d.mp4" % n)
+        encode(files, out)
+        Image.open(files[0][0]).convert("RGB").resize((1280, 720)).save(os.path.join(ROOT, "logic-lab%d.jpg" % n), quality=82)
+        d = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration,size", "-of", "csv=p=0", out], capture_output=True, text=True).stdout.strip()
+        print(eid, "→", os.path.basename(out), d, len(files), "frames")
+
+if __name__ == "__main__":
+    main()
