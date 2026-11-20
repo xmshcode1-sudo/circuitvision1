@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="../../style.css">
 <link rel="stylesheet" href="../../lg.css">
 <style>
+  html[lang=en] #hdr-r, html[lang=en] #hdr-l, html[lang=en] #side, html[lang=en] #card { direction: ltr; }
+  html[lang=en] .t { border-right: 0; padding-right: 0; border-left: 6px solid #ff8a1f; padding-left: 18px; }
+  html[lang=en] ol.steps { padding: 0 0 0 26px; }
   html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050914; }
   body, body * { font-family: "DejaVu Sans", sans-serif !important; }
   #frame { position: relative; width: 1920px; height: 1080px; background: #050914; color: #e9eef7; }
@@ -50,6 +53,8 @@
 <script src="../../trainer.js"></script>
 <script src="../../logic-exps.js"></script>
 <script src="../../figs.js"></script>
+<script src="logic-en.js"></script>
+<script>window.EN = /lang=en/.test(location.search); if (window.EN) { document.documentElement.lang = "en"; document.documentElement.dir = "ltr"; }</script>
 </head>
 <body>
 <div id="frame">
@@ -66,6 +71,16 @@
   var $ = function (s) { return document.querySelector(s); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ltr(s) { return esc(s).replace(/([A-Za-z0-9][A-Za-z0-9_'⊕+=<>·̄.\-]*(?: [A-Za-z0-9][A-Za-z0-9_'⊕+=<>·̄.\-]*)*)/g, '<bdi dir="ltr">$1</bdi>'); }
+  var EN = window.EN, DICT = window.LOGIC_EN || {}, MISS = {};
+  function T(s) { if (!EN || !s || !/[\u0600-\u06ff]/.test(s)) return s; if (DICT[s]) return DICT[s];
+    for (var i = 0; i < PAT.length; i++) { var m = PAT[i][0].exec(s); if (m) return s.replace(PAT[i][0], PAT[i][1]); }
+    MISS[s] = 1; return s; }
+  var PAT = [[/^سلك (\d+) من (\d+)$/, "Wire $1 of $2"], [/^الأسلاك (\d+) إلى (\d+) من (\d+)$/, "Wires $1–$2 of $3"], [/^خطوة (\d+) من (\d+)$/, "Step $1 of $2"],
+    [/^النبضة (\d+): يرجع (\d+)$/, "Pulse $1: back to $2"], [/^النبضة (\d+): (\d+)$/, "Pulse $1: $2"], [/^التجربة (\d+)$/, "Lab#$1"], [/^معمل التصميم المنطقي · التجربة (\d+)$/, "Logic Design Lab · Lab#$1"],
+    [/^(\w+) في المقبس (\d+)$/, "$1 in socket $2"]];
+  window.missing = function () { return Object.keys(MISS); };
+  function A(ar, en) { return EN ? en : ar; }
+  function plain(s) { return String(s || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); }
   var tr = CV.trainer.mount($("#tr"), {}), S = tr.state, L = CV.trainer.layout(), E, SC = [];
 
   /* same hole choice as the lab page (logic.js holesFor) */
@@ -86,11 +101,11 @@
   function epName(ep, chips) {
     var m;
     if (ep === "V5") return "+5V"; if (ep === "G0") return "0V";
-    if (ep === "sw:i") return "مفتاح H/L السفلي";
-    if ((m = /^sw:([a-h])$/.exec(ep))) return "المفتاح " + m[1];
+    if (ep === "sw:i") return A("مفتاح H/L السفلي", "lower H/L switch");
+    if ((m = /^sw:([a-h])$/.exec(ep))) return A("المفتاح ", "switch ") + m[1];
     if ((m = /^led:([a-h])$/.exec(ep))) return "LED " + m[1];
-    if (ep === "pls") return "زر النبضة ⎍";
-    if ((m = /^(\d+)\.(\d+)$/.exec(ep))) { var c = CV.chips.get(chips[m[1]]); return "الرجل " + m[2] + " (" + (c ? c.labels[m[2]] : "") + ") في " + chips[m[1]] + " (المقبس " + m[1] + ")"; }
+    if (ep === "pls") return A("زر النبضة ⎍", "pulse button ⎍");
+    if ((m = /^(\d+)\.(\d+)$/.exec(ep))) { var c = CV.chips.get(chips[m[1]]), lb = c ? c.labels[m[2]] : ""; return A("الرجل " + m[2] + " (" + lb + ") في " + chips[m[1]] + " (المقبس " + m[1] + ")", "pin " + m[2] + " (" + lb + ") of " + chips[m[1]] + " (socket " + m[1] + ")"); }
     return ep;
   }
   /* wires shown together: power, J/K tied high, the shared CLEAR, LEDs; everything else one by one */
@@ -103,14 +118,19 @@
     return null;
   }
 
-  function card(eb, ti, en, lines, dur) { SC.push({ dur: dur, card: { eb: eb, ti: ti, en: en, lines: lines || [] } }); }
-  function scene(o) { SC.push(o); }
+  function card(eb, ti, en, lines, dur) { SC.push({ dur: dur, ar: [ti].concat(lines || []).join(" — "), card: { eb: T(eb), ti: T(ti), en: en, lines: (lines || []).map(T) } }); }
+  function scene(o) { // o.side holds Arabic text: keep it for the subtitles, show it in the frame's language
+    var p = o.side;
+    if (p && !o.ar) o.ar = [p.sub].concat(o.step ? swText(p.sw, p.pulse) : [], [p.say], p.steps || [], p.lines || [], [p.note]).filter(Boolean).map(plain).join(" — ") || plain(p.t);
+    if (p) { p.t = T(p.t); p.sub = T(p.sub); p.say = T(p.say); p.note = T(p.note); if (p.steps) p.steps = p.steps.map(T); if (p.lines) p.lines = p.lines.map(T); }
+    SC.push(o);
+  }
 
   window.plan = function (id) {
     E = CV.logicLab.experiments.filter(function (x) { return x.id === id; })[0]; SC = [];
-    $("#hdr-l").textContent = "التجربة " + E.n;
+    $("#hdr-l").textContent = T("التجربة " + E.n); if (EN) $("#hdr-r").innerHTML = "<b>CircuitVision</b> · Logic Design Lab · EE2111";
     card("معمل التصميم المنطقي · التجربة " + E.n, E.title, "Lab#" + E.n + ": " + E.en, E.objective, 7);
-    scene({ dur: 7, side: { t: "المتطلبات", lines: ["جهاز IC Trainer وأسلاك، والدوائر:"].concat(E.chips.map(function (c) { return c + ": " + CV.chips.get(c).ar; })), note: E.note } });
+    scene({ dur: 7, side: { t: "المتطلبات", lines: ["جهاز IC Trainer وأسلاك، والدوائر:"].concat(E.chips.map(function (c) { return c + ": " + A(CV.chips.get(c).ar, CV.chips.get(c).en); })), note: E.note } });
     E.parts.forEach(function (p) { scene({ dur: Math.min(16, 4 + p.steps.length * 2.3), side: { t: p.title, steps: p.steps } }); });
     card("التجربة " + E.n, "التطبيق العملي", "Procedure", [], 4);
     E.tasks.filter(function (t) { return t.type === "seq" || t.type === "build"; }).forEach(function (t) {
@@ -139,7 +159,7 @@
       scene({ dur: 3.5, side: { t: t.title, sub: "✓ التوصيل صحيح", lines: ["هذا نفس الحل في زر «اعرض الحل على الجهاز» بالصفحة."] } });
     });
     card("التجربة " + E.n, "جرّبها بنفسك", "Lab#" + E.n + " · circuitvision1.vercel.app/logic.html#" + E.id, ["أكمل الجداول، ووصّل كل دائرة على الجهاز، والموقع يفحص توصيلك."], 5);
-    return SC.map(function (s) { return { dur: s.dur }; });
+    return SC.map(function (s) { return { dur: s.quiet ? 0 : s.dur, ar: s.quiet ? "" : s.ar || "" }; });
   };
 
   var hlHoles = [];
@@ -150,8 +170,8 @@
   }
   function swText(sw, pulse) {
     var out = [];
-    Object.keys(sw || {}).forEach(function (k) { out.push("المفتاح " + (k === "i" ? "H/L السفلي" : k) + " = " + sw[k]); });
-    if (pulse === 1) out.push("اضغط زر النبضة ⎍ (حافة صاعدة)"); else if (pulse === 0) out.push("ارفع إصبعك (حافة نازلة)");
+    Object.keys(sw || {}).forEach(function (k) { out.push(A("المفتاح " + (k === "i" ? "H/L السفلي" : k), k === "i" ? "lower H/L switch" : "switch " + k) + " = " + sw[k]); });
+    if (pulse === 1) out.push(A("اضغط زر النبضة ⎍ (حافة صاعدة)", "press the pulse button ⎍ (rising edge)")); else if (pulse === 0) out.push(A("ارفع إصبعك (حافة نازلة)", "release it (falling edge)"));
     return out;
   }
 
