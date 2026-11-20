@@ -300,8 +300,9 @@
     var body = "";
     var toc = [];
     var SUM = (CV.lessonSum || {})[L.id];
-    var moreWhen = "";   // «متى ولماذا» lives in its own folded box at the end, so the lesson itself stays short
-    order.forEach(function (k) { var s = byId[k]; if (!s) return; if (k === "when") { moreWhen = '<details class="l-sec card l-more" id="sec-when"><summary class="sec-h"><h2>' + s.title + '</h2>' + (s.en ? '<span class="en">' + s.en + '</span>' : '') + '<span class="muted small">اضغط للعرض</span></summary>' + short(s, SUM) + '</details>'; return; } body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
+    // «متى ولماذا» and «في الواقع» live on the Real-World page (rw-uses.js); the lesson keeps a link to them
+    var moreWhen = (byId.when || byId.realworld) ? '<a class="card l-more-link" href="realworld.html#use-' + L.id + '"><b>متى ولماذا نستخدمه؟ وأين نراه في الواقع</b><span class="muted small">في صفحة «الهندسة في الواقع» ←</span></a>' : "";
+    order.forEach(function (k) { var s = byId[k]; if (!s || k === "when" || k === "realworld") return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
     if ((L.course === "signals-systems" || L.course === "logic-design" || L.course === "circuits-2") && CV.bi && CV.bi.mode() === "en") body = '<div class="card no-bi" style="padding:12px 16px" dir="ltr">English text for these lessons is in preparation (قيد الإعداد); the equations, drawings and videos below are language-neutral.</div>' + body;
     if (!L.video && /^c1-/.test(L.id) && CV.videoDur && CV.videoDur[L.id]) { L.video = L.id + ".mp4"; L.videoDur = CV.videoDur[L.id]; }
@@ -330,7 +331,6 @@
       body += sec("generated", L.generator.title, "Generated Practice", '<p class="muted">كل دائرة هنا يولّدها المحرك بشكل مختلف ويحلها قبل عرضها. هذه التمارين إضافية ولا تؤثر على إكمال الدرس.</p><div id="gen-practice"></div>');
       toc.push(["generated", "تمارين مولّدة"]);
     }
-    if (byId.realworld) { body += sec("realworld", byId.realworld.title, byId.realworld.en, short(byId.realworld, SUM)); toc.push(["realworld", "في الواقع"]); }
 
     var mlId = "ml-" + L.id, hasMl = CV.matlabIndex && CV.matlabIndex[mlId];
     body += sec("matlab", "الدرس في MATLAB", "MATLAB", hasMl ? '<div id="ml-slot" data-id="' + mlId + '"></div>' :

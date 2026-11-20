@@ -718,3 +718,6 @@ html.wb-lock .lg-ref { right: calc(env(safe-area-inset-right, 0px) + 14px) !impo
 .crumbs { font-size: 13px; color: var(--fg-3); display: flex; gap: 8px; flex-wrap: wrap; }
 .l-more > summary { cursor: pointer; list-style: none; } .l-more > summary::-webkit-details-marker { display: none; }
 .l-more > summary::after { content: "▾"; margin-inline-start: auto; color: var(--fg-3); } .l-more[open] > summary::after { content: "▴"; }
+.l-more-link { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; align-items: center; padding: 14px 18px; text-decoration: none; color: inherit; }
+.rw-uses .rw-c { margin: 18px 0 4px; } .rw-uses .rw-ch { margin: 10px 0 4px; }
+.rw-l { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 6px 0; } .rw-l > summary { cursor: pointer; font-weight: 600; } .rw-l h4 { margin: 12px 0 4px; }
