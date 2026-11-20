@@ -54,12 +54,12 @@
       e.s.forEach(function (st, j) {
         var last = j === e.s.length - 1, v;
         if (hasFig) v = vis(last && e.after ? e.after : (e.fig || e.after));
-        else { var from = Math.max(0, j - 4); v = board(e.s.slice(from, j + 1).map(function (x, q) { return "<span class='n'>" + (from + q + 1) + "</span>" + x; }), j - from); }
+        else { var from = Math.max(0, j - 4); v = board(e.s.slice(from, j + 1).map(function (x, q) { return "<div class='n'>" + (from + q + 1) + "</div>" + x; }), j - from); }
         out.push({ title: "مثال " + (i + 1), sub: "الخطوة " + (j + 1) + " من " + e.s.length, text: hasFig ? "<ol class='steps' start='" + (Math.max(0, j - 3) + 1) + "'>" + e.s.slice(Math.max(0, j - 3), j + 1).map(function (x, q, arr) { return "<li" + (q === arr.length - 1 ? " class='now'" : "") + ">" + x + "</li>"; }).join("") + "</ol>" : "<p>" + st + "</p>", vis: v, dur: 4 + strip(st).length / 24 });
       });
     });
-    if (s.when) out.push({ title: "متى نستخدمه؟", text: "<ul class='ticks'>" + s.when.map(function (w) { return "<li>" + w + "</li>"; }).join("") + "</ul>", vis: lawsB, dur: 4 + s.when.length * 2.5 });
-    out.push({ kind: "card", eyebrow: "انتهى الشرح", title: s.ar, en: "حل التمرين والاختبار القصير في صفحة الدرس", lines: [], dur: 4 });
+    if (false && s.when) out.push({ title: "متى نستخدمه؟", text: "<ul class='ticks'>" + s.when.map(function (w) { return "<li>" + w + "</li>"; }).join("") + "</ul>", vis: lawsB, dur: 4 + s.when.length * 2.5 });
+    out.push({ kind: "card", eyebrow: "انتهى الشرح", title: s.ar, en: "حل التمرين والاختبار في بنك الأسئلة", lines: [], dur: 4 });
     return out;
   }
   /* small helpers for the content files */

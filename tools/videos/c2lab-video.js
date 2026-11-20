@@ -69,7 +69,7 @@
     e.prelab.forEach(function (t, k) {
       var from = Math.max(0, k - 3);
       out.push({ title: "التحضير (Pre-Lab)", sub: "السؤال " + (k + 1) + " من " + e.prelab.length, text: "<p>" + t.q + "</p><p style='color:#ff9f43'>" + t.sol + "</p>",
-        vis: board(e.prelab.slice(from, k + 1).map(function (x, q) { return "<span class='n'>" + (from + q + 1) + "</span>" + x.q + "<br><span style='color:#7dffb0'>" + x.sol + "</span>"; }), k - from), dur: 5 + strip(t.q + t.sol).length / 22 });
+        vis: board(e.prelab.slice(from, k + 1).map(function (x, q) { return "<div class='n'>" + (from + q + 1) + "</div>" + x.q + "<br><span style='color:#7dffb0'>" + x.sol + "</span>"; }), k - from), dur: 5 + strip(t.q + t.sol).length / 22 });
     });
     e.procs.forEach(function (p) {
       out.push({ title: "خطوات التجربة", sub: p.title, text: "<ol class='steps'>" + p.steps.map(function (s) { return "<li class='now'>" + s + "</li>"; }).join("") + "</ol>", vis: sch(p), dur: 5 + strip(p.steps.join(" ")).length / 24 });

@@ -22,7 +22,7 @@
       ps.slice(0, 6).forEach(function (p, i) { out.push({ title: i ? "الفكرة (تابع)" : "الفكرة", text: "<p>" + p + "</p>", vis: cf[i] || cf[0] || allFigs[0] || lawsB, dur: dur(p, 4) }); });
     }
     if (lawsB) out.push({ title: "القوانين", sub: lawsHtml.length + " علاقات", text: "<p>هذه العلاقات التي يقوم عليها الدرس، وتجدها كاملة في صفحة الدرس.</p>", vis: lawsB, dur: 4 + lawsHtml.length * 2.5 });
-    if (sec.when) { var w = [].map.call(dom(sec.when.html).querySelectorAll("li"), function (x) { return x.innerHTML; }); if (w.length) out.push({ title: "متى نستخدمه؟", text: "<ul>" + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>", vis: allFigs[0] || lawsB, dur: dur(w.join(" "), 4) }); }
+    if (false && sec.when) { var w = [].map.call(dom(sec.when.html).querySelectorAll("li"), function (x) { return x.innerHTML; }); if (w.length) out.push({ title: "متى نستخدمه؟", text: "<ul>" + w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>", vis: allFigs[0] || lawsB, dur: dur(w.join(" "), 4) }); }
     if (sec.example) {
       var ex = dom(sec.example.html), n = 0, q = null, fg = null;
       [].forEach.call(ex.children, function (el) {
@@ -33,13 +33,13 @@
           st.forEach(function (s, j) {
             var from = Math.max(0, j - 4);
             out.push({ title: "مثال " + Math.max(n, 1), sub: "الخطوة " + (j + 1) + " من " + st.length, text: "<p>" + s + "</p>",
-              vis: fg || board(st.slice(from, j + 1).map(function (x, k) { return "<span class='n'>" + (from + k + 1) + "</span>" + x; }), j - from), dur: dur(s, 4) });
+              vis: fg || board(st.slice(from, j + 1).map(function (x, k) { return "<div class='n'>" + (from + k + 1) + "</div>" + x; }), j - from), dur: dur(s, 4) });
           });
         }
       });
     }
-    if (sec.realworld) out.push({ title: "في الواقع", text: sec.realworld.html, vis: allFigs[allFigs.length - 1] || lawsB, dur: dur(sec.realworld.html, 4) });
-    out.push({ kind: "card", eyebrow: "انتهى الدرس", title: l.ar, en: "حل التمرين والاختبار في صفحة الدرس", lines: ["وجرّب سكربت MATLAB الخاص بالدرس"], dur: 4 });
+    if (false && sec.realworld) out.push({ title: "في الواقع", text: sec.realworld.html, vis: allFigs[allFigs.length - 1] || lawsB, dur: dur(sec.realworld.html, 4) });
+    out.push({ kind: "card", eyebrow: "انتهى الدرس", title: l.ar, en: "حل التمرين والاختبار في بنك الأسئلة", lines: ["وجرّب سكربت MATLAB الخاص بالدرس"], dur: 4 });
     V[id] = out;
   });
 })();
