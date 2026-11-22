@@ -80,7 +80,8 @@
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (trainer) { trainer.destroy(); trainer = null; }
     clearInterval(mTimer); mTimer = 0; var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
-    if (/^(free|exam|fault)$/.test(id)) showMode(id);
+    var mm = /^(free|exam|fault)(?:-(exp\d+))?$/.exec(id);
+    if (mm) showMode(mm[1], mm[2]);
     else if (e && !free(e)) showLocked(e); else if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
   }
@@ -117,7 +118,7 @@
     var builds = e.tasks.filter(function (t) { return t.type === "build" || t.type === "seq"; });
     var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     root.innerHTML = nav +
-      '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1 class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span></div>' +
+      '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1 class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين محلولة</span><div class="lg-cta">' + (boardTasks(null, e.id).length ? '<a class="btn btn-ghost btn-sm" href="#exam-' + e.id + '">⏱ اختبار عملي</a>' : "") + (boardTasks(["build"], e.id).length ? '<a class="btn btn-ghost btn-sm" href="#fault-' + e.id + '">🔧 تدريب الأعطال</a>' : "") + '<a class="btn btn-ghost btn-sm" href="#free">🧪 المعمل الحر</a></div></div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الهدف</h2><ul>' + e.objective.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>المتطلبات</h2><p class="muted">جهاز IC Trainer، وأسلاك، والدوائر التالية (اضغط أي دائرة لترى أرجلها):</p><div class="lg-chips">' + chipsHtml + '</div>' + (e.note ? '<p class="lg-note">' + bd(e.note) + '</p>' : "") + '</section></div>' +
       (VIDEO[e.n] ? '<section class="card lg-sec lg-video"><h2>شرح التجربة بالفيديو <span class="muted small ltr">' + VIDEO[e.n] + '</span></h2><video controls playsinline preload="none" poster="logic-lab' + e.n + '.jpg" src="logic-lab' + e.n + '.mp4">' + (SUB[e.n] ? '<track kind="subtitles" srclang="ar" label="العربية" src="logic-lab' + e.n + '.ar.vtt" default>' : '') + '</video><p class="muted small">نفس الجهاز اللي تحت: التوصيل سلك سلك، ثم تجربة كل الحالات وقراءة الـ LED.</p></section>' : '') +
@@ -352,9 +353,9 @@
   var mTimer = 0, EXAM_K = "cv-logic-exam", EXAM_LOG = "cv-logic-exam-log", FAULT_K = "cv-logic-fault", FAULT_LOG = "cv-logic-fault-log";
   function mls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (x) { return null; } }
   function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
-  function boardTasks(types) {
+  function boardTasks(types, only) {
     var out = [];
-    EXP.forEach(function (e) { if (!free(e)) return; e.tasks.forEach(function (t) { if ((types || ["build", "seq"]).indexOf(t.type) > -1 && t.sol) out.push({ e: e, t: t }); }); });
+    EXP.forEach(function (e) { if (!free(e) || (only && e.id !== only)) return; e.tasks.forEach(function (t) { if ((types || ["build", "seq"]).indexOf(t.type) > -1 && t.sol) out.push({ e: e, t: t }); }); });
     return out;
   }
   function findTask(eid, tid) { var e = EXP.filter(function (x) { return x.id === eid; })[0], t = e && e.tasks.filter(function (x) { return x.id === tid; })[0]; return t ? { e: e, t: t } : null; }
@@ -379,10 +380,10 @@
   }
   function modeHead(code, title, sub) { return '<nav class="lg-tabs"><a href="#">← معمل التصميم المنطقي</a></nav><div class="lg-head"><span class="code">EE2111 · Logic Design Lab · ' + code + '</span><h1>' + title + '</h1>' + (sub ? '<span class="lg-ar">' + sub + '</span>' : "") + '</div>'; }
   function figHtml(e, t) { var f = CV.logicFigs ? CV.logicFigs.get(e.id, t) : null; return f && f.svg ? '<div class="cl-fig md-fig">' + f.svg + '</div>' : ""; }
-  function showMode(id) {
+  function showMode(id, only) {
     if (id === "free") return showFree();
-    if (id === "exam") return showLExam();
-    return showLFault();
+    if (id === "exam") return showLExam(only);
+    return showLFault(only);
   }
   function showFree() {
     var list = boardTasks();
@@ -400,9 +401,10 @@
     $("#fr-ref").onclick = function () { var x = sel(); if (x) refPanel(x.e, x.t, true); };
     $("#fr-clear").onclick = function () { trainer.reset(); $("#lg-out").innerHTML = ""; };
   }
-  function showLExam() {
-    var c = mls(EXAM_K), pool = boardTasks();
-    if (!c || c.done || !findTask(c.e, c.t)) { var x0 = rnd(pool); c = { e: x0.e.id, t: x0.t.id, start: Date.now(), mins: +(mls("cv-logic-exam-mins") || 20), done: false, fresh: true }; mls(EXAM_K, c); }
+  function showLExam(only) {
+    var c = mls(EXAM_K), pool = boardTasks(null, only);
+    if (!pool.length) { root.innerHTML = modeHead("Practical exam", "اختبار عملي", "") + '<p>لا توجد مهمة توصيل في هذه التجربة.</p>'; return; }
+    if (!c || c.done || !findTask(c.e, c.t) || (c.only || "") !== (only || "")) { var x0 = rnd(pool); c = { e: x0.e.id, t: x0.t.id, only: only || "", start: Date.now(), mins: +(mls("cv-logic-exam-mins") || 20), done: false, fresh: true }; mls(EXAM_K, c); }
     var x = findTask(c.e, c.t), e = x.e, t = x.t;
     document.title = "اختبار عملي — معمل التصميم المنطقي — CircuitVision";
     root.innerHTML = modeHead("Practical exam", "اختبار عملي", "Lab#" + e.n + ": " + esc(e.title)) +
@@ -454,18 +456,18 @@
     }
     return { sol: { chips: sol.chips, wires: nw }, say: say };
   }
-  function showLFault() {
-    var c = mls(FAULT_K), pool = boardTasks(["build"]);
+  function showLFault(only) {
+    var c = mls(FAULT_K), pool = boardTasks(["build"], only);
     document.title = "تدريب الأعطال — معمل التصميم المنطقي — CircuitVision";
     root.innerHTML = modeHead("Troubleshooting", "تدريب الأعطال", "") + '<section class="card lg-sec" id="md-task"></section>' +
       '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2><div class="lg-out" id="lg-out" aria-live="polite"></div><div id="lg-tr"></div></section>';
     trainer = CV.trainer.mount($("#lg-tr"), { key: "logic-fault" });
-    if (!c || c.done || !findTask(c.e, c.t)) {
+    if (!c || c.done || !findTask(c.e, c.t) || (c.only || "") !== (only || "")) {
       c = null;
       for (var i = 0; i < 40 && !c; i++) {
         var x0 = rnd(pool), f = mutate(x0.t.sol); if (!f) continue;
         load(f.sol); var g = grade(x0.t);
-        if (!g.ok) c = { e: x0.e.id, t: x0.t.id, sol: f.sol, say: f.say, tries: 0, done: false };
+        if (!g.ok) c = { e: x0.e.id, t: x0.t.id, only: only || "", sol: f.sol, say: f.say, tries: 0, done: false };
       }
       if (!c) { $("#md-task").innerHTML = "<p>تعذّر تجهيز عطل الآن. حدّث الصفحة.</p>"; return; }
       mls(FAULT_K, c);
@@ -490,22 +492,25 @@
     $("#md-new").onclick = function () { c.done = true; mls(FAULT_K, c); route(); };
     if (c.done) { $("#md-res").className = "lg-res"; $("#md-res").innerHTML = "العطل كان: " + esc(c.say) + ' <span class="muted">اضغط «عطل جديد» لتدريب ثاني.</span>'; }
   }
+function labOpts(types, id) { return '<label class="md-f">التجربة <select class="select" id="' + id + '"><option value="">أي تجربة (عشوائي)</option>' + EXP.filter(function (e) { return boardTasks(types, e.id).length; }).map(function (e) { return '<option value="' + e.id + '">Lab#' + e.n + ": " + esc(e.title) + "</option>"; }).join("") + '</select></label>'; }
   function modeCards() {
     var log = mls(EXAM_LOG) || [], flog = mls(FAULT_LOG) || [];
     return '<div class="md-grid">' +
       '<section class="card lg-sec md-card"><h2>⏱ اختبار عملي</h2><p>مهمة توصيل عشوائية من التجارب، ووقت محدد، وبدون «اعرض الحل». الدرجة من عدد الحالات اللي تطابق.</p>' +
+      labOpts(null, "md-exp") +
       '<label class="md-f">الوقت <select class="select" id="md-mins">' + [10, 15, 20, 30].map(function (m) { return '<option value="' + m + '"' + (+(mls("cv-logic-exam-mins") || 20) === m ? " selected" : "") + '>' + m + ' دقيقة</option>'; }).join("") + '</select></label>' +
       '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-go-exam">ابدأ الاختبار</button></div>' +
       (log.length ? '<p class="muted small">آخر درجاتك: <span class="ltr">' + log.slice(0, 5).map(function (x) { return x.score; }).join(" · ") + "</span></p>" : "") + '</section>' +
       '<section class="card lg-sec md-card"><h2>🔧 تدريب الأعطال</h2><p>دائرة مركّبة فيها خطأ توصيل واحد: سلك ناقص أو طرفه على رجل غلط. تجرّب المفاتيح وتلقاه وتصلّحه.</p>' +
+      labOpts(["build"], "md-fexp") +
       '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-go-fault">ابدأ التدريب</button></div>' +
       (flog.length ? '<p class="muted small">صلّحت ' + flog.filter(function (x) { return x.ok; }).length + " من " + flog.length + " أعطال.</p>" : "") + '</section>' +
       '<section class="card lg-sec md-card"><h2>🧪 المعمل الحر</h2><p>الجهاز بكل الشرائح، تركّب أي دائرة، وتقدر تتحقق منها مقابل أي تمرين توصيل من التجارب.</p><div class="lg-act"><a class="btn btn-primary" href="#free">افتح المعمل الحر</a><a class="btn btn-ghost" href="trainer.html">الجهاز فقط</a></div></section></div>';
   }
   function wireModeCards() {
     var a = $("#md-go-exam"); if (!a) return;
-    a.onclick = function () { mls("cv-logic-exam-mins", +$("#md-mins").value); var c = mls(EXAM_K); if (c) { c.done = true; mls(EXAM_K, c); } location.hash = "exam"; };
-    $("#md-go-fault").onclick = function () { var c = mls(FAULT_K); if (c) { c.done = true; mls(FAULT_K, c); } location.hash = "fault"; };
+    a.onclick = function () { mls("cv-logic-exam-mins", +$("#md-mins").value); var c = mls(EXAM_K); if (c) { c.done = true; mls(EXAM_K, c); } var v = $("#md-exp").value; location.hash = v ? "exam-" + v : "exam"; };
+    $("#md-go-fault").onclick = function () { var c = mls(FAULT_K); if (c) { c.done = true; mls(FAULT_K, c); } var v = $("#md-fexp").value; location.hash = v ? "fault-" + v : "fault"; };
   }
 
   window.addEventListener("hashchange", route);
