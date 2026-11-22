@@ -203,8 +203,9 @@
       if (p.say) h += '<div class="sub">' + ltr(p.say) + '</div>';
     }
     if (s.table) {
-      var t = s.table, ins = t.inputs.map(function (x) { return x[0]; }), outs = t.outputs.map(function (x) { return x[0]; }), rows = tr.table(ins, outs, t.fn);
-      h += '<table class="tb"><tr>' + t.inputs.concat(t.outputs).map(function (x) { return "<th>" + esc(x[1]) + "</th>"; }).join("") + '</tr>' + rows.map(function (r) { return "<tr>" + r.in.concat(r.got).map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr>"; }).join("") + '</table>';
+      var t = s.table, ins = (t.inputs || []).map(function (x) { return x[0]; }), outs = t.probes ? t.probes : (t.outputs || []).map(function (x) { return x[0]; }), rows = tr.table(ins, outs, t.fn);
+      var heads = (t.inputs || []).map(function (x) { return x[1]; }).concat(t.probes ? t.probes.map(function (x) { return x.name; }) : (t.outputs || []).map(function (x) { return x[1]; }));
+      h += '<table class="tb"><tr>' + heads.map(function (x) { return "<th>" + esc(x) + "</th>"; }).join("") + '</tr>' + rows.map(function (r) { return "<tr>" + r.in.concat(r.got).map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr>"; }).join("") + '</table>';
     }
     if (p.note) h += '<div class="note">' + ltr(p.note) + '</div>';
     $("#side").innerHTML = h;
