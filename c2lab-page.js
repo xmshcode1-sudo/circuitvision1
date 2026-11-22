@@ -22,7 +22,9 @@
   function route() {
     if (bench) { bench.destroy(); bench = null; }
     var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
-    var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
+    var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0], M = CV.c2labModes;
+    if (M) M.leave();
+    if (M && M.route(id, root, { instView: instView, wireInst: wireInst })) { window.scrollTo(0, 0); return; }
     if (id === "free" && CV.clabFree) {
       bench = CV.clabFree.show(root, { key: "c2-free", code: "EE 2020 · Electric Circuits II Lab", title: "معمل الدوائر الكهربائية 2", exps: EXP, rbDigits: 5,
         inst: ["ps", "fg", "sc", "d1", "d2", "rb", "lb", "cb", "va", "cc", "tp", "pm", "r1", "r2", "r3"], kit: CV.clabFree.kitFrom(CV.c2lab.PIECES) });
@@ -37,6 +39,7 @@
       '<p>التجارب العشر في كتيب معمل المقرر EE 2020: شحن المكثف وتفريغه، الملفات المقترنة، RLC، الرنين، المرشحات، شبكات المنفذين، وثلاثي الطور. لكل تجربة: التحضير، والخطوات، وأجهزة افتراضية تقرأ منها، وجداول تتحقق منها المنصة، ورسم لقراءاتك، وفيديو شرح.</p>' +
       '<div class="lg-cta"><a class="btn btn-primary" href="#c2e1">ابدأ بالتجربة 1</a><a class="btn btn-ghost" href="#free">🧪 المعمل الحر</a></div></div>' +
       '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n' + (c.d === c.t && c.t ? " ok" : "") + '">' + e.n + '</span><div><b class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="pg">' + (c.d ? c.d + " من " + c.t : "") + '</span></div></a>'; }).join("") + '</div>';
+    if (CV.c2labModes) { root.insertAdjacentHTML("beforeend", CV.c2labModes.indexHtml()); CV.c2labModes.wireIndex(root); }
   }
 
   /* ---------- pre-lab ---------- */
@@ -141,7 +144,7 @@
     var c = count(e), i = EXP.indexOf(e), vd = videoDur(e);
     var nav = '<nav class="lg-tabs" aria-label="التجارب">' + EXP.map(function (x) { return '<a href="#' + x.id + '" class="' + (x === e ? "cur" : "") + '"' + (x === e ? ' aria-current="page"' : "") + '><span class="n">' + x.n + '</span><span>' + esc(x.title.split(" ").slice(0, 3).join(" ")) + '</span></a>'; }).join("") + '</nav>';
     root.innerHTML = nav +
-      '<div class="lg-head"><span class="code">EE 2020 · Electric Circuits II Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span></div>' +
+      '<div class="lg-head"><span class="code">EE 2020 · Electric Circuits II Lab</span><h1 class="ltr lg-sheet">Experiment #' + e.n + ': ' + esc(e.en) + '</h1><span class="lg-ar">' + esc(e.title) + '</span><span class="pg">' + c.d + ' من ' + c.t + ' مكتملة</span>' + (CV.c2labModes ? '<div class="lg-cta">' + (CV.c2labModes.examPool(e.id).length ? '<a class="btn btn-ghost btn-sm" href="#exam-' + e.id + '">⏱ اختبار عملي</a>' : "") + (CV.c2labModes.faultPool(e.id).length ? '<a class="btn btn-ghost btn-sm" href="#fault-' + e.id + '">🔧 تدريب الأعطال</a>' : "") + '<a class="btn btn-ghost btn-sm" href="#free">🧪 المعمل الحر</a></div>' : "") + '</div>' +
       '<div class="lg-top"><section class="card lg-sec"><h2>الأهداف</h2><ul>' + e.objective.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul></section>' +
       '<section class="card lg-sec"><h2>الأدوات</h2><ul>' + e.equipment.map(function (o) { return "<li>" + bd(esc(o)) + "</li>"; }).join("") + '</ul></section></div>' +
       (vd ? '<section class="card lg-sec lg-video"><h2>شرح التجربة بالفيديو <span class="muted small ltr">' + vd + '</span></h2><video controls playsinline preload="none" poster="c2lab' + e.n + '.jpg" src="c2lab' + e.n + '.mp4">' + (((window.CV || {}).videoAr || []).indexOf("c2lab" + e.n) > -1 ? '<track kind="subtitles" srclang="ar" label="العربية" src="c2lab' + e.n + '.ar.vtt">' : '') + '</video><p class="muted small">من نفس الصفحة: الرسمة، والتحضير، وضبط الأجهزة، وكل قراءة في الجدول.</p></section>' : '<section class="card lg-sec"><h2>شرح التجربة بالفيديو</h2><p class="muted">قيد الإعداد</p></section>') +

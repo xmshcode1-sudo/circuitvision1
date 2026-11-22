@@ -79,7 +79,9 @@
   function route() {
     var id = location.hash.slice(1), e = EXP.filter(function (x) { return x.id === id; })[0];
     if (trainer) { trainer.destroy(); trainer = null; }
-    if (e && !free(e)) showLocked(e); else if (e) showExp(e); else showIndex();
+    clearInterval(mTimer); mTimer = 0; var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
+    if (/^(free|exam|fault)$/.test(id)) showMode(id);
+    else if (e && !free(e)) showLocked(e); else if (e) showExp(e); else showIndex();
     window.scrollTo(0, 0);
   }
   /* subscriptions: Lab#1 is the free sample; the other labs need the Logic Design subscription */
@@ -94,9 +96,11 @@
     document.title = "معمل التصميم المنطقي — CircuitVision";
     root.innerHTML = '<div class="lg-head"><span class="code">EE2111 · Logic Design Lab</span><h1>معمل التصميم المنطقي</h1>' +
       '<p>تجارب المعمل السبع كما في أوراق القسم. كل تجربة: الهدف والقطع، ثم الشرح خطوة بخطوة، ثم تحلّها بنفسك: تكمل جداولها، وتوصّلها على جهاز IC Trainer مطابق لجهاز المعمل، والموقع يفحص توصيلك بتجربة كل حالات المداخل.</p>' +
-      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بـ Lab#1</a><a class="btn btn-ghost" href="trainer.html">الجهاز للتجريب الحر</a></div></div>' +
+      '<div class="lg-cta"><a class="btn btn-primary" href="#exp1">ابدأ بـ Lab#1</a><a class="btn btn-ghost" href="#free">🧪 المعمل الحر</a></div></div>' +
       '<div class="lg-grid">' + EXP.map(function (e) { var c = count(e); return '<a class="card lg-card" href="#' + e.id + '"><span class="n">' + (free(e) ? e.n : "🔒") + '</span><div><b class="ltr lg-sheet">Lab#' + e.n + ': ' + esc(e.en) + '</b><span>' + esc(e.title) + '</span><span class="chips ltr">' + e.chips.join(" · ") + '</span><span class="pg">' + c.d + ' من ' + c.t + ' تمارين</span></div></a>'; }).join("") + '</div>' +
       '<p class="muted small">ما زالت دروس النظرية لمقرر Logic Design قيد الإعداد؛ هذه الصفحة للجزء العملي.</p>';
+    root.insertAdjacentHTML("beforeend", modeCards());
+    wireModeCards();
   }
   function showExp(e) {
     cur = e;
@@ -341,6 +345,168 @@
     return null;
   }
   function lv(v) { return v === null || v === undefined ? "عائم" : v; }
+
+  /* ======================= free lab, practical exam and troubleshooting (#free, #exam, #fault) =======================
+     All on the same trainer. Every check runs the circuit through all its input combinations (trainer.table / sequence),
+     exactly like «تحقق من توصيلي» in the experiments. Only the labs the student can open are used. */
+  var mTimer = 0, EXAM_K = "cv-logic-exam", EXAM_LOG = "cv-logic-exam-log", FAULT_K = "cv-logic-fault", FAULT_LOG = "cv-logic-fault-log";
+  function mls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (x) { return null; } }
+  function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function boardTasks(types) {
+    var out = [];
+    EXP.forEach(function (e) { if (!free(e)) return; e.tasks.forEach(function (t) { if ((types || ["build", "seq"]).indexOf(t.type) > -1 && t.sol) out.push({ e: e, t: t }); }); });
+    return out;
+  }
+  function findTask(eid, tid) { var e = EXP.filter(function (x) { return x.id === eid; })[0], t = e && e.tasks.filter(function (x) { return x.id === tid; })[0]; return t ? { e: e, t: t } : null; }
+  function ioList(t) {
+    return (t.inputs || []).map(function (x) { return '<li><span class="ltr">' + esc(x[1]) + '</span> ← ' + (x[0] === "i" ? "مفتاح H/L السفلي" : "المفتاح " + x[0]) + '</li>'; }).join("") +
+      (t.outputs || []).map(function (x) { return '<li><span class="ltr">' + esc(x[1]) + '</span> → LED ' + x[0] + '</li>'; }).join("") + (t.type === "seq" ? '<li>CLK ← زر النبضة ⎍</li>' : "");
+  }
+  /* how much of a task the board passes: { ok, done, total, err } */
+  function grade(t) {
+    trainer.update();
+    var errs = trainer.issues().filter(function (x) { return x.sev === "err" || /مطفأ/.test(x.t); });
+    if (errs.length) return { ok: false, done: 0, total: 1, err: errs.map(function (x) { return x.t; }) };
+    var outs = t.probes ? t.probes : (t.outputs || []).map(function (o) { return o[0]; });
+    if (t.type === "seq") {
+      var got = trainer.sequence(t.steps, outs), k = 0;
+      while (k < t.steps.length && t.steps[k].want.every(function (x, j) { return x === got[k][j]; })) k++;
+      return { ok: k === t.steps.length, done: k, total: t.steps.length };
+    }
+    var rows = trainer.table(t.inputs.map(function (x) { return x[0]; }), outs, t.fn), good = rows.filter(function (r) { return r.ok; }).length;
+    if (good < rows.length && !t.probes && flexMatch(t)) good = rows.length;
+    return { ok: good === rows.length, done: good, total: rows.length };
+  }
+  function modeHead(code, title, sub) { return '<nav class="lg-tabs"><a href="#">← معمل التصميم المنطقي</a></nav><div class="lg-head"><span class="code">EE2111 · Logic Design Lab · ' + code + '</span><h1>' + title + '</h1>' + (sub ? '<span class="lg-ar">' + sub + '</span>' : "") + '</div>'; }
+  function figHtml(e, t) { var f = CV.logicFigs ? CV.logicFigs.get(e.id, t) : null; return f && f.svg ? '<div class="cl-fig md-fig">' + f.svg + '</div>' : ""; }
+  function showMode(id) {
+    if (id === "free") return showFree();
+    if (id === "exam") return showLExam();
+    return showLFault();
+  }
+  function showFree() {
+    var list = boardTasks();
+    document.title = "المعمل الحر — معمل التصميم المنطقي — CircuitVision";
+    root.innerHTML = modeHead("Free lab", "المعمل الحر", "") +
+      '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2><p class="muted small">ركّب أي دائرة تبيها بأي شرائح. وتبي تتأكد من دائرة من التجارب؟ اخترها وتحقق: أي توصيل يعطي نفس الجدول ينقبل، حتى لو على مفاتيح أو LED غير المقترحة.</p>' +
+      '<div class="lg-bench-bar"><label>قارن بتمرين: <select id="lg-task" class="select">' + EXP.filter(free).map(function (e) { var ts = list.filter(function (x) { return x.e === e; }); return ts.length ? '<optgroup label="Lab#' + e.n + ': ' + esc(e.title) + '">' + ts.map(function (x) { return '<option value="' + e.id + "/" + x.t.id + '">' + esc(x.t.title) + '</option>'; }).join("") + '</optgroup>' : ""; }).join("") + '</select></label>' +
+      '<button type="button" class="btn btn-primary btn-sm" id="fr-check">تحقق من توصيلي</button><button type="button" class="btn btn-ghost btn-sm" id="fr-ref">📐 الرسمة</button><button type="button" class="btn btn-ghost btn-sm" id="fr-clear">امسح الجهاز</button></div>' +
+      '<p class="muted small" id="lg-task-note"></p><div class="lg-out" id="lg-out" aria-live="polite"></div><div id="lg-tr"></div></section>';
+    trainer = CV.trainer.mount($("#lg-tr"), { key: "logic-free" });
+    function sel() { var v = $("#lg-task").value.split("/"); return findTask(v[0], v[1]); }
+    function note() { var x = sel(); if (!x) return; $("#lg-task-note").innerHTML = bd(x.t.note || ""); $("#lg-out").innerHTML = ""; refPanel(x.e, x.t, false, true); }
+    $("#lg-task").addEventListener("change", note); note();
+    $("#fr-check").onclick = function () { var x = sel(); if (x) { cur = x.e; boardCheck(x.e, x.t); } };
+    $("#fr-ref").onclick = function () { var x = sel(); if (x) refPanel(x.e, x.t, true); };
+    $("#fr-clear").onclick = function () { trainer.reset(); $("#lg-out").innerHTML = ""; };
+  }
+  function showLExam() {
+    var c = mls(EXAM_K), pool = boardTasks();
+    if (!c || c.done || !findTask(c.e, c.t)) { var x0 = rnd(pool); c = { e: x0.e.id, t: x0.t.id, start: Date.now(), mins: +(mls("cv-logic-exam-mins") || 20), done: false, fresh: true }; mls(EXAM_K, c); }
+    var x = findTask(c.e, c.t), e = x.e, t = x.t;
+    document.title = "اختبار عملي — معمل التصميم المنطقي — CircuitVision";
+    root.innerHTML = modeHead("Practical exam", "اختبار عملي", "Lab#" + e.n + ": " + esc(e.title)) +
+      '<section class="card lg-sec md-bar"><div class="md-timer" id="md-timer" aria-live="off"></div><p class="muted small">وصّل الدائرة على الجهاز، ثم «سلّم». ما فيه «اعرض الحل» ولا تحقق قبل التسليم. الدرجة من عدد الحالات اللي تطابق.</p></section>' +
+      '<section class="card lg-sec"><h2>المهمة</h2><b>' + bd(t.title) + '</b>' + (t.note ? '<p>' + bd(t.note) + '</p>' : "") + figHtml(e, t) + '<ul class="lg-io">' + ioList(t) + '</ul>' +
+      '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-submit">سلّم</button><button type="button" class="btn btn-ghost" id="md-new">مهمة ثانية</button></div><div class="lg-res" id="md-res" aria-live="polite"></div></section>' +
+      '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2><div id="lg-tr"></div></section>';
+    trainer = CV.trainer.mount($("#lg-tr"), { key: "logic-exam" });
+    if (c.fresh) { trainer.reset(); c.fresh = false; mls(EXAM_K, c); }
+    function submit(auto) {
+      if (c.done && !auto) return;
+      clearInterval(mTimer);
+      var g = grade(t), score = g.err ? 0 : Math.round(100 * g.done / g.total);
+      c.done = true; c.score = score; mls(EXAM_K, c);
+      var log = mls(EXAM_LOG) || []; log.unshift({ e: e.id, t: t.id, score: score, at: Date.now() }); mls(EXAM_LOG, log.slice(0, 30));
+      if (score === 100) mark(e.id, t.id, 1);
+      var r = $("#md-res"); r.className = "lg-res " + (score >= 60 ? "ok" : "bad");
+      r.innerHTML = '<div class="md-score"><b class="ltr">' + score + ' / 100</b>' + (auto ? '<span>(انتهى الوقت وسُلّم تلقائيًا)</span>' : "") + '</div>' +
+        (g.err ? "<b>الجهاز فيه مشكلة تمنع الفحص:</b><ul>" + g.err.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + "</ul>"
+          : "<p>" + (t.type === "seq" ? "مرّت الدائرة بـ " + g.done + " من " + g.total + " خطوة." : g.done + " من " + g.total + " حالة تطابق.") + "</p>") +
+        '<details><summary>توصيل صحيح للمقارنة</summary>' + wiringList(t.sol) + '</details>';
+      $("#md-submit").disabled = true;
+    }
+    function tick() {
+      var left = c.start + c.mins * 60000 - Date.now(), el = $("#md-timer"); if (!el) return;
+      if (left <= 0) { el.textContent = "انتهى الوقت"; submit(true); return; }
+      var m = Math.floor(left / 60000), s2 = Math.floor(left % 60000 / 1000);
+      el.innerHTML = '<span>الوقت المتبقي</span><b class="ltr">' + m + ":" + (s2 < 10 ? "0" : "") + s2 + '</b>'; el.classList.toggle("low", left < 120000);
+    }
+    $("#md-submit").onclick = function () { submit(false); };
+    $("#md-new").onclick = function () { c.done = true; mls(EXAM_K, c); route(); };
+    if (c.done) { $("#md-submit").disabled = true; $("#md-res").className = "lg-res"; $("#md-res").textContent = "سلّمت هذه المهمة ودرجتك " + c.score + " / 100. اضغط «مهمة ثانية» لاختبار جديد."; }
+    else { mTimer = setInterval(tick, 1000); tick(); }
+  }
+  /* a fault: the right wiring of a task with one wire missing, or one end moved to another pin of the same chip */
+  function mutate(sol) {
+    var w = sol.wires, k = Math.floor(Math.random() * w.length), a = w[k], kind = Math.random() < 0.45 ? "miss" : "move";
+    function chipEnd(ep) { return /^\d+\.\d+$/.test(ep); }
+    if (/^(V5|G0)$/.test(a[0]) || /^(V5|G0)$/.test(a[1])) return null;
+    var nw = w.slice(), say;
+    if (kind === "miss") { nw.splice(k, 1); say = "السلك بين «" + epName(a[0], sol.chips) + "» و«" + epName(a[1], sol.chips) + "» ناقص."; }
+    else {
+      var j = chipEnd(a[1]) ? 1 : chipEnd(a[0]) ? 0 : -1; if (j < 0) return null;
+      var m = /^(\d+)\.(\d+)$/.exec(a[j]), c = CV.chips.get(sol.chips[m[1]]); if (!c) return null;
+      var pins = []; for (var p2 = 1; p2 <= c.pins; p2++) if (p2 !== +m[2] && !/^(VCC|GND|NC)$/i.test(String(c.labels[p2]))) pins.push(p2);
+      if (!pins.length) return null;
+      var to = m[1] + "." + rnd(pins), na = a.slice(); na[j] = to; nw[k] = na;
+      say = "طرف السلك اللي المفروض على «" + epName(a[j], sol.chips) + "» موصول على «" + epName(to, sol.chips) + "»، والطرف الثاني على «" + epName(a[1 - j], sol.chips) + "».";
+    }
+    return { sol: { chips: sol.chips, wires: nw }, say: say };
+  }
+  function showLFault() {
+    var c = mls(FAULT_K), pool = boardTasks(["build"]);
+    document.title = "تدريب الأعطال — معمل التصميم المنطقي — CircuitVision";
+    root.innerHTML = modeHead("Troubleshooting", "تدريب الأعطال", "") + '<section class="card lg-sec" id="md-task"></section>' +
+      '<section class="card lg-sec lg-bench" id="bench"><h2>الجهاز</h2><div class="lg-out" id="lg-out" aria-live="polite"></div><div id="lg-tr"></div></section>';
+    trainer = CV.trainer.mount($("#lg-tr"), { key: "logic-fault" });
+    if (!c || c.done || !findTask(c.e, c.t)) {
+      c = null;
+      for (var i = 0; i < 40 && !c; i++) {
+        var x0 = rnd(pool), f = mutate(x0.t.sol); if (!f) continue;
+        load(f.sol); var g = grade(x0.t);
+        if (!g.ok) c = { e: x0.e.id, t: x0.t.id, sol: f.sol, say: f.say, tries: 0, done: false };
+      }
+      if (!c) { $("#md-task").innerHTML = "<p>تعذّر تجهيز عطل الآن. حدّث الصفحة.</p>"; return; }
+      mls(FAULT_K, c);
+    }
+    var x = findTask(c.e, c.t), e = x.e, t = x.t;
+    $("#md-task").innerHTML = '<h2>المهمة</h2><p>الدائرة على الجهاز تحت مركّبة ومشغّلة، لكن فيها <b>خطأ واحد في التوصيل</b>: سلك ناقص، أو سلك طرفه على رجل غلط. جرّب المفاتيح وراقب الـ LED، لقِ الخطأ وصلّحه، ثم «تحقق».</p>' +
+      '<b>Lab#' + e.n + ' · ' + bd(t.title) + '</b>' + (t.note ? '<p>' + bd(t.note) + '</p>' : "") + figHtml(e, t) + '<ul class="lg-io">' + ioList(t) + '</ul>' +
+      '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-check">تحقق</button><button type="button" class="btn btn-ghost" id="md-reset">أرجع الدائرة مثل البداية</button><button type="button" class="btn btn-ghost" id="md-new">عطل جديد</button></div><div class="lg-res" id="md-res" aria-live="polite"></div>';
+    if (!c.loaded) { load(c.sol); c.loaded = true; mls(FAULT_K, c); }
+    $("#md-check").onclick = function () {
+      var g = grade(t), r = $("#md-res");
+      if (g.ok) {
+        if (!c.done) { c.done = true; mls(FAULT_K, c); var log = mls(FAULT_LOG) || []; log.unshift({ e: e.id, ok: true, at: Date.now() }); mls(FAULT_LOG, log.slice(0, 50)); }
+        r.className = "lg-res ok"; r.innerHTML = "✓ صلّحتها! الدائرة الحين تطابق في كل الحالات. العطل كان: " + esc(c.say); return;
+      }
+      c.tries++; mls(FAULT_K, c); r.className = "lg-res bad";
+      r.innerHTML = (g.err ? "الجهاز فيه مشكلة: " + esc(g.err[0]) : (t.type === "seq" ? g.done + " من " + g.total + " خطوة" : g.done + " من " + g.total + " حالة") + " تطابق.") +
+        (c.tries >= 3 ? ' <button type="button" class="btn btn-ghost btn-sm" id="md-show">اعرض العطل</button>' : " باقي " + (3 - c.tries) + " محاولة قبل ما يظهر زر «اعرض العطل».");
+      var sh = $("#md-show"); if (sh) sh.onclick = function () { r.innerHTML = "العطل: " + esc(c.say); if (!c.done) { c.done = true; mls(FAULT_K, c); var log = mls(FAULT_LOG) || []; log.unshift({ e: e.id, ok: false, at: Date.now() }); mls(FAULT_LOG, log.slice(0, 50)); } };
+    };
+    $("#md-reset").onclick = function () { load(c.sol); $("#md-res").innerHTML = ""; };
+    $("#md-new").onclick = function () { c.done = true; mls(FAULT_K, c); route(); };
+    if (c.done) { $("#md-res").className = "lg-res"; $("#md-res").innerHTML = "العطل كان: " + esc(c.say) + ' <span class="muted">اضغط «عطل جديد» لتدريب ثاني.</span>'; }
+  }
+  function modeCards() {
+    var log = mls(EXAM_LOG) || [], flog = mls(FAULT_LOG) || [];
+    return '<div class="md-grid">' +
+      '<section class="card lg-sec md-card"><h2>⏱ اختبار عملي</h2><p>مهمة توصيل عشوائية من التجارب، ووقت محدد، وبدون «اعرض الحل». الدرجة من عدد الحالات اللي تطابق.</p>' +
+      '<label class="md-f">الوقت <select class="select" id="md-mins">' + [10, 15, 20, 30].map(function (m) { return '<option value="' + m + '"' + (+(mls("cv-logic-exam-mins") || 20) === m ? " selected" : "") + '>' + m + ' دقيقة</option>'; }).join("") + '</select></label>' +
+      '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-go-exam">ابدأ الاختبار</button></div>' +
+      (log.length ? '<p class="muted small">آخر درجاتك: <span class="ltr">' + log.slice(0, 5).map(function (x) { return x.score; }).join(" · ") + "</span></p>" : "") + '</section>' +
+      '<section class="card lg-sec md-card"><h2>🔧 تدريب الأعطال</h2><p>دائرة مركّبة فيها خطأ توصيل واحد: سلك ناقص أو طرفه على رجل غلط. تجرّب المفاتيح وتلقاه وتصلّحه.</p>' +
+      '<div class="lg-act"><button type="button" class="btn btn-primary" id="md-go-fault">ابدأ التدريب</button></div>' +
+      (flog.length ? '<p class="muted small">صلّحت ' + flog.filter(function (x) { return x.ok; }).length + " من " + flog.length + " أعطال.</p>" : "") + '</section>' +
+      '<section class="card lg-sec md-card"><h2>🧪 المعمل الحر</h2><p>الجهاز بكل الشرائح، تركّب أي دائرة، وتقدر تتحقق منها مقابل أي تمرين توصيل من التجارب.</p><div class="lg-act"><a class="btn btn-primary" href="#free">افتح المعمل الحر</a><a class="btn btn-ghost" href="trainer.html">الجهاز فقط</a></div></section></div>';
+  }
+  function wireModeCards() {
+    var a = $("#md-go-exam"); if (!a) return;
+    a.onclick = function () { mls("cv-logic-exam-mins", +$("#md-mins").value); var c = mls(EXAM_K); if (c) { c.done = true; mls(EXAM_K, c); } location.hash = "exam"; };
+    $("#md-go-fault").onclick = function () { var c = mls(FAULT_K); if (c) { c.done = true; mls(FAULT_K, c); } location.hash = "fault"; };
+  }
 
   window.addEventListener("hashchange", route);
   if (CV.cloud && CV.cloud.configured()) CV.cloud.ready().then(function () { if (CV.cloud.access()) route(); });

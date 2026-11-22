@@ -721,3 +721,21 @@ html.wb-lock .lg-ref { right: calc(env(safe-area-inset-right, 0px) + 14px) !impo
 .l-more-link { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; align-items: center; padding: 14px 18px; text-decoration: none; color: inherit; }
 .rw-uses .rw-c { margin: 18px 0 4px; } .rw-uses .rw-ch { margin: 10px 0 4px; }
 .rw-l { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 6px 0; } .rw-l > summary { cursor: pointer; font-weight: 600; } .rw-l h4 { margin: 12px 0 4px; }
+
+/* practical exam / troubleshooting cards (logic lab; the circuits labs get the same rules from clab.css) */
+.md-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.md-card p { margin: 0; color: var(--fg-2); line-height: 1.7; }
+.md-f { display: grid; gap: 4px; font-size: 13.5px; color: var(--fg-2); }
+.md-bar { position: sticky; top: 8px; z-index: 20; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 16px; }
+.md-bar p { margin: 0; flex: 1 1 260px; }
+.md-timer { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--fg-2); }
+.md-timer b { font-size: 26px; font-family: var(--font-mono); color: var(--fg); }
+.md-timer.low b { color: #e5484d; }
+.md-fig { max-width: 520px; }
+.md-t td, .md-t th { white-space: nowrap; }
+.md-t input { width: 110px; }
+.md-pair { display: flex; gap: 10px; flex-wrap: wrap; } .md-pair label { display: flex; gap: 6px; align-items: center; font-size: 12.5px; }
+.md-score { display: flex; gap: 10px; align-items: baseline; } .md-score b { font-size: 28px; }
+.md-break { margin: 6px 0; padding-inline-start: 20px; }
+.md-ans { display: flex; gap: 10px; flex-wrap: wrap; } .md-ans label { display: grid; gap: 4px; font-size: 13.5px; flex: 1 1 200px; }
+.md-exp summary { cursor: pointer; color: var(--fg-2); font-size: 14px; }
