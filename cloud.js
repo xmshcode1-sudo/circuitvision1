@@ -220,6 +220,13 @@
     freeNote: function (id) { return id === "logic-design" ? "تجربة Lab#1 مجانية كاملة." : "الدرس الأول من كل فصل مجاني لتجربة المنصة."; },
     lockHtml: function (courseId, what) {
       var c = api.course(courseId), name = c ? c.name_ar : "المقرر";
+      if (window.CV && CV.bi && CV.bi.mode && CV.bi.mode() === "en") {   // English-first: the card in English (Arabic names have no dictionary entry)
+        var co = (CV.allCourses || []).filter(function (x) { return x.id === courseId; })[0], wEn = { "هذا الدرس": "This lesson", "هذه الأداة": "This tool", "هذه التجربة": "This experiment" }[what] || "This part";
+        return '<section class="card cv-lock no-bi" role="region" aria-label="Subscribers only" dir="ltr"><span class="cv-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>' +
+          '<h2>' + wEn + ' is for subscribers of ' + esc(co ? co.code : "the course") + '</h2>' +
+          '<p>The subscription is <b>' + api.price(courseId) + '</b> SAR for one month, and opens every lesson and tool of the course. ' + (courseId === "logic-design" ? "Lab#1 is fully free to try." : "The first lesson of every chapter is free to try the platform.") + '</p>' +
+          '<div class="cv-lock-cta"><a class="btn btn-primary" href="pay.html?course=' + encodeURIComponent(courseId) + '">Subscribe now</a><a class="btn btn-ghost" href="dashboard.html">Dashboard</a></div></section>';
+      }
       return '<section class="card cv-lock" role="region" aria-label="محتوى للمشتركين"><span class="cv-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>' +
         '<h2>' + (what || "هذا الجزء") + ' للمشتركين في ' + esc(name) + '</h2>' +
         '<p>الاشتراك <b class="ltr">' + api.price(courseId) + '</b> ريال لمدة شهر، ويفتح كل دروس المقرر وأدواته. ' + api.freeNote(courseId) + '</p>' +

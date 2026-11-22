@@ -117,7 +117,7 @@
     if (el.tagName === "OPTION") { var ot = norm(el.textContent), oe = el.getAttribute("data-bi-src") ? null : look(ot); if (oe) { el.setAttribute("data-bi-src", ot); var plain = oe.replace(/<[^>]+>/g, ""); el.textContent = mode === "ar" ? ot + " · " + plain : plain + " · " + ot; } return; }
     if (el.tagName === "OPTGROUP") { var lt = norm(el.label), le = look(lt); if (le && !el.getAttribute("data-bi-src")) { el.setAttribute("data-bi-src", lt); el.label = mode === "ar" ? lt + " · " + le.replace(/<[^>]+>/g, "") : le.replace(/<[^>]+>/g, "") + " · " + lt; } }
     var raw = textOf(el), t = AR.test(raw) ? norm(raw) : "";
-    if (!t) return;
+    if (!t) { if (mode === "en" && el.querySelectorAll) Array.prototype.forEach.call(el.querySelectorAll("svg"), svgText); return; }
     var en = look(t);
     if (en !== null && !hasControl(el) && el.tagName !== "SELECT" && isLeaf(el)) { pair(el, en); return; }
     runs(el);

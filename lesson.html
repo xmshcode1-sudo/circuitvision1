@@ -169,6 +169,7 @@
 <script src="store.js"></script>
 <script src="bi.js"></script>
 <script src="ui.en.js"></script><script src="c1-variables.en.js"></script><script src="lessons.en.js"></script>
+<script src="site.en.js"></script>
 <script src="config.js"></script>
 <script src="cloud.js"></script>
 <script src="curriculum.js"></script>
@@ -304,7 +305,6 @@
     var moreWhen = (byId.when || byId.realworld) ? '<a class="card l-more-link" href="realworld.html#use-' + L.id + '"><b>متى ولماذا نستخدمه؟ وأين نراه في الواقع</b><span class="muted small">في صفحة «الهندسة في الواقع» ←</span></a>' : "";
     order.forEach(function (k) { var s = byId[k]; if (!s || k === "when" || k === "realworld") return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
-    if ((L.course === "signals-systems" || L.course === "logic-design" || L.course === "circuits-2") && CV.bi && CV.bi.mode() === "en") body = '<div class="card no-bi" style="padding:12px 16px" dir="ltr">English text for these lessons is in preparation (قيد الإعداد); the equations, drawings and videos below are language-neutral.</div>' + body;
     if (!L.video && /^c1-/.test(L.id) && CV.videoDur && CV.videoDur[L.id]) { L.video = L.id + ".mp4"; L.videoDur = CV.videoDur[L.id]; }
     if (L.video) body += sec("video", "شرح الدرس بالفيديو", "Video", '<div class="ss-vid"><video controls playsinline preload="none" poster="' + L.video.replace(/\.mp4$/, ".jpg") + '" src="' + L.video + '">' + ((CV.videoAr || []).indexOf(L.id) > -1 ? '<track kind="subtitles" srclang="ar" label="العربية" src="' + L.video.replace(/\.mp4$/, ".ar.vtt") + '">' : '') + '</video>' + (L.videoDur ? '<span class="muted small">المدة ' + L.videoDur + '</span>' : '') + '</div>');
     else body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
