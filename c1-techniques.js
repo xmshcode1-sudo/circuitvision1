@@ -22,26 +22,41 @@
   /* ================= 1. Node-voltage method ================= */
   var n1ex = nodes(twoNode(30, 5, 3, 6, E([0, 2], [1, 2], "I", 2, { dir: "ba", name: "Is" })), [[0, 1], [0, 2]]);
   var n1 = nodes(twoNode(30, 10, 8, 3, E([0, 2], [1, 2], "I", 6, { dir: "ba", name: "Is" }), { r1: { ilabel: "i" } }), [[0, 1], [0, 2]]), s1 = solve(n1);
+  /* Lecture circuits (Dr. Abdullah Noman, Ch. 4) and tutorial problems. Worked-example numbers are checked when the file loads. */
+  var chk = function (got, want, what) { if (Math.abs(got - want) > 1e-6 * Math.max(1, Math.abs(want))) throw new Error("lesson number mismatch: " + what + " = " + got + ", expected " + want); };
+  var BOT = function (n) { var o = []; for (var k = 0; k < n; k++) o.push(E([1, k], [1, k + 1], "W")); return o; };
+  var x45 = nodes({ rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 10, { plus: "a", name: "V10" }), E([0, 0], [0, 1], "R", 1, { name: "R1" }), E([0, 1], [1, 1], "R", 5, { name: "R5" }), E([0, 1], [0, 2], "R", 2, { name: "R2" }), E([0, 2], [1, 2], "R", 10, { name: "R10" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "I", 2, { dir: "ba", name: "I2" })].concat(BOT(3)) }, [[0, 1], [0, 2]]);
+  var s45 = solve(x45); chk(s45.byName.R5.v, 100 / 11, "4.5 v1"); chk(s45.byName.R10.v, 120 / 11, "4.5 v2");
+  var x42 = nodes({ rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 50, { plus: "a", name: "V50" }), E([0, 0], [0, 1], "R", 5, { name: "R5", ilabel: "iₐ" }), E([0, 1], [1, 1], "R", 10, { name: "R10", ilabel: "ib" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 40, { name: "R40", ilabel: "ic" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "I", 3, { dir: "ba", name: "I3" })].concat(BOT(3)) }, [[0, 1]]);
+  var s42 = solve(x42); chk(s42.byName.R10.v, 40, "4.2 v1"); chk(s42.byName.R5.i, 2, "4.2 ia"); chk(s42.byName.V50.p, -100, "4.2 p50"); chk(s42.byName.I3.p, -120, "4.2 p3");
+  var xp46 = { rows: 3, cols: 3, edges: [E([0, 0], [1, 0], "R", 20, { name: "R20" }), E([1, 0], [2, 0], "V", 24, { plus: "a", name: "V24" }), E([0, 0], [0, 1], "R", 80, { name: "R80" }), E([0, 1], [2, 1], "R", 25, { name: "R25", vlabel: "vₒ" }), E([0, 1], [0, 2], "W"), E([0, 2], [2, 2], "I", 0.04, { dir: "ab", name: "I40", vtext: "40 mA" }), E([2, 0], [2, 1], "W"), E([2, 1], [2, 2], "W")] };
+  var sp46 = solve(xp46); chk(sp46.byName.R25.v, 4, "P4.6 vo");
+
   L["c1-techniques-1"] = {
     id: "c1-techniques-1", ar: "مدخل إلى طريقة جهود العقد", en: "Introduction to the Node-Voltage Method", minutes: 30,
     objectives: ["تختار عقدة مرجعية وتسمّي جهود العقد.", "تكتب معادلة KCL عند كل عقدة بدلالة جهود العقد.", "تحل المعادلات وتحسب أي تيار من جهود العقد."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>بدل أن نجعل تيار كل فرع مجهولًا، نجعل المجاهيل <b>جهود العقد</b> فقط. نختار عقدة <b>مرجعية</b> (الأرضي) جهدها صفر، ونقيس جهد كل عقدة أخرى بالنسبة لها.</p>" +
-        "<p>تيار أي مقاومة بين عقدتين يُكتب مباشرة بدلالة الجهدين: <span class='eq-i'>i = (vₖ − vⱼ) / R</span>. ثم نكتب KCL عند كل عقدة غير مرجعية، فنحصل على معادلة لكل مجهول.</p>" +
-        "<div class='callout'>عدد المعادلات = عدد العقد − 1 (العقدة المرجعية لا نكتب لها معادلة). والعقدة المتصلة بالمرجع عبر مصدر جهد يكون جهدها معروفًا.</div>" },
+        "<p>طريقة جهود العقد تجد كل جهود العقد المجهولة بثلاث خطوات: (1) اختر <b>عقدة مرجعية</b> وأرّضها. (2) عند كل عقدة: مجموع التيارات <b>الخارجة</b> = صفر. (3) حل المعادلات.</p>" +
+        "<p>نعمل على <b>العقد الأساسية</b> <span class='ltr'>(essential nodes)</span>: العقدة التي يلتقي عندها ثلاثة عناصر أو أكثر. إذا كان في الدائرة n عقدة أساسية نحتاج <span class='ltr'>n − 1</span> معادلة.</p>" +
+        "<p>نختار المرجع غالبًا العقدة السفلية لأنها تتصل بأكثر الفروع، ونرمز لها ▼. <b>جهد العقدة</b> هو ارتفاع الجهد من المرجع إلى العقدة. والتيار الخارج من العقدة 1 عبر مقاومة 1 Ω إلى مصدر 10 V هو هبوط الجهد على المقاومة مقسومًا على قيمتها: <span class='eq-i'>(v₁ − 10)/1</span>.</p>" +
+        fig(x45, "دائرة الشكل 4.5: مصدر 10 V ومقاومات 1 و 5 و 2 و 10 Ω ومصدر 2 A") +
+        "<p>في الشكل 4.5: ثلاث عقد أساسية، إذن معادلتان لـ v₁ و v₂.</p>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq'>Σ (vₖ − vⱼ) / R + Σ i<sub>out</sub> = 0   (at node k)</div>" +
-        "<p class='muted'>قاعدة عملية: اكتب كل التيارات <b>خارجة</b> من العقدة. تيار المقاومة الخارج = (جهد هذه العقدة − جهد العقدة الأخرى) / R. ومصدر التيار الذي يدخل العقدة يُكتب بإشارة سالبة.</p>" },
+        "<div class='eq'>Σ i<sub>out</sub> = 0   عند كل عقدة غير مرجعية</div><div class='eq'>i = (v<sub>عقدة</sub> − v<sub>الطرف الآخر</sub>) / R</div><div class='eq'>عدد المعادلات = n − 1</div>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>مناسبة للدوائر التي فيها عقد قليلة وفروع كثيرة على التوازي.</li><li>اختر المرجع عند العقدة التي يتصل بها أكبر عدد من العناصر، فتبسّط المعادلات.</li><li>بعد إيجاد جهود العقد، أي تيار أو جهد في الدائرة يُحسب بقانون أوم مباشرة.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(n1ex, "دائرة بعقدتين مجهولتين ومصدر جهد ومصدر تيار") +
-        "<p class='q'>أوجد <span class='ltr'>v₁</span> و <span class='ltr'>v₂</span>. المرجع هو الضلع السفلي.</p>" +
-        "<ol class='steps'><li><b>العقدة v₁:</b> " + eqi("(v₁ − 30)/5 + v₁/3 + (v₁ − v₂)/6 = 0") + "</li>" +
-        "<li><b>العقدة v₂:</b> مصدر التيار يدخلها 2 A: " + eqi("(v₂ − v₁)/6 − 2 = 0 → v₂ = v₁ + 12") + "</li>" +
-        "<li><b>بالتعويض:</b> " + eqi("(v₁ − 30)/5 + v₁/3 − 2 = 0") + "، وبالضرب في 15: " + eqi("3v₁ − 90 + 5v₁ − 30 = 0 → v₁ = 15 V") + "</li>" +
-        "<li>" + eqi("v₂ = 27 V") + ". للتحقق عند v₁: " + eqi("−3 + 5 − 2 = 0") + " ✓</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>برامج المحاكاة مثل SPICE تحل كل الدوائر بنسخة من طريقة جهود العقد (Modified Nodal Analysis)، لأنها تصلح لأي دائرة مهما كبرت. ومحرك CircuitVision الذي يحل التمارين يعمل بنفس الطريقة.</p>" }
+        "<ul class='ticks'><li>الطريقة مناسبة عندما تكون العقد أقل من الحلقات، أو فيها مصادر تيار.</li><li>اكتب كل التيارات <b>خارجة</b> من العقدة، ومصدر التيار الداخل للعقدة يُكتب بإشارة سالبة.</li><li>بعد إيجاد الجهود: احسب أي تيار بقانون أوم، وأي قدرة بـ p = vi.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>الشكل 4.5: أوجد v₁ و v₂.</p>" +
+        "<ol class='steps'><li>عند العقدة 1: <span class='eq-i'>(v₁ − 10)/1 + v₁/5 + (v₁ − v₂)/2 = 0</span></li><li>عند العقدة 2: <span class='eq-i'>(v₂ − v₁)/2 + v₂/10 − 2 = 0</span></li><li>الحل: <span class='eq-i'>v₁ = 100/11 = 9.09 V ، v₂ = 120/11 = 10.91 V</span></li></ol>" +
+        "<p class='q'>مثال 4.2: (a) أوجد i<sub>a</sub> و i<sub>b</sub> و i<sub>c</sub>. (b) أوجد قدرة كل مصدر.</p>" +
+        fig(x42, "مصدر 50 V ومقاومات 5 و 10 و 40 Ω ومصدر 3 A") +
+        "<ol class='steps'><li>عقدة واحدة أساسية غير مرجعية: <span class='eq-i'>(v₁ − 50)/5 + v₁/10 + v₁/40 − 3 = 0 ← v₁ = 40 V</span></li><li><span class='eq-i'>i<sub>a</sub> = (50 − 40)/5 = 2 A ، i<sub>b</sub> = 40/10 = 4 A ، i<sub>c</sub> = 40/40 = 1 A</span></li><li><span class='eq-i'>p<sub>50V</sub> = −50 i<sub>a</sub> = −100 W</span> (يعطي)، <span class='eq-i'>p<sub>3A</sub> = −3v₁ = −120 W</span> (يعطي).</li></ol>" +
+        "<p class='q'>مسألة 4.6 (التيوتوريال): استخدم طريقة جهود العقد لإيجاد v<sub>o</sub>.</p>" +
+        fig(xp46, "مصدر 24 V مع 20 Ω و 80 Ω و 25 Ω ومصدر 40 mA") +
+        "<ol class='steps'><li>20 Ω و 80 Ω على التوالي مع المصدر: <span class='eq-i'>(v₁ − 24)/(20 + 80) + v₁/25 + 0.04 = 0</span></li><li><span class='eq-i'>v₁(1/100 + 1/25) = 24/100 − 0.04 ← v₁(0.05) = 0.2</span></li><li><span class='eq-i'>v<sub>o</sub> = v₁ = 4 V</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>برامج محاكاة الدوائر مثل SPICE تستخدم طريقة جهود العقد نفسها: تكتب معادلة KCL لكل عقدة وتحلها كمصفوفة.</p>" }
     ],
     quiz: [
       { q: "دائرة فيها 5 عقد. كم معادلة نحتاج في طريقة جهود العقد (بدون مصادر جهد)؟", options: [
@@ -73,17 +88,25 @@
   /* ================= 2. Node-voltage with dependent sources ================= */
   var n2ex = nodes(twoNode(24, 6, 2, 10, E([0, 2], [1, 2], "CCCS", 4, { dir: "ba", ctrl: "R1", name: "D" }), { r1: { isCtrl: true } }), [[0, 1], [0, 2]]);
   var n2 = nodes(twoNode(60, 12, 24, 8, E([0, 2], [1, 2], "CCCS", 0.5, { dir: "ab", ctrl: "R1", name: "D" }), { r1: { isCtrl: true } }), [[0, 1], [0, 2]]), s2 = solve(n2);
+  var x43 = nodes({ rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 20, { plus: "a", name: "V20" }), E([0, 0], [0, 1], "R", 2, { name: "R2a", vtext: "2 Ω" }), E([0, 1], [1, 1], "R", 20, { name: "R20" }), E([0, 1], [0, 2], "R", 5, { name: "R5", ilabel: "iφ" }), E([0, 2], [1, 2], "R", 10, { name: "R10" }), E([0, 2], [0, 3], "R", 2, { name: "R2b", vtext: "2 Ω" }), E([0, 3], [1, 3], "CCVS", 8, { plus: "a", ctrl: "R5", vtext: "8 iφ", name: "D" })].concat(BOT(3)) }, [[0, 1], [0, 2]]);
+  var s43 = solve(x43); chk(s43.byName.R20.v, 16, "4.3 v1"); chk(s43.byName.R10.v, 10, "4.3 v2"); chk(s43.byName.R5.i, 1.2, "4.3 iphi"); chk(s43.byName.R5.p, 7.2, "4.3 p5");
+
   L["c1-techniques-2"] = {
     id: "c1-techniques-2", ar: "طريقة جهود العقد والمصادر التابعة", en: "The Node-Voltage Method and Dependent Sources", minutes: 30,
     objectives: ["تعبّر عن الكمية المتحكِّمة بدلالة جهود العقد.", "تكتب معادلات العقد مع المصدر التابع.", "تحل النظام وتتحقق من النتيجة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>المصدر التابع يُعامل في KCL كأي مصدر، لكن قيمته مجهولة. نضيف <b>معادلة قيد</b> تعبّر عن الكمية المتحكِّمة (مثل <span class='ltr'>iₓ</span>) بدلالة جهود العقد، فيبقى عدد المجاهيل كما هو.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>iₓ = (vₐ − v_b) / Rₓ</div><p class='muted'>عوّض هذا التعبير مكان iₓ في كل معادلات KCL، فتصبح المعادلات في جهود العقد فقط.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>اكتب معادلة القيد قبل معادلات العقد، حتى لا تنسى تعويضها.</li><li>انتبه لاتجاه iₓ المرسوم: يحدد إشارة التعبير.</li><li>المصدر التابع قد يجعل جهد عقدة أعلى من جهد المصدر المستقل؛ هذا طبيعي لأنه يضيف طاقة.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(n2ex, "دائرة عقد فيها مصدر تيار تابع قيمته 4 iₓ") +
-        "<ol class='steps'><li><b>القيد:</b> " + eqi("iₓ = (24 − v₁)/6") + "</li><li><b>العقدة v₁:</b> " + eqi("(v₁ − 24)/6 + v₁/2 + (v₁ − v₂)/10 = 0") + "</li><li><b>العقدة v₂:</b> المصدر التابع يدخلها: " + eqi("(v₂ − v₁)/10 − 4iₓ = 0") + "</li>" +
-        "<li><b>الحل:</b> " + eqi("v₁ = 15 V, v₂ = 75 V, iₓ = 1.5 A") + ". لاحظ أن v₂ أكبر بكثير من 24 V.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>دوائر مكبرات الترانزستور تُحل بهذه الطريقة: الترانزستور يُستبدل بمصدر تيار تابع، ثم تُكتب معادلات العقد لحساب كسب المكبر.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>إذا كان في الدائرة مصدر تابع، نكتب معادلات العقد كالمعتاد، ثم نضيف إليها <b>معادلة القيد</b> التي يفرضها المصدر التابع: نكتب الكمية المتحكِّمة بدلالة جهود العقد.</p>" +
+        fig(x43, "مثال 4.3: مصدر 20 V ومقاومات ومصدر جهد تابع 8 iφ") },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>معادلات KCL للعقد</div><div class='eq'>+ معادلة القيد: الكمية المتحكِّمة بدلالة جهود العقد</div><div class='eq'>مثال: i<sub>φ</sub> = (v₁ − v₂)/5</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>لا تضف مجهولًا جديدًا دون معادلة: كل كمية متحكِّمة تُكتب بدلالة جهود العقد.</li><li>تيار فرع فيه مصدر جهد تابع ومقاومة يُكتب مثل أي فرع: (v<sub>عقدة</sub> − 8i<sub>φ</sub>)/R.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 4.3: استخدم طريقة جهود العقد لإيجاد القدرة المستهلكة في المقاومة 5 Ω.</p>" +
+        "<ol class='steps'><li>العقدة 1: <span class='eq-i'>(v₁ − 20)/2 + v₁/20 + (v₁ − v₂)/5 = 0 ← 15v₁ − 4v₂ = 200   (1)</span></li><li>العقدة 2: <span class='eq-i'>(v₂ − v₁)/5 + v₂/10 + (v₂ − 8i<sub>φ</sub>)/2 = 0 ← 8v₂ − 2v₁ − 40i<sub>φ</sub> = 0   (2)</span></li><li>القيد: <span class='eq-i'>i<sub>φ</sub> = (v₁ − v₂)/5</span>، وبالتعويض في (2): <span class='eq-i'>16v₂ − 10v₁ = 0</span></li><li>الحل: <span class='eq-i'>v₁ = 16 V ، v₂ = 10 V</span></li><li><span class='eq-i'>i<sub>φ</sub> = (16 − 10)/5 = 1.2 A ، p<sub>5Ω</sub> = 5 × 1.2² = 7.2 W</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>دوائر الترانزستور والمكبرات تُحلل بهذه الطريقة: الترانزستور يُستبدل بنموذج فيه مصدر تابع، ثم نكتب معادلات العقد مع معادلة القيد.</p>" }
     ],
     quiz: [
       { q: "في وجود مصدر تابع، عدد المعادلات اللازمة:", options: [
@@ -114,19 +137,26 @@
   /* ================= 3. Node-voltage special cases ================= */
   var n3ex = nodes(twoNode(50, 5, 15, 10, E([0, 2], [1, 2], "R", 20, { name: "R3" }), { topType: "V", topName: "V2", top: { plus: "b" } }), [[0, 0], [0, 1], [0, 2]]);
   var n3 = nodes(twoNode(60, 3, 6, 20, E([0, 2], [1, 2], "R", 10, { name: "R3" }), { topType: "V", topName: "V2", top: { plus: "b" } }), [[0, 0], [0, 1], [0, 2]]), s3 = solve(n3);
+  var xsn = nodes({ rows: 2, cols: 5, edges: [E([0, 0], [1, 0], "V", 50, { plus: "a", name: "V50" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 40, { name: "R40" }), E([0, 2], [0, 1], "R", 5, { name: "R5" }), E([0, 2], [1, 2], "R", 50, { name: "R50" }), E([0, 2], [0, 3], "CCVS", 10, { plus: "b", ctrl: "R5", vtext: "10 iφ", name: "D" }), E([0, 3], [1, 3], "R", 100, { name: "R100" }), E([0, 3], [0, 4], "W"), E([0, 4], [1, 4], "I", 4, { dir: "ba", name: "I4" })].concat(BOT(4)) }, [[0, 1], [0, 2], [0, 3]]);
+  var ssn = solve(xsn); chk(ssn.byName.R50.v, 60, "supernode v2"); chk(ssn.byName.R100.v, 80, "supernode v3"); chk(ssn.byName.R5.i, 2, "supernode iphi");
+
   L["c1-techniques-3"] = {
     id: "c1-techniques-3", ar: "جهود العقد: حالات خاصة", en: "The Node-Voltage Method: Some Special Cases", minutes: 30,
     objectives: ["تتعامل مع مصدر جهد بين عقدة والمرجع.", "تستخدم العقدة العظمى (Supernode) لمصدر جهد بين عقدتين.", "تكتب معادلة القيد للعقدة العظمى."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p><b>الحالة 1:</b> مصدر جهد بين عقدة والمرجع: جهد العقدة معروف مباشرة، فلا نكتب لها معادلة.</p>" +
-        "<p><b>الحالة 2:</b> مصدر جهد بين عقدتين غير مرجعيتين: تيار المصدر مجهول ولا يمكن كتابته بقانون أوم. الحل: نعامل العقدتين ومعهما المصدر كعقدة واحدة كبيرة تسمى <b>العقدة العظمى</b> <span class='ltr'>(supernode)</span>، ونكتب KCL لها كلها، ثم نضيف معادلة القيد: فرق جهد العقدتين = جهد المصدر.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>Σ i<sub>out</sub> (supernode) = 0 ,   v_b − vₐ = V<sub>s</sub></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>لا تكتب تيار مصدر الجهد بقانون أوم؛ ليس له مقاومة.</li><li>في معادلة القيد خذ قطبية المصدر من الرسم: الطرف + جهده أعلى بمقدار V<sub>s</sub>.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(n3ex, "دائرة فيها مصدر جهد بين عقدتين") +
-        "<ol class='steps'><li><span class='ltr'>v₁ = 50 V</span> مباشرة.</li><li><b>القيد:</b> الطرف + للمصدر V2 جهة v₃: " + eqi("v₃ = v₂ + 10") + "</li>" +
-        "<li><b>KCL للعقدة العظمى (v₂ و v₃ معًا):</b> " + eqi("(v₂ − 50)/5 + v₂/15 + v₃/20 = 0") + "</li><li>" + eqi("v₂ = 30 V, v₃ = 40 V") + ". للتحقق: " + eqi("−4 + 2 + 2 = 0") + " ✓</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>منظمات الجهد في الدوائر الإلكترونية تتصرف كمصادر جهد بين عقدتين غير مرجعيتين، ولهذا تظهر العقدة العظمى كثيرًا عند تحليل دوائر التغذية.</p>" }
+        "<p><b>الحالة الأولى:</b> إذا كان مصدر جهد هو العنصر الوحيد بين عقدة أساسية والمرجع، فجهد هذه العقدة معروف مباشرة، فيقل عدد المجاهيل.</p>" +
+        "<p><b>الحالة الثانية — العقدة الفائقة</b> <span class='ltr'>(supernode)</span>: إذا كان مصدر جهد بين عقدتين أساسيتين (غير المرجع)، فتيار المصدر مجهول. نضم العقدتين في عقدة فائقة ونكتب لها <b>معادلتين</b>: KCL لكل التيارات الخارجة من العقدة الفائقة، ومعادلة المصدر نفسه (فرق جهد العقدتين = قيمة المصدر).</p>" +
+        fig(xsn, "دائرة العقدة الفائقة: مصدر 50 V ومصدر جهد تابع 10 iφ بين العقدتين 2 و 3") },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>مصدر بين عقدة والمرجع: v<sub>عقدة</sub> = v<sub>s</sub></div><div class='eq'>عقدة فائقة: Σ i<sub>out</sub> = 0 للعقدتين معًا</div><div class='eq'>+ v<sub>b</sub> − v<sub>a</sub> = قيمة المصدر بين العقدتين</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>لا تكتب تيار مصدر الجهد المثالي بقانون أوم: ليست له مقاومة وتياره مجهول.</li><li>مع العقدة الفائقة: التيارات بين العقدتين داخلها لا تظهر في معادلة KCL.</li><li>إذا كان المصدر تابعًا، أضف أيضًا معادلة القيد.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال المحاضرة: أوجد v₁ و v₂ و v₃ و i<sub>φ</sub>.</p>" +
+        "<ol class='steps'><li>i<sub>φ</sub> هو تيار المقاومة 5 Ω من العقدة 2 إلى العقدة 1.</li><li>المصدر 50 V وحده بين العقدة 1 والمرجع: <span class='eq-i'>v₁ = 50 V</span></li><li>العقدتان 2 و 3 بينهما المصدر التابع، فنكوّن عقدة فائقة. KCL: <span class='eq-i'>(v₂ − v₁)/5 + v₂/50 + v₃/100 − 4 = 0</span></li><li>بالضرب في 100 ومع v₁ = 50: <span class='eq-i'>22v₂ + v₃ = 1400   (1)</span></li><li>معادلة المصدر: <span class='eq-i'>v₃ = v₂ + 10i<sub>φ</sub></span> مع <span class='eq-i'>i<sub>φ</sub> = (v₂ − v₁)/5</span> ← <span class='eq-i'>v₂ + 2(v₂ − 50) − v₃ = 0   (2)</span></li><li>الحل: <span class='eq-i'>v₂ = 60 V ، v₃ = 80 V ، i<sub>φ</sub> = 2 A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>في دوائر الإلكترونيات يوجد غالبًا مصدر تغذية بين خطين ليس أحدهما الأرضي، والعقدة الفائقة هي الطريقة المباشرة لحلها.</p>" }
     ],
     quiz: [
       { q: "مصدر جهد مثالي بين عقدتين غير مرجعيتين. لماذا لا نكتب KCL لكل عقدة على حدة؟", options: [
@@ -155,17 +185,27 @@
   /* ================= 4. Mesh-current method ================= */
   var m4ex = twoNode(40, 3, 10, 2, E([0, 2], [1, 2], "V", 20, { plus: "a", name: "V2" })); meshes(m4ex);
   var m4 = twoNode(50, 2, 4, 12, E([0, 2], [1, 2], "V", 20, { plus: "a", name: "V2" }), { r2: { ilabel: "i" } }), ms4 = meshes(m4);
+  var x44 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 40, { plus: "a", name: "V40" }), E([0, 0], [0, 1], "R", 2, { name: "R2" }), E([0, 1], [1, 1], "R", 8, { name: "R8", vlabel: "vₒ" }), E([0, 1], [0, 2], "R", 6, { name: "R6a", vtext: "6 Ω" }), E([0, 2], [1, 2], "R", 6, { name: "R6b", vtext: "6 Ω" }), E([0, 2], [0, 3], "R", 4, { name: "R4" }), E([0, 3], [1, 3], "V", 20, { plus: "a", name: "V20" })].concat(BOT(3)) };
+  var s44 = solve(x44); meshes(x44); chk(s44.byName.R2.i, 5.6, "4.4 ia"); chk(s44.byName.R6a.i, 2, "4.4 ib"); chk(s44.byName.R4.i, -0.8, "4.4 ic"); chk(s44.byName.R8.v, 28.8, "4.4 vo"); chk(s44.byName.V40.p, -224, "4.4 p40"); chk(s44.byName.V20.p, -16, "4.4 p20");
+
   L["c1-techniques-4"] = {
     id: "c1-techniques-4", ar: "مدخل إلى طريقة تيارات الحلقات", en: "Introduction to the Mesh-Current Method", minutes: 30,
     objectives: ["تعرّف تيار الحلقة لكل شبكة (mesh).", "تكتب KVL لكل حلقة بدلالة تيارات الحلقات.", "تحسب تيار الفرع المشترك من تياري الحلقتين."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>الحلقة الصغرى <span class='ltr'>(mesh)</span> حلقة لا تحتوي داخلها على حلقات أخرى. نعطي كل حلقة تيارًا افتراضيًا يدور فيها (عادة مع عقارب الساعة)، ونكتب KVL حولها.</p><p>الفرع الذي تشترك فيه حلقتان يمر فيه <b>الفرق</b> بين تياريهما. بهذا تصبح المجاهيل تيارات الحلقات فقط.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>Σ R·(iₖ − iⱼ) + Σ (voltage drops of sources) = 0   (around mesh k)</div><p class='muted'>في الفرع المشترك بين الحلقة k والحلقة j، التيار في اتجاه دوران k هو <span class='ltr'>iₖ − iⱼ</span>.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>تصلح للدوائر المستوية (يمكن رسمها بلا تقاطع أسلاك).</li><li>مناسبة عندما تكون الحلقات أقل من العقد، أو عند وجود مصادر جهد كثيرة.</li><li>عدد المعادلات = عدد الحلقات الصغرى.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(m4ex, "دائرة بحلقتين i1 و i2") +
-        "<ol class='steps'><li><b>الحلقة 1:</b> " + eqi("−40 + 3i₁ + 10(i₁ − i₂) = 0") + "</li><li><b>الحلقة 2:</b> " + eqi("10(i₂ − i₁) + 2i₂ + 20 = 0") + " (ندخل V2 من طرفه +، فهو هبوط)</li>" +
-        "<li>" + eqi("13i₁ − 10i₂ = 40 , −10i₁ + 12i₂ = −20") + "</li><li>" + eqi("i₁ = 5 A , i₂ = 2.5 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>في دوائر الجسور مثل حساسات الوزن والضغط (جسر ويتستون)، تحليل الحلقات يعطي تيار الذراع الوسطى بمعادلات قليلة، وهذا التيار هو إشارة الحساس.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>طريقة تيارات الحلقات تجد تيار كل حلقة (mesh) بثلاث خطوات: (1) اختر مجموعة حلقات بحيث تمر حلقة واحدة على الأقل بكل فرع. (2) طبّق KVL حول كل حلقة. (3) حل المعادلات لإيجاد تيارات الحلقات.</p>" +
+        "<p>تيار الحلقة يدور في اتجاه عقارب الساعة. والمقاومة المشتركة بين حلقتين يمر فيها الفرق بين تياريهما. مثال المحاضرة بمصدرين v₁ و v₂ ومقاومات R₁ و R₂ و R₃:</p>" +
+        "<div class='eq'>v₁ = i<sub>a</sub>R₁ + (i<sub>a</sub> − i<sub>b</sub>)R₃</div><div class='eq'>−v₂ = (i<sub>b</sub> − i<sub>a</sub>)R₃ + i<sub>b</sub>R₂</div>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>KVL حول كل حلقة: Σ v = 0</div><div class='eq'>المقاومة المشتركة: R(i<sub>الحلقة</sub> − i<sub>المجاورة</sub>)</div><div class='eq'>عدد المعادلات = عدد الحلقات</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>الطريقة مناسبة عندما تكون الحلقات أقل من العقد، أو فيها مصادر جهد.</li><li>تيار أي فرع = تيار حلقته، أو فرق تياري الحلقتين إذا كان مشتركًا.</li><li>الحلقة <b>mesh</b> حلقة لا تحيط بأي حلقة أخرى، والطريقة للدوائر المستوية.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 4.4: (a) أوجد قدرة كل مصدر جهد. (b) أوجد الجهد v<sub>o</sub> على المقاومة 8 Ω.</p>" +
+        fig(x44, "مثال 4.4: مصدر 40 V ومقاومات 2 و 8 و 6 و 6 و 4 Ω ومصدر 20 V") +
+        "<ol class='steps'><li><span class='eq-i'>−40 + 2i<sub>a</sub> + 8(i<sub>a</sub> − i<sub>b</sub>) = 0</span></li><li><span class='eq-i'>8(i<sub>b</sub> − i<sub>a</sub>) + 6i<sub>b</sub> + 6(i<sub>b</sub> − i<sub>c</sub>) = 0</span></li><li><span class='eq-i'>6(i<sub>c</sub> − i<sub>b</sub>) + 4i<sub>c</sub> + 20 = 0</span></li><li>الحل: <span class='eq-i'>i<sub>a</sub> = 5.6 A ، i<sub>b</sub> = 2 A ، i<sub>c</sub> = −0.8 A</span></li><li><span class='eq-i'>p<sub>40V</sub> = −40i<sub>a</sub> = −224 W</span>، و <span class='eq-i'>p<sub>20V</sub> = 20i<sub>c</sub> = −16 W</span>: المصدران يعطيان قدرة.</li><li><span class='eq-i'>v<sub>o</sub> = 8(i<sub>a</sub> − i<sub>b</sub>) = 8(3.6) = 28.8 V</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>في تمديدات الإنارة والدوائر ذات المصادر الكثيرة على التوالي (مثل بطاريات السيارة الكهربائية) تكون الحلقات قليلة، فتكون طريقة الحلقات أسرع.</p>" }
     ],
     quiz: [
       { q: "تيار الفرع المشترك بين حلقتين تياراهما i₁ و i₂ (كلاهما مع عقارب الساعة):", options: [
@@ -195,16 +235,25 @@
   /* ================= 5. Mesh-current with dependent sources ================= */
   var m5ex = twoNode(40, 8, 20, 10, E([0, 2], [1, 2], "CCVS", 5, { plus: "a", ctrl: "R2", name: "D" }), { r2: { isCtrl: true } }); meshes(m5ex);
   var m5 = twoNode(20, 6, 2, 5, E([0, 2], [1, 2], "CCVS", 8, { plus: "b", ctrl: "R2", name: "D" }), { r2: { isCtrl: true } }), ms5 = meshes(m5), s5 = solve(m5);
+  var x45m = { rows: 3, cols: 3, edges: [E([0, 0], [1, 0], "W"), E([1, 0], [2, 0], "V", 50, { plus: "a", name: "V50" }), E([0, 0], [0, 2], "R", 1, { name: "R1" }), E([1, 0], [1, 1], "R", 5, { name: "R5" }), E([1, 1], [2, 1], "R", 20, { name: "R20", ilabel: "iφ" }), E([1, 1], [1, 2], "R", 4, { name: "R4" }), E([0, 2], [1, 2], "W"), E([1, 2], [2, 2], "CCVS", 15, { plus: "a", ctrl: "R20", vtext: "15 iφ", name: "D" }), E([2, 0], [2, 1], "W"), E([2, 1], [2, 2], "W")] };
+  var s45m = solve(x45m); chk(s45m.byName.R4.i, 2, "4.5 i4"); chk(s45m.byName.R4.p, 16, "4.5 p4"); chk(s45m.byName.R20.i, 1.6, "4.5 iphi");
+
   L["c1-techniques-5"] = {
     id: "c1-techniques-5", ar: "طريقة تيارات الحلقات والمصادر التابعة", en: "The Mesh-Current Method and Dependent Sources", minutes: 30,
     objectives: ["تعبّر عن الكمية المتحكِّمة بدلالة تيارات الحلقات.", "تكتب KVL مع مصدر جهد تابع.", "تحسب قدرة المصدر التابع."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>نفس الفكرة في طريقة العقد: المصدر التابع يدخل KVL كمصدر عادي، ونضيف <b>معادلة قيد</b> تعبّر عن iₓ أو vₓ بدلالة تيارات الحلقات. إذا كانت iₓ في فرع مشترك، فهي فرق تياري الحلقتين.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>iₓ = i₁ − i₂   (if iₓ flows in the shared branch in the direction of i₁)</div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>حدد اتجاه iₓ المرسوم وقارنه باتجاه تيارات الحلقات.</li><li>بعد التعويض، رتّب المعادلات وحلها كالمعتاد.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(m5ex, "دائرة حلقتين مع مصدر جهد تابع قيمته 5 iₓ") +
-        "<ol class='steps'><li><b>القيد:</b> iₓ في R2 للأسفل، فـ " + eqi("iₓ = i₁ − i₂") + "</li><li><b>الحلقة 1:</b> " + eqi("−40 + 8i₁ + 20(i₁ − i₂) = 0") + "</li><li><b>الحلقة 2:</b> ندخل المصدر التابع من طرفه +: " + eqi("20(i₂ − i₁) + 10i₂ + 5iₓ = 0") + "</li><li>" + eqi("i₁ = 2.5 A , i₂ = 1.5 A , iₓ = 1 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مكبرات العمليات في نماذجها المبسطة تحتوي مصدر جهد تابعًا (VCVS) بكسب كبير جدًا، وتُحل دوائرها بالحلقات أو العقد بنفس الأسلوب.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>مع المصدر التابع نكتب معادلات KVL للحلقات كالمعتاد، ثم نعبّر عن الكمية المتحكِّمة <b>بدلالة تيارات الحلقات</b> (معادلة القيد) ونعوّضها.</p>" +
+        fig(x45m, "مثال 4.5: مصدر 50 V ومقاومات 1 و 5 و 4 و 20 Ω ومصدر جهد تابع 15 iφ") },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>KVL لكل حلقة</div><div class='eq'>+ القيد: i<sub>φ</sub> = i₁ − i₃ (تيار فرع مشترك بدلالة تيارات الحلقات)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>إذا كان التيار المتحكِّم في فرع مشترك فهو فرق تياري حلقتين، مع الانتباه لاتجاهه.</li><li>بعد التعويض رتّب المعادلات في الشكل القياسي قبل الحل.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 4.5: استخدم طريقة تيارات الحلقات لإيجاد القدرة المستهلكة في المقاومة 4 Ω.</p>" +
+        "<ol class='steps'><li>نحتاج ثلاث حلقات: i₁ (اليسرى)، i₂ (العلوية مع 1 Ω)، i₃ (اليمنى).</li><li><span class='eq-i'>50 = 5(i₁ − i₂) + 20(i₁ − i₃)</span></li><li><span class='eq-i'>0 = 5(i₂ − i₁) + 1i₂ + 4(i₂ − i₃)</span></li><li><span class='eq-i'>0 = 20(i₃ − i₁) + 4(i₃ − i₂) + 15i<sub>φ</sub></span></li><li>القيد: <span class='eq-i'>i<sub>φ</sub> = i₁ − i₃</span>، وبعد الترتيب: <span class='eq-i'>50 = 25i₁ − 5i₂ − 20i₃ ، 0 = −5i₁ + 10i₂ − 4i₃ ، 0 = −5i₁ − 4i₂ + 9i₃</span></li><li>الحل: <span class='eq-i'>i₂ = 26 A ، i₃ = 28 A</span>، وتيار 4 Ω من اليسار لليمين <span class='eq-i'>i₃ − i₂ = 2 A</span></li><li><span class='eq-i'>p<sub>4Ω</sub> = (2)²(4) = 16 W</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>نموذج مكبر العمليات فيه مصدر جهد تابع بكسب كبير، وتحليل دوائره بالحلقات أو العقد يحتاج معادلة القيد نفسها.</p>" }
     ],
     quiz: [
       { q: "مصدر جهد تابع قيمته <span class='ltr'>8iₓ</span> في حلقة. عند كتابة KVL:", options: [
@@ -236,16 +285,26 @@
   }
   var m6ex = supermesh(40, 8, 2.5, 12, 20); meshes(m6ex);
   var m6 = supermesh(30, 4, 3, 12, 2), ms6 = meshes(m6), s6 = solve(m6);
+  var xsm = { rows: 3, cols: 3, edges: [E([0, 0], [0, 1], "R", 10, { name: "R10" }), E([0, 1], [0, 2], "W"), E([0, 0], [1, 0], "W"), E([1, 0], [2, 0], "V", 100, { plus: "a", name: "V100" }), E([1, 0], [1, 1], "R", 3, { name: "R3" }), E([1, 1], [1, 2], "R", 2, { name: "R2" }), E([0, 2], [1, 2], "W"), E([1, 1], [2, 1], "I", 5, { dir: "ba", name: "I5" }), E([1, 2], [2, 2], "V", 50, { plus: "a", name: "V50" }), E([2, 0], [2, 1], "R", 6, { name: "R6" }), E([2, 1], [2, 2], "R", 4, { name: "R4" })] };
+  var ssm = solve(xsm); chk(ssm.byName.R3.i, 0.5, "supermesh ia-ib"); chk(ssm.byName.R10.i, 1.25, "supermesh ib"); chk(ssm.byName.R6.i, -1.75, "supermesh ia"); chk(ssm.byName.R4.i, -6.75, "supermesh ic");
+
   L["c1-techniques-6"] = {
     id: "c1-techniques-6", ar: "تيارات الحلقات: حالات خاصة", en: "The Mesh-Current Method: Some Special Cases", minutes: 30,
     objectives: ["تتعامل مع مصدر تيار في فرع خارجي.", "تستخدم الحلقة العظمى (Supermesh) لمصدر تيار في فرع مشترك.", "تكتب معادلة القيد للحلقة العظمى."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p><b>الحالة 1:</b> مصدر تيار في فرع لا تمر به إلا حلقة واحدة: تيار هذه الحلقة يساوي قيمة المصدر مباشرة.</p><p><b>الحالة 2:</b> مصدر تيار في فرع مشترك بين حلقتين: جهده مجهول، فلا نكتب KVL لكل حلقة. نتجاهل هذا الفرع ونكتب KVL حول المسار الخارجي للحلقتين معًا، وتسمى <b>الحلقة العظمى</b> <span class='ltr'>(supermesh)</span>، ثم نضيف القيد: فرق تياري الحلقتين = قيمة المصدر.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>i₁ − i₂ = Iₛ   (Iₛ in the direction of i₁ in the shared branch)</div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>لا تكتب جهد مصدر التيار كأنه صفر؛ هو مجهول.</li><li>اتجاه سهم المصدر يحدد إشارة القيد.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(m6ex, "دائرة حلقتين بينهما مصدر تيار") +
-        "<ol class='steps'><li><b>القيد:</b> السهم للأسفل وهو اتجاه i₁: " + eqi("i₁ − i₂ = 2.5") + "</li><li><b>KVL للحلقة العظمى (المسار الخارجي):</b> " + eqi("−40 + 8i₁ + 12i₂ + 20i₂ = 0") + "</li><li>" + eqi("8(i₂ + 2.5) + 32i₂ = 40 → i₂ = 0.5 A , i₁ = 3 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مصادر التيار تظهر في نماذج الحساسات ودوائر شحن البطاريات بتيار ثابت، والحلقة العظمى هي الطريقة المباشرة لتحليل هذه الدوائر بالحلقات.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>الحالة الأولى: فرع فيه مصدر تيار.</b> جهد مصدر التيار مجهول، فنعرّف له متغيرًا v ونكتبه في معادلتي الحلقتين المشتركتين فيه، ثم نجمع المعادلتين لنحذف v، ونضيف معادلة المصدر: الفرق بين تياري الحلقتين = تيار المصدر.</p>" +
+        "<p><b>الحالة الثانية — الحلقة الفائقة</b> <span class='ltr'>(supermesh)</span>: نتجنب تعريف v من البداية، فنكتب KVL حول المسار الذي يحيط بالحلقتين معًا متجاهلين الفرع المشترك الذي فيه المصدر. والنتيجة نفسها.</p>" +
+        fig(xsm, "دائرة الحلقة الفائقة: 100 V و 50 V ومصدر تيار 5 A") },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>KVL حول الحلقة الفائقة (بدون الفرع المشترك)</div><div class='eq'>+ i<sub>c</sub> − i<sub>a</sub> = تيار المصدر</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>إذا كان مصدر التيار على الحافة الخارجية لحلقة واحدة، فتيار هذه الحلقة معروف مباشرة.</li><li>إذا كان مشتركًا بين حلقتين: حلقة فائقة.</li><li>لا تكتب KVL حول حلقة تمر بمصدر تيار دون أن تعرّف جهده.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال المحاضرة: أوجد تيارات الحلقات i<sub>a</sub> و i<sub>b</sub> و i<sub>c</sub>.</p>" +
+        "<ol class='steps'><li>الحلقة a مع جهد المصدر v: <span class='eq-i'>100 = 3(i<sub>a</sub> − i<sub>b</sub>) + v + 6i<sub>a</sub>   (1)</span></li><li>الحلقة c: <span class='eq-i'>−50 = 4i<sub>c</sub> − v + 2(i<sub>c</sub> − i<sub>b</sub>)   (2)</span></li><li>بجمع (1) و (2) يختفي v (وهي نفسها معادلة الحلقة الفائقة): <span class='eq-i'>50 = 9i<sub>a</sub> − 5i<sub>b</sub> + 6i<sub>c</sub></span></li><li>الحلقة b: <span class='eq-i'>0 = 3(i<sub>b</sub> − i<sub>a</sub>) + 10i<sub>b</sub> + 2(i<sub>b</sub> − i<sub>c</sub>)</span></li><li>معادلة المصدر: <span class='eq-i'>i<sub>c</sub> − i<sub>a</sub> = 5</span></li><li>الحل: <span class='eq-i'>i<sub>a</sub> = 1.75 A ، i<sub>b</sub> = 1.25 A ، i<sub>c</sub> = 6.75 A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>مصادر التيار في الدوائر الحقيقية تمثل أجهزة مثل شواحن البطاريات بتيار ثابت والخلايا الشمسية، ووجودها بين حلقتين حالة شائعة.</p>" }
     ],
     quiz: [
       { q: "مصدر تيار في الفرع الخارجي لحلقة واحدة قيمته 2 A مع اتجاه الحلقة:", options: [
@@ -275,15 +334,26 @@
 
   /* ================= 7. Node vs mesh ================= */
   var c7 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 24, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", 2, { name: "R1" }), E([0, 1], [0, 2], "R", 5, { name: "R2" }), E([0, 2], [0, 3], "R", 2, { name: "R3" }), E([0, 1], [1, 1], "R", 8, { name: "R4" }), E([0, 2], [1, 2], "R", 6, { name: "R5", vlabel: "v" }), E([0, 3], [1, 3], "R", 4, { name: "R6" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] }, s7 = solve(c7);
+  var x413 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 20, { plus: "a", name: "V20" }), E([0, 0], [0, 1], "R", 15, { name: "R15" }), E([0, 1], [1, 1], "I", 2, { dir: "ba", name: "I2" }), E([0, 1], [0, 2], "R", 10, { name: "R10" }), E([0, 2], [1, 2], "V", 25, { plus: "a", name: "V25" })].concat(BOT(2)) };
+  var s413 = solve(x413); chk(s413.byName.I2.v, 35, "4.13 v1"); chk(s413.byName.I2.p, -70, "4.13 p2A");
+
   L["c1-techniques-7"] = {
     id: "c1-techniques-7", ar: "جهود العقد أم تيارات الحلقات؟", en: "The Node-Voltage Method Versus the Mesh-Current Method", minutes: 20,
     objectives: ["تعدّ المعادلات اللازمة لكل طريقة.", "تختار الطريقة الأقل معادلات والأنسب لنوع المصادر.", "تحل بالطريقة المختارة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>الطريقتان تعطيان نفس النتيجة دائمًا. الفرق في <b>عدد المعادلات</b> وصعوبتها. قبل الحل، عُدّ:</p><ul class='ticks'><li><b>جهود العقد:</b> عدد العقد الأساسية − 1، مطروحًا منه مصادر الجهد (كل مصدر جهد يحذف مجهولًا).</li><li><b>تيارات الحلقات:</b> عدد الحلقات الصغرى، مطروحًا منه مصادر التيار.</li></ul>" },
-      { id: "laws", title: "القوانين", en: "Counting", html: "<div class='eq-row'><div class='eq'>N<sub>node</sub> = nₑ − 1 − (voltage sources)</div><div class='eq'>N<sub>mesh</sub> = meshes − (current sources)</div></div><p class='muted'>العقدة الأساسية: عقدة يلتقي فيها ثلاثة عناصر أو أكثر.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>دوائر بفروع كثيرة على التوازي ← غالبًا العقد أسهل.</li><li>دوائر بحلقات قليلة ومصادر جهد ← غالبًا الحلقات أسهل.</li><li>المطلوب نفسه يرجّح: إذا كان المطلوب جهدًا فالعقد أقرب، وإذا كان تيارًا في فرع خارجي فالحلقات أقرب.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>دائرة فيها 4 عقد أساسية، و 5 حلقات صغرى، ومصدر جهد واحد بين عقدة والمرجع، ومصدر تيار في فرع خارجي.</p><ol class='steps'><li><b>العقد:</b> " + eqi("4 − 1 − 1 = 2") + " معادلتان.</li><li><b>الحلقات:</b> " + eqi("5 − 1 = 4") + " معادلات.</li><li>الأفضل: جهود العقد.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>المهندس الذي يحل دائرة بيده يختار الطريقة الأقصر، أما برامج المحاكاة فتستخدم جهود العقد دائمًا لأنها تعمل على أي دائرة، حتى غير المستوية.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>أكبر ميزة للطريقتين أنهما تقللان عدد المعادلات التي نحلها معًا. وقبل البدء نسأل:</p>" +
+        "<ul><li>أي الطريقتين تعطي <b>معادلات أقل</b>؟ قارن (عدد العقد الأساسية − 1) بعدد الحلقات.</li><li>هل في الدائرة <b>عقد فائقة</b>؟ إذن طريقة العقد تقلل المعادلات.</li><li>هل فيها <b>حلقات فائقة</b>؟ إذن طريقة الحلقات تقلل المعادلات.</li></ul>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>معادلات العقد = n<sub>e</sub> − 1 − (عدد مصادر الجهد)</div><div class='eq'>معادلات الحلقات = عدد الحلقات − (عدد مصادر التيار)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>مصادر التيار تسهّل طريقة العقد، ومصادر الجهد تسهّل طريقة الحلقات.</li><li>إذا كان المطلوب جهدًا فطريقة العقد غالبًا أقرب، وإذا كان تيارًا فطريقة الحلقات.</li><li>يمكنك حل المسألة بالطريقتين للتحقق من النتيجة.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مسألة 4.13: أوجد القدرة التي يعطيها مصدر التيار 2 A.</p>" +
+        fig(x413, "مصدر 20 V و 15 Ω ومصدر 2 A و 10 Ω ومصدر 25 V") +
+        "<ol class='steps'><li><b>بطريقة العقد</b> (معادلة واحدة): <span class='eq-i'>(v₁ − 20)/15 − 2 + (v₁ − 25)/10 = 0 ← v₁ = 35 V</span></li><li><span class='eq-i'>p<sub>2A</sub> = −35 × 2 = −70 W</span>، أي المصدر يعطي 70 W.</li><li><b>بطريقة الحلقات</b>: مصدر التيار مشترك بين الحلقتين، فحلقة فائقة: <span class='eq-i'>−20 + 15i<sub>a</sub> + 10i<sub>b</sub> + 25 = 0</span> مع <span class='eq-i'>i<sub>b</sub> − i<sub>a</sub> = 2</span></li><li><span class='eq-i'>i<sub>a</sub> = −1 A ، i<sub>b</sub> = 1 A ← v₁ = 20 − 15(−1) = 35 V</span>، نفس النتيجة.</li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>المهندس يختار الطريقة قبل أن يبدأ، كما تختار أقصر طريق قبل أن تقود. معادلة واحدة بدل اثنتين توفر الوقت وتقلل الأخطاء في الاختبار.</p>" }
     ],
     quiz: [
       { q: "دائرة فيها 3 عقد أساسية و 4 حلقات صغرى، بدون مصادر خاصة. أي طريقة أقل معادلات؟", options: [
@@ -309,15 +379,32 @@
 
   /* ================= 8. Source transformations ================= */
   var c8 = twoNode(36, 6, 3, 2, E([0, 2], [1, 2], "R", 8, { name: "R4", ilabel: "i" })), s8 = solve(c8);
+  var x48 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 6, { plus: "a", name: "V6" }), E([0, 0], [0, 1], "R", 4, { name: "R4" }), E([0, 1], [1, 1], "R", 30, { name: "R30" }), E([0, 1], [0, 2], "R", 6, { name: "R6" }), E([0, 2], [1, 2], "R", 20, { name: "R20" }), E([0, 2], [0, 3], "R", 5, { name: "R5" }), E([0, 3], [1, 3], "V", 40, { plus: "a", name: "V40" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "R", 10, { name: "R10" }), E([1, 2], [1, 3], "W")] };
+  var s48 = solve(x48); chk(s48.byName.V6.i, 0.825, "4.8 i"); chk(s48.byName.V6.p, 4.95, "4.8 p6");
+  var x49 = { rows: 3, cols: 5, edges: [E([0, 0], [1, 0], "V", 250, { plus: "a", name: "V250" }), E([1, 0], [2, 0], "W"), E([0, 0], [0, 1], "W"), E([0, 1], [2, 1], "R", 125, { name: "R125" }), E([0, 1], [0, 2], "R", 25, { name: "R25" }), E([0, 2], [1, 2], "I", 8, { dir: "ab", name: "I8" }), E([1, 2], [2, 2], "R", 10, { name: "R10" }), E([0, 2], [0, 3], "W"), E([0, 3], [2, 3], "R", 100, { name: "R100", vlabel: "vₒ" }), E([0, 3], [0, 4], "R", 5, { name: "R5" }), E([0, 4], [2, 4], "R", 15, { name: "R15" }), E([2, 0], [2, 1], "W"), E([2, 1], [2, 2], "W"), E([2, 2], [2, 3], "W"), E([2, 3], [2, 4], "W")] };
+  var s49 = solve(x49); chk(s49.byName.R100.v, 20, "4.9 vo");
+
   L["c1-techniques-8"] = {
     id: "c1-techniques-8", ar: "تحويل المصادر", en: "Source Transformations", minutes: 25,
     objectives: ["تحوّل مصدر جهد مع مقاومة على التوالي إلى مصدر تيار مع مقاومة على التوازي، والعكس.", "تستخدم التحويلات المتتالية لاختزال دائرة.", "تعرف حدود التحويل."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>مصدر جهد <span class='ltr'>vₛ</span> على التوالي مع مقاومة R يكافئ تمامًا (بالنسبة لبقية الدائرة) مصدر تيار <span class='ltr'>iₛ = vₛ/R</span> على التوازي مع نفس المقاومة R. سهم مصدر التيار يتجه نحو الطرف الذي كان عنده الموجب.</p><p>بالتبديل بين الشكلين نستطيع جمع المقاومات على التوالي أو التوازي خطوة خطوة حتى تبسط الدائرة.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>iₛ = vₛ / R</div><div class='eq'>vₛ = iₛ R</div></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>التحويل يحتاج مقاومة على التوالي مع مصدر الجهد، أو على التوازي مع مصدر التيار.</li><li>المقاومة نفسها تبقى، وتتغير طريقة توصيلها فقط.</li><li>لا تحوّل المقاومة التي تريد تيارها أو جهدها، فهي تختفي داخل المكافئ.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>حوّل <span class='ltr'>48 V</span> على التوالي مع <span class='ltr'>8 Ω</span>.</p><ol class='steps'><li>" + eqi("iₛ = 48/8 = 6 A") + " على التوازي مع 8 Ω، والسهم نحو طرف الموجب السابق.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>البطارية الحقيقية مصدر جهد مع مقاومة داخلية صغيرة. تحويلها لمصدر تيار يبين لماذا يكون تيار القصر كبيرًا جدًا وخطيرًا: <span class='ltr'>12 V / 0.02 Ω = 600 A</span>.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>تحويل المصادر</b> يسمح باستبدال مصدر جهد <span class='ltr'>v<sub>s</sub></span> على التوالي مع مقاومة R بمصدر تيار <span class='ltr'>i<sub>s</sub></span> على التوازي مع <b>نفس المقاومة</b>، والعكس. الدائرتان متكافئتان بالنسبة للطرفين a و b.</p>" +
+        "<p><b>حالة خاصة:</b> مقاومة على التوازي مع مصدر جهد، أو على التوالي مع مصدر تيار، <b>لا تؤثر</b> على ما يحدث عند الطرفين a و b، فيمكن حذفها عند حساب الجهود والتيارات خارجها. لكنها تؤثر على حساب قدرة المصدر نفسه.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>v<sub>s</sub> = i<sub>s</sub>R</div><div class='eq'>i<sub>s</sub> = v<sub>s</sub> / R</div>" +
+        "<p class='muted'>اتجاه سهم مصدر التيار يشير نحو الطرف الموجب لمصدر الجهد.</p>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>استخدم التحويل لتجميع المصادر: مصادر الجهد على التوالي تُجمع، ومصادر التيار على التوازي تُجمع.</li><li>بعد كل تحويل ابحث عن مقاومات صارت على التوالي أو التوازي.</li><li>لا تحوّل العنصر الذي تريد جهده أو تياره.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال 4.8: (a) أوجد قدرة مصدر 6 V. (b) هل يمتصها أم يعطيها؟</p>" +
+        fig(x48, "مثال 4.8: مصدر 6 V ومقاومات 4 و 6 و 30 و 10 و 20 و 5 Ω ومصدر 40 V") +
+        "<ol class='steps'><li>40 V مع 5 Ω ← مصدر <span class='eq-i'>40/5 = 8 A</span> على التوازي مع 5 Ω، ثم <span class='eq-i'>20 ∥ 5 = 4 Ω</span></li><li>8 A مع 4 Ω ← <span class='eq-i'>32 V</span> على التوالي مع 4 Ω، ثم مع 6 Ω و 10 Ω: <span class='eq-i'>4 + 6 + 10 = 20 Ω</span></li><li>32 V مع 20 Ω ← <span class='eq-i'>1.6 A</span> مع 20 Ω، ثم <span class='eq-i'>20 ∥ 30 = 12 Ω</span></li><li>1.6 A مع 12 Ω ← <span class='eq-i'>19.2 V</span> على التوالي مع 12 Ω.</li><li><span class='eq-i'>i = (19.2 − 6)/(4 + 12) = 0.825 A</span>، و <span class='eq-i'>p<sub>6V</sub> = 6 × 0.825 = 4.95 W</span>: المصدر <b>يمتص</b>.</li></ol>" +
+        "<p class='q'>مثال 4.9: استخدم تحويل المصادر لإيجاد v<sub>o</sub>.</p>" +
+        fig(x49, "مثال 4.9: مصدر 250 V ومصدر 8 A ومقاومات") +
+        "<ol class='steps'><li>125 Ω على التوازي مع مصدر الجهد، و 10 Ω على التوالي مع مصدر التيار: نحذفهما (الحالة الخاصة). و 5 + 15 = 20 Ω.</li><li>250 V مع 25 Ω ← <span class='eq-i'>10 A</span> مع 25 Ω، ونجمع مصادر التيار: <span class='eq-i'>10 − 8 = 2 A</span></li><li><span class='eq-i'>25 ∥ 100 ∥ 20 = 10 Ω ← v<sub>o</sub> = 2 × 10 = 20 V</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>ورقة بيانات البطارية تعطي جهدها ومقاومتها الداخلية (مصدر جهد مع مقاومة)، بينما الخلية الشمسية تُوصف عادة كمصدر تيار مع مقاومة. التحويل يسمح بمقارنتهما بنفس النموذج.</p>" }
     ],
     quiz: [
       { q: "مصدر تيار <span class='ltr'>5 A</span> على التوازي مع <span class='ltr'>4 Ω</span> يكافئ:", options: [
@@ -343,16 +430,32 @@
   /* ================= 9. Thévenin and Norton ================= */
   function port3(Vs, r1, r2, r3) { return { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", Vs, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", r1, { name: "R1" }), E([0, 1], [1, 1], "R", r2, { name: "R2" }), E([0, 1], [0, 2], "R", r3, { name: "R3" }), E([0, 2], [1, 2], "T", 0, { name: "ab" })].concat(bottom3) }; }
   var t9ex = port3(12, 4, 12, 1), t9 = port3(60, 6, 12, 4), th9 = AN.thevenin(t9);
+  var xth = ({ rows: 2, cols: 5, edges: [E([0, 0], [1, 0], "V", 25, { plus: "a", name: "V25" }), E([0, 0], [0, 1], "R", 5, { name: "R5" }), E([0, 1], [1, 1], "R", 20, { name: "R20" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "I", 3, { dir: "ba", name: "I3" }), E([0, 2], [0, 3], "R", 4, { name: "R4" }), E([0, 3], [0, 4], "W"), E([0, 4], [1, 4], "T", 0, { name: "ab" })].concat(BOT(4)) });
+  var sth = AN.thevenin(xth); chk(sth.voc, 32, "Th voc"); chk(Math.abs(sth.isc), 4, "Th isc"); chk(Math.abs(sth.rth), 8, "Th rth");
+  var x410 = { rows: 2, cols: 5, edges: [E([0, 0], [1, 0], "V", 5, { plus: "a", name: "V5" }), E([0, 0], [0, 1], "R", 2000, { name: "R2k", vtext: "2 kΩ", ilabel: "i" }), E([0, 1], [1, 1], "VCVS", 3, { plus: "a", ctrl: "R25", vtext: "3 v", name: "D1" }), E([0, 2], [1, 2], "CCCS", 20, { dir: "ab", ctrl: "R2k", vtext: "20 i", name: "D2" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "R", 25, { name: "R25", vlabel: "v" }), E([0, 3], [0, 4], "W"), E([0, 4], [1, 4], "T", 0, { name: "ab" })].concat(BOT(4)) };
+  var s410 = AN.thevenin(x410); chk(s410.voc, -5, "4.10 VTh"); chk(Math.abs(s410.isc), 0.05, "4.10 isc"); chk(s410.rth, 100, "4.10 RTh");
+
   L["c1-techniques-9"] = {
     id: "c1-techniques-9", ar: "مكافئا ثيفنن ونورتن", en: "Thévenin and Norton Equivalents", minutes: 30,
     objectives: ["تحسب جهد ثيفنن من جهد الدائرة المفتوحة.", "تحسب مقاومة ثيفنن بإطفاء المصادر المستقلة.", "تحسب تيار نورتن وتربط بين المكافئين."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>أي شبكة خطية بين طرفين a و b يمكن استبدالها بـ <b>مصدر جهد V<sub>Th</sub> على التوالي مع مقاومة R<sub>Th</sub></b> (مكافئ ثيفنن)، أو <b>مصدر تيار I<sub>N</sub> على التوازي مع R<sub>Th</sub></b> (مكافئ نورتن). أي حمل يوصل بين a و b يتصرف تمامًا كأنه موصول بالشبكة الأصلية.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>V<sub>Th</sub> = v<sub>oc</sub></div><div class='eq'>I<sub>N</sub> = i<sub>sc</sub></div><div class='eq'>R<sub>Th</sub> = V<sub>Th</sub> / I<sub>N</sub></div></div><p class='muted'>بدون مصادر تابعة: R<sub>Th</sub> = المقاومة المكافئة بين a و b بعد إطفاء المصادر المستقلة (مصدر الجهد ← سلك، مصدر التيار ← دائرة مفتوحة).</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>عندما تريد دراسة حمل يتغير (مثل مقاومة متغيرة) دون إعادة حل الدائرة كلها في كل مرة.</li><li>V<sub>Th</sub> يُحسب بدون أي حمل بين الطرفين.</li><li>I<sub>N</sub> يُحسب بوصل الطرفين بسلك.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(t9ex, "شبكة بين الطرفين a و b") +
-        "<ol class='steps'><li><b>V<sub>Th</sub>:</b> لا تيار في R3 والطرفان مفتوحان، فـ V<sub>Th</sub> = جهد R2 بقسمة الجهد: " + eqi("12 × 12/(4 + 12) = 9 V") + "</li><li><b>R<sub>Th</sub>:</b> أطفئ المصدر (سلك): " + eqi("R3 + R1 ∥ R2 = 1 + 3 = 4 Ω") + "</li><li><b>I<sub>N</sub>:</b> " + eqi("9 / 4 = 2.25 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مخرج الصوت في الهاتف ومخرج مقسّم الحساسات يُوصفان بمكافئ ثيفنن: جهد ومقاومة خرج. وهذا ما يحدد هل الحمل (سماعة أو متحكم) سيُحمّل المخرج ويخفض جهده أم لا.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>نظرية ثيفنن:</b> أي شبكة من المصادر والمقاومات يمكن استبدالها، بالنسبة لطرفين a و b، بمصدر جهد مستقل <span class='ltr'>V<sub>Th</sub></span> على التوالي مع مقاومة <span class='ltr'>R<sub>Th</sub></span>. إذا وصلنا نفس الحمل بالدائرتين نحصل على نفس الجهد والتيار في الحمل.</p>" +
+        "<p><b>الخطوات:</b> (1) أزل الحمل R<sub>L</sub> مؤقتًا. (2) احسب جهد الدائرة المفتوحة <span class='ltr'>V<sub>ab</sub> = V<sub>Th</sub></span>. (3) اجعل الحمل صفرًا (قصر) واحسب <span class='ltr'>i<sub>sc</sub></span> من a إلى b، ثم <span class='ltr'>R<sub>Th</sub> = V<sub>Th</sub>/i<sub>sc</sub></span>.</p>" +
+        "<p><b>مكافئ نورتن:</b> مصدر تيار مستقل على التوازي مع مقاومة نورتن. نحصل عليه من ثيفنن بتحويل المصادر: <span class='ltr'>I<sub>N</sub> = i<sub>sc</sub></span> و <span class='ltr'>R<sub>N</sub> = R<sub>Th</sub></span>.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>V<sub>Th</sub> = v<sub>ab</sub> (دائرة مفتوحة)</div><div class='eq'>i<sub>sc</sub> = V<sub>Th</sub> / R<sub>Th</sub>  ←  R<sub>Th</sub> = V<sub>Th</sub> / i<sub>sc</sub></div><div class='eq'>I<sub>N</sub> = i<sub>sc</sub> ، R<sub>N</sub> = R<sub>Th</sub></div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>عندما تريد تيار أو قدرة حمل متغير: احسب المكافئ مرة واحدة ثم جرّب أي حمل.</li><li>طريقة i<sub>sc</sub> تصلح دائمًا، حتى مع المصادر التابعة.</li><li>انتبه لاتجاه i<sub>sc</sub>: من a إلى b عبر القصر.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال المحاضرة: أوجد مكافئ ثيفنن (ونورتن) للدائرة بالنسبة للطرفين a و b.</p>" +
+        fig(xth, "مصدر 25 V ومقاومات 5 و 20 و 4 Ω ومصدر 3 A والطرفان a و b") +
+        "<ol class='steps'><li>الدائرة المفتوحة: لا تيار في 4 Ω، فـ <span class='eq-i'>v<sub>ab</sub> = v₁</span>: <span class='eq-i'>(v₁ − 25)/5 + v₁/20 − 3 = 0 ← v₁ = 32 V = V<sub>Th</sub></span></li><li>بعد قصر a و b: <span class='eq-i'>(v₂ − 25)/5 + v₂/20 − 3 + v₂/4 = 0 ← v₂ = 16 V</span>، و <span class='eq-i'>i<sub>sc</sub> = 16/4 = 4 A</span></li><li><span class='eq-i'>R<sub>Th</sub> = 32/4 = 8 Ω</span>، فمكافئ ثيفنن: 32 V مع 8 Ω، ومكافئ نورتن: 4 A مع 8 Ω.</li></ol>" +
+        "<p class='q'>مثال 4.10: أوجد مكافئ ثيفنن لدائرة فيها مصادر تابعة.</p>" +
+        fig(x410, "مثال 4.10: مصدر 5 V و 2 kΩ ومصدر جهد تابع 3v ومصدر تيار تابع 20i و 25 Ω") +
+        "<ol class='steps'><li>i<sub>x</sub> يجب أن يساوي صفرًا لعدم وجود مسار عودة، فجهد الدائرة المفتوحة جهد 25 Ω: <span class='eq-i'>V<sub>Th</sub> = v = −20i(25) = −500i</span></li><li><span class='eq-i'>i = (5 − 3v)/2000 = (5 − 3V<sub>Th</sub>)/2000</span> ← <span class='eq-i'>V<sub>Th</sub> = −5 V</span></li><li>مع القصر بين a و b: v = 0، فـ <span class='eq-i'>i = 5/2000 = 2.5 mA</span> و <span class='eq-i'>i<sub>sc</sub> = −20i = −50 mA</span></li><li><span class='eq-i'>R<sub>Th</sub> = −5/(−0.05) = 100 Ω</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>مقبس الشحن في الجوال يرى الشاحن كمصدر جهد مع مقاومة داخلية، أي مكافئ ثيفنن، وهذا يفسر لماذا ينخفض جهد الشاحن قليلًا عندما يسحب الجوال تيارًا أكبر.</p>" }
     ],
     quiz: [
       { q: "لحساب R<sub>Th</sub> في دائرة بمصادر مستقلة فقط، مصدر الجهد يُستبدل بـ:", options: [
@@ -381,16 +484,29 @@
   /* ================= 10. More on deriving Thévenin ================= */
   function port4(Vs, r1, beta, dir, r3, r2) { return { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", Vs, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", r1, { name: "R1", isCtrl: true }), E([0, 1], [1, 1], "R", r2, { name: "R2" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "CCCS", beta, { dir: dir, ctrl: "R1", name: "D" }), E([0, 2], [0, 3], "R", r3, { name: "R3" }), E([0, 3], [1, 3], "T", 0, { name: "ab" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] }; }
   var t10ex = port4(24, 4, 2, "ab", 12, 8), t10 = port4(36, 30, 0.5, "ab", 2, 12), th10 = AN.thevenin(t10);
+  var xthd = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "W"), E([0, 0], [0, 1], "R", 5, { name: "R5" }), E([0, 1], [1, 1], "R", 20, { name: "R20" }), E([0, 1], [0, 2], "R", 4, { name: "R4" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "T", 0, { name: "ab" })].concat(BOT(3)) };
+  chk(CV.gen.reqValue(xthd), 8, "Th deactivated Rab");
+
   L["c1-techniques-10"] = {
     id: "c1-techniques-10", ar: "المزيد عن إيجاد مكافئ ثيفنن", en: "More on Deriving a Thévenin Equivalent", minutes: 30,
     objectives: ["تحسب R<sub>Th</sub> بقسمة جهد الدائرة المفتوحة على تيار القصر.", "تستخدم مصدر اختبار لحساب R<sub>Th</sub>.", "تعرف لماذا لا تُطفأ المصادر التابعة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>إذا كانت الدائرة تحتوي مصادر تابعة، لا يصح إطفاؤها، لأن قيمتها تعتمد على الدائرة نفسها. لحساب R<sub>Th</sub> طريقتان:</p><ol class='steps'><li><b>v<sub>oc</sub> / i<sub>sc</sub>:</b> احسب جهد الدائرة المفتوحة وتيار القصر، والنسبة بينهما R<sub>Th</sub>.</li><li><b>مصدر اختبار:</b> أطفئ المصادر <b>المستقلة</b> فقط، وصل مصدر اختبار (مثلًا 1 A) بين a و b، واحسب الجهد الناتج: <span class='ltr'>R<sub>Th</sub> = v<sub>T</sub> / i<sub>T</sub></span>.</li></ol>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>R<sub>Th</sub> = v<sub>oc</sub> / i<sub>sc</sub></div><div class='eq'>R<sub>Th</sub> = v<sub>T</sub> / i<sub>T</sub></div></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>مع المصادر التابعة: لا تطفئها أبدًا.</li><li>إذا لم توجد مصادر مستقلة، فإن v<sub>oc</sub> = 0 ونحتاج مصدر الاختبار.</li><li>المصادر التابعة قد تجعل V<sub>Th</sub> أكبر من جهد المصدر المستقل.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(t10ex, "شبكة بمصدر تيار تابع بين الطرفين a و b") +
-        "<p class='q'>المصدر التابع <span class='ltr'>2iₓ</span> للأسفل، و iₓ تيار R1.</p><ol class='steps'><li><b>v<sub>oc</sub>:</b> " + eqi("iₓ = (24 − v)/4") + "، و KCL: " + eqi("iₓ = v/8 + 2iₓ") + " → " + eqi("v = 48 V") + " (أكبر من 24 V!).</li><li><b>i<sub>sc</sub>:</b> بقصر a-b: " + eqi("i<sub>sc</sub> = 12 A") + ".</li><li>" + eqi("R<sub>Th</sub> = 48/12 = 4 Ω") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مقاومة الخرج لمكبر الترانزستور تُحسب بهذه الطريقة، لأن الترانزستور مصدر تابع. ولهذا قد تكون مقاومة خرج المكبر مختلفة جدًا عن أي مقاومة فيزيائية في الدائرة.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>طريقة <span class='ltr'>V<sub>Th</sub>/i<sub>sc</sub></span> ليست دائمًا الأسهل. هناك طريقتان أبسط غالبًا لإيجاد R<sub>Th</sub>:</p>" +
+        "<p><b>الأولى (المصادر كلها مستقلة):</b> عطّل كل المصادر المستقلة: مصدر الجهد يصبح <b>قصرًا</b>، ومصدر التيار يصبح <b>مفتوحًا</b>. ثم احسب المقاومة التي تراها بين a و b. (إذا كانت للمصدر مقاومة داخلية فتبقى.)</p>" +
+        "<p><b>الثانية (فيها مصادر تابعة):</b> عطّل المصادر المستقلة فقط، وضع <b>مصدر اختبار</b> v<sub>T</sub> (أو i<sub>T</sub>) بين a و b، ثم <span class='ltr'>R<sub>Th</sub> = v<sub>T</sub>/i<sub>T</sub></span>. المصادر التابعة <b>لا تُعطَّل</b> أبدًا.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>R<sub>Th</sub> = R<sub>ab</sub> بعد تعطيل المصادر المستقلة</div><div class='eq'>R<sub>Th</sub> = v<sub>T</sub> / i<sub>T</sub>   (مع المصادر التابعة)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>مصادر مستقلة فقط: الطريقة الأولى أسرع.</li><li>مصادر تابعة: مصدر الاختبار، لأن المقاومة لا تُحسب بالتوالي والتوازي.</li><li>اختر قيمة اختبار سهلة مثل v<sub>T</sub> = 1 V إن أردت.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>الطريقة الأولى على مثال الدرس السابق (25 V و 5 و 20 و 4 Ω و 3 A):</p>" +
+        fig(xthd, "الدائرة بعد تعطيل المصادر: 5 Ω و 20 Ω و 4 Ω") +
+        "<ol class='steps'><li>مصدر 25 V ← قصر، ومصدر 3 A ← مفتوح.</li><li><span class='eq-i'>R<sub>ab</sub> = R<sub>Th</sub> = 4 + (5 × 20)/25 = 8 Ω</span>، نفس نتيجة V<sub>Th</sub>/i<sub>sc</sub>.</li></ol>" +
+        "<p class='q'>مثال 4.11: أوجد R<sub>Th</sub> لدائرة مثال 4.10 بمصدر اختبار.</p>" +
+        "<ol class='steps'><li>عطّل مصدر 5 V (قصر) وضع v<sub>T</sub> بين a و b، و i<sub>T</sub> التيار الذي يعطيه.</li><li>KCL عند a: <span class='eq-i'>i<sub>T</sub> = v<sub>T</sub>/25 + 20i</span></li><li>الحلقة اليسرى: <span class='eq-i'>i = −3v<sub>T</sub>/2000</span></li><li><span class='eq-i'>i<sub>T</sub> = v<sub>T</sub>/25 − 60v<sub>T</sub>/2000 ← i<sub>T</sub>/v<sub>T</sub> = 1/25 − 6/200 = 1/100</span></li><li><span class='eq-i'>R<sub>Th</sub> = v<sub>T</sub>/i<sub>T</sub> = 100 Ω</span>، نفس نتيجة مثال 4.10.</li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>مهندسو الصوت يقيسون <b>مقاومة الخرج</b> للمكبر بنفس فكرة مصدر الاختبار: يطبقون إشارة على الخرج ويقيسون التيار، لأن المكبر مليء بالمصادر التابعة.</p>" }
     ],
     quiz: [
       { q: "دائرة فيها مصدر تابع فقط بدون مصادر مستقلة. جهد ثيفنن:", options: [
@@ -419,15 +535,26 @@
 
   /* ================= 11. Maximum power transfer ================= */
   var t11 = port3(60, 10, 40, 8), th11 = AN.thevenin(t11);
+  var x412 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 360, { plus: "a", name: "V360" }), E([0, 0], [0, 1], "R", 30, { name: "R30" }), E([0, 1], [1, 1], "R", 150, { name: "R150" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 25, { name: "RL", vtext: "R_L" })].concat(BOT(2)) };
+  var s412 = solve(x412); chk(s412.byName.RL.p, 900, "4.12 pmax"); chk(s412.byName.RL.v, 150, "4.12 vab"); chk(s412.byName.V360.p, -2520, "4.12 ps");
+
   L["c1-techniques-11"] = {
     id: "c1-techniques-11", ar: "أقصى نقل للقدرة", en: "Maximum Power Transfer", minutes: 20,
     objectives: ["تحدد مقاومة الحمل التي تستقبل أقصى قدرة.", "تحسب أقصى قدرة من مكافئ ثيفنن.", "تعرف أن الكفاءة عند أقصى نقل 50% فقط."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>إذا وصلنا حملًا R<sub>L</sub> بشبكة مكافئها (V<sub>Th</sub>, R<sub>Th</sub>)، فإن القدرة في الحمل <span class='ltr'>p = V<sub>Th</sub>² R<sub>L</sub> / (R<sub>Th</sub> + R<sub>L</sub>)²</span>. هذه القدرة تكون أكبر ما يمكن عندما <b>R<sub>L</sub> = R<sub>Th</sub></b>.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>R<sub>L</sub> = R<sub>Th</sub></div><div class='eq'>p<sub>max</sub> = V<sub>Th</sub>² / (4R<sub>Th</sub>)</div></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>في الاتصالات ومكبرات الصوت حيث الإشارة ضعيفة ونريد أكبر قدرة.</li><li>ليس في شبكات الكهرباء: عند أقصى نقل يضيع نصف القدرة في R<sub>Th</sub>، فالكفاءة 50%.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>مكافئ ثيفنن: <span class='ltr'>V<sub>Th</sub> = 40 V</span>، <span class='ltr'>R<sub>Th</sub> = 8 Ω</span>.</p><ol class='steps'><li>" + eqi("R<sub>L</sub> = 8 Ω") + "</li><li>" + eqi("p<sub>max</sub> = 40²/(4 × 8) = 50 W") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>في الهوائيات وخطوط الإشارة (مثل كابلات 50 Ω) تُصمَّم دوائر الموائمة (matching) لتحقيق هذا الشرط، لأن الإشارة ضعيفة وإيصال أكبر قدرة أهم من الكفاءة. أما مكبرات الصوت وشبكة الكهرباء فمقاومة المصدر فيها أصغر بكثير من الحمل عمدًا، لأن الكفاءة عند الموائمة 50% فقط.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>نظرية نقل القدرة القصوى:</b> الحمل يأخذ أكبر قدرة من شبكة خطية عندما تساوي مقاومته مقاومة ثيفنن للشبكة كما يراها الحمل: <span class='ltr'>R<sub>L</sub> = R<sub>Th</sub></span>.</p>" +
+        "<p>الاشتقاق: <span class='eq-i'>p = i²R<sub>L</sub> = (V<sub>Th</sub>/(R<sub>Th</sub> + R<sub>L</sub>))² R<sub>L</sub></span>. نشتق بالنسبة لـ R<sub>L</sub> ونساوي بالصفر: <span class='eq-i'>(R<sub>Th</sub> + R<sub>L</sub>)² = 2R<sub>L</sub>(R<sub>Th</sub> + R<sub>L</sub>)</span> ← <span class='eq-i'>R<sub>L</sub> = R<sub>Th</sub></span>.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>R<sub>L</sub> = R<sub>Th</sub></div><div class='eq'>p<sub>max</sub> = V<sub>Th</sub>²R<sub>L</sub>/(2R<sub>L</sub>)² = V<sub>Th</sub>² / (4R<sub>L</sub>)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>أوجد مكافئ ثيفنن أولًا، ثم ضع R<sub>L</sub> = R<sub>Th</sub>.</li><li>عند القدرة القصوى يكون نصف جهد ثيفنن على الحمل.</li><li>القدرة القصوى ليست كفاءة عالية: جزء كبير من قدرة المصدر يضيع داخل الشبكة.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 4.12: (a) أوجد R<sub>L</sub> لأكبر قدرة. (b) أوجد القدرة القصوى. (c) ما نسبة قدرة مصدر 360 V التي تصل للحمل؟</p>" +
+        fig(x412, "مثال 4.12: مصدر 360 V و 30 Ω و 150 Ω والحمل RL") +
+        "<ol class='steps'><li><span class='eq-i'>V<sub>Th</sub> = (150/180)(360) = 300 V</span> ، <span class='eq-i'>R<sub>Th</sub> = (150)(30)/180 = 25 Ω ← R<sub>L</sub> = 25 Ω</span></li><li><span class='eq-i'>p<sub>max</sub> = (300/50)²(25) = 900 W</span></li><li><span class='eq-i'>v<sub>ab</sub> = (300/50)(25) = 150 V</span> ، <span class='eq-i'>i<sub>s</sub> = (360 − 150)/30 = 7 A</span> ، <span class='eq-i'>p<sub>s</sub> = −7 × 360 = −2520 W</span></li><li>النسبة: <span class='eq-i'>900/2520 × 100 = 35.71 %</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>في الهوائيات ومكبرات الصوت نطابق مقاومة الحمل مع مقاومة المصدر للحصول على أكبر قدرة. أما في شبكة الكهرباء فنريد كفاءة عالية، فنجعل مقاومة الحمل أكبر بكثير من مقاومة الشبكة.</p>" }
     ],
     quiz: [
       { q: "شبكة R<sub>Th</sub> = 50 Ω. لأقصى قدرة في الحمل، R<sub>L</sub> =", options: [
@@ -453,16 +580,28 @@
   /* ================= 12. Superposition ================= */
   function sup(Vs, r1, r2, r3, I, dir) { return twoNode(Vs, r1, r2, r3, E([0, 2], [1, 2], "I", I, { dir: dir, name: "Is" }), { r2: { ilabel: "i" } }); }
   var u12ex = sup(60, 12, 8, 6, 5, "ba"), u12 = sup(40, 5, 3, 10, 4, "ab"), p12 = AN.superpose(u12, { el: "R2", q: "i" });
+  var xsp = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 120, { plus: "a", name: "V120" }), E([0, 0], [0, 1], "R", 6, { name: "R6", ilabel: "i₁" }), E([0, 1], [1, 1], "R", 3, { name: "R3", ilabel: "i₂" }), E([0, 1], [0, 2], "R", 2, { name: "R2", ilabel: "i₃" }), E([0, 2], [1, 2], "R", 4, { name: "R4", ilabel: "i₄" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "I", 12, { dir: "ab", name: "I12" })].concat(BOT(3)) };
+  var ssp = solve(xsp); chk(ssp.byName.R6.i, 17, "sp i1"); chk(ssp.byName.R3.i, 6, "sp i2"); chk(ssp.byName.R2.i, 11, "sp i3"); chk(ssp.byName.R4.i, -1, "sp i4");
+
   L["c1-techniques-12"] = {
     id: "c1-techniques-12", ar: "مبدأ التراكب", en: "Superposition", minutes: 25,
     objectives: ["تطبق التراكب على دائرة فيها أكثر من مصدر مستقل.", "تطفئ المصادر بالطريقة الصحيحة.", "تعرف أن التراكب لا ينطبق على القدرة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>في الدائرة الخطية، الاستجابة (تيار أو جهد) لعدة مصادر مستقلة = مجموع الاستجابات لكل مصدر وحده. نشغّل مصدرًا واحدًا ونطفئ الباقي، ونكرر، ثم نجمع.</p><div class='callout'>إطفاء مصدر الجهد = استبداله بسلك. إطفاء مصدر التيار = استبداله بدائرة مفتوحة. المصادر التابعة لا تُطفأ.</div>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>i = i′ + i″ + …</div><p class='muted'>القدرة لا تُجمع بالتراكب، لأنها تتناسب مع مربع التيار: احسب التيار الكلي أولًا ثم القدرة.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>عندما يجعل كل مصدر وحده الدائرة بسيطة (توالي وتوازي).</li><li>حافظ على نفس اتجاه السهم في كل الحالات، واجمع بالإشارات.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(u12ex, "دائرة بمصدر جهد ومصدر تيار") +
-        "<ol class='steps'><li><b>Vs وحده</b> (Is مفتوح): R3 بلا تيار، " + eqi("i′ = 60/(12 + 8) = 3 A") + "</li><li><b>Is وحده</b> (Vs سلك): 5 A تدخل العقدة العليا اليمنى عبر R3 وتتوزع على R1 و R2: " + eqi("i″ = 5 × 12/(12 + 8) = 3 A") + "</li><li>" + eqi("i = 3 + 3 = 6 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>في دوائر الإلكترونيات، نحلل جهود الانحياز (DC) والإشارة (AC) كل على حدة ثم نجمعها. هذا تطبيق مباشر لمبدأ التراكب، وستستخدمه كثيرًا في مقرر الإلكترونيات.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>مبدأ التراكب</b> <span class='ltr'>(superposition)</span>: إذا كان النظام خطيًا وفيه أكثر من مصدر مستقل، فالاستجابة الكلية = مجموع الاستجابات لكل مصدر وحده.</p>" +
+        "<p>نشغّل مصدرًا واحدًا في كل مرة ونعطّل الباقي (مصدر الجهد قصر، ومصدر التيار مفتوح)، ثم نجمع الجهود والتيارات. <b>المصادر التابعة لا تُعطَّل أبدًا</b> عند تطبيق التراكب.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>x = x′ + x″ + …</div><div class='eq'>مصدر جهد معطل ← قصر ، مصدر تيار معطل ← مفتوح</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>مفيد عندما تكون المصادر من أنواع مختلفة، أو تريد أثر كل مصدر وحده.</li><li>يصلح للجهود والتيارات فقط، <b>لا للقدرة</b> (القدرة ليست خطية).</li><li>انتبه لاتجاهات المراجع عند الجمع.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال المحاضرة: احسب تيارات الفروع بالتراكب.</p>" +
+        fig(xsp, "مصدر 120 V ومقاومات 6 و 3 و 2 و 4 Ω ومصدر 12 A") +
+        "<ol class='steps'><li><b>مصدر 120 V وحده</b> (12 A مفتوح): <span class='eq-i'>(v₁ − 120)/6 + v₁/3 + v₁/(2 + 4) = 0 ← v₁ = 30 V</span></li><li><span class='eq-i'>i₁′ = (120 − 30)/6 = 15 A ، i₂′ = 30/3 = 10 A ، i₃′ = i₄′ = 30/6 = 5 A</span></li><li><b>مصدر 12 A وحده</b> (120 V قصر): <span class='eq-i'>v₃/3 + v₃/6 + (v₃ − v₄)/2 = 0 ، (v₄ − v₃)/2 + v₄/4 + 12 = 0</span> ← <span class='eq-i'>v₃ = −12 V ، v₄ = −24 V</span></li><li><span class='eq-i'>i₁″ = −v₃/6 = 2 A ، i₂″ = v₃/3 = −4 A ، i₃″ = (v₃ − v₄)/2 = 6 A ، i₄″ = v₄/4 = −6 A</span></li><li><b>الجمع:</b> <span class='eq-i'>i₁ = 17 A ، i₂ = 6 A ، i₃ = 11 A ، i₄ = −1 A</span></li></ol>" +
+        "<p class='q'>مثال 4.13: استخدم التراكب لإيجاد v<sub>o</sub> في دائرة فيها مصدر 10 V ومصدر 5 A ومصدران تابعان.</p>" +
+        "<ol class='steps'><li>مع 10 V وحده: المصدران التابعان يبقيان، والنتيجة <span class='eq-i'>v<sub>o</sub>′ = (20/25)(10) = 8 V</span></li><li>مع 5 A وحده: معادلتا عقد تعطيان <span class='eq-i'>v<sub>o</sub>″ = 16 V</span></li><li><span class='eq-i'>v<sub>o</sub> = 8 + 16 = 24 V</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>في دوائر الصوت توجد إشارة متغيرة فوق جهد تغذية ثابت. المهندس يحلل أثر كل منهما وحده (تحليل DC ثم تحليل الإشارة) ويجمعهما، وهذا تطبيق مباشر للتراكب.</p>" }
     ],
     quiz: [
       { q: "عند حساب مساهمة مصدر الجهد، مصدر التيار الآخر يُستبدل بـ:", options: [
