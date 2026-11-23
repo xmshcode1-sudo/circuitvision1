@@ -52,6 +52,7 @@
         "</dl>" },
       { id: "laws", title: "متغيرات الدائرة", en: "Circuit Variables", html:
         "<p>كل تحليل في المقرر يدور حول أربعة متغيرات <span class='ltr'>(I, V, P, E)</span>:</p>" +
+        "<div class='eq'>V = dw / dq</div><div class='eq'>I = dq / dt</div><div class='eq'>P = dw / dt = V·I</div>" +
         "<table class='tbl'><thead><tr><th>المتغير</th><th>الرمز</th><th>الوحدة</th></tr></thead><tbody>" +
         "<tr><td>التيار <span class='ltr'>(current)</span></td><td class='ltr'>I</td><td>أمبير <span class='ltr'>(A)</span></td></tr>" +
         "<tr><td>الجهد <span class='ltr'>(voltage)</span></td><td class='ltr'>V</td><td>فولت <span class='ltr'>(V)</span></td></tr>" +

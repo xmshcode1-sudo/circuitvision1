@@ -21,6 +21,9 @@
   #dev { position: absolute; left: 28px; top: 70px; width: 1300px; height: 975px; border-radius: 22px; background: #121927; box-shadow: inset 0 0 0 1px #1e2738; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   #vis { width: 1220px; max-height: 860px; display: flex; align-items: center; justify-content: center; direction: ltr; }
   #vis > svg, #vis .lgk-w svg, #vis .lgc, #vis .lgk { width: 100% !important; max-width: none !important; height: auto; max-height: 840px; }
+  /* Circuits 1 lesson figures (.lfig, one or more circuits side by side) fill the picture area */
+  #vis > .lfig { display: flex; gap: 40px; align-items: center; justify-content: center; width: 100%; }
+  #vis > .lfig > svg { flex: 1 1 0; min-width: 0; width: 100% !important; max-width: none !important; height: auto; max-height: 820px; }
   #vis .lgk-w { width: 820px; } #vis .lgk-legend { font-size: 30px; gap: 12px 22px; margin-top: 14px; }
   #vis .lgrow { gap: 40px; width: 100%; } #vis .lgrow > * { flex: 1 1 0; min-width: 0; }
   #vis .lgt { font-size: 34px; } #vis .lgt td, #vis .lgt th { padding: 8px 22px; } #vis .lgt.sm { font-size: 27px; } #vis .lgt.sm td, #vis .lgt.sm th { padding: 5px 14px; }
