@@ -16,25 +16,32 @@
   var n1 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "T", 0, { name: "ab" }), E([0, 0], [0, 1], "R", 3, { name: "R1" }), E([0, 1], [0, 2], "R", 7, { name: "R2" }), E([0, 2], [1, 2], "R", 10, { name: "R3" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
   var r1 = req(n1);
 
+  /* Lecture circuits (Dr. Abdullah Noman, Ch. 3) and tutorial problems. Worked-example numbers are checked when the file loads. */
+  var chk = function (got, want, what) { if (Math.abs(got - want) > 1e-6 * Math.max(1, Math.abs(want))) throw new Error("lesson number mismatch: " + what + " = " + got + ", expected " + want); };
+
   L["c1-resistive-1"] = {
     id: "c1-resistive-1", ar: "المقاومات على التوالي", en: "Resistors in Series", minutes: 15,
     objectives: ["تتعرف على المقاومات الموصلة على التوالي في أي رسم.", "تحسب المقاومة المكافئة لمقاومات على التوالي.", "تعرف أن التيار واحد في كل عناصر التوالي."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>تكون العناصر على <b>التوالي</b> <span class='ltr'>(series)</span> إذا مر فيها <b>نفس التيار</b>. ويحدث ذلك عندما تتصل ببعضها عند عقد لا يتصل بها إلا هذان العنصران فقط.</p>" +
-        "<p>بتطبيق KVL على مقاومات على التوالي يمر فيها تيار i: <span class='eq-i'>v = iR₁ + iR₂ + … + iRₙ = i(R₁ + R₂ + … + Rₙ)</span>. إذن يمكن استبدالها كلها بمقاومة واحدة تساوي مجموعها، دون أن يتغير شيء في بقية الدائرة.</p>" },
+        "<p>في هذا الفصل نستخدم قانون أوم وقانوني كيرشوف لدوائر أكثر تعقيدًا، والهدف <b>تبسيط</b> الدائرة إلى دائرة مكافئة أسهل.</p>" +
+        "<p>عندما يتصل عنصران عند عقدة واحدة لا يتصل بها غيرهما، نقول إنهما على <b>التوالي</b> <span class='ltr'>(series)</span>. والعناصر على التوالي <b>يمر فيها نفس التيار</b>.</p>" +
+        "<p>في دائرة المحاضرة: مصدر <span class='ltr'>v<sub>s</sub></span> مع سبع مقاومات R₁ إلى R₇ في حلقة واحدة، كلها يمر فيها نفس التيار <span class='ltr'>i<sub>s</sub></span>. بتطبيق KVL حول الحلقة:</p>" +
+        "<div class='eq'>−v<sub>s</sub> + i<sub>s</sub>R₁ + i<sub>s</sub>R₂ + … + i<sub>s</sub>R₇ = 0</div>" +
+        "<div class='eq'>v<sub>s</sub> = i<sub>s</sub>(R₁ + R₂ + … + R₇) = i<sub>s</sub>R<sub>eq</sub></div>" +
+        "<p>إذن نستبدل المقاومات السبع بمقاومة واحدة <span class='ltr'>R<sub>eq</sub></span> دون أن يتغير التيار في المصدر.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Series connection</dt><dd>عناصر يمر فيها نفس التيار.</dd><dt>Equivalent resistance (R<sub>eq</sub>)</dt><dd>مقاومة واحدة لها نفس تأثير المجموعة على بقية الدائرة.</dd></dl>" },
-      { id: "laws", title: "القانون", en: "Equation", html: "<div class='eq'>R<sub>eq</sub> = R₁ + R₂ + … + Rₙ</div><p class='muted'>المقاومة المكافئة للتوالي أكبر دائمًا من أكبر مقاومة فيها.</p>" },
+        "<dl class='terms'><dt>Series connection</dt><dd>عنصران يتصلان عند عقدة واحدة لا يتصل بها غيرهما، فيمر فيهما نفس التيار.</dd><dt>Equivalent resistance (R<sub>eq</sub>)</dt><dd>مقاومة واحدة لها نفس تأثير المجموعة على بقية الدائرة.</dd></dl>" },
+      { id: "laws", title: "القانون", en: "Equation", html:
+        "<div class='eq'>R<sub>eq</sub> = Σ R<sub>i</sub> = R₁ + R₂ + … + R<sub>k</sub></div><div class='eq'>v<sub>s</sub> = i<sub>s</sub>R<sub>eq</sub></div><p class='muted'>المقاومة المكافئة للتوالي أكبر دائمًا من أكبر مقاومة فيها.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>شكل الرسم لا يحدد التوالي. مقاومتان في خط واحد قد لا تكونان على التوالي إذا اتصل بالعقدة بينهما عنصر ثالث.</li>" +
-        "<li>عند وجود مصدر في الحلقة، اجمع المقاومات أولًا ثم احسب التيار من <span class='eq-i'>i = v / R<sub>eq</sub></span>.</li>" +
-        "<li>كل الأسلاك المتصلة ببعضها عقدة واحدة. انتبه لها عند تحديد العقد.</li></ul>" },
+        "<ul class='ticks'><li>شكل الرسم لا يحدد التوالي. مقاومتان في خط واحد ليستا على التوالي إذا اتصل بالعقدة بينهما عنصر ثالث.</li>" +
+        "<li>عند وجود مصدر في الحلقة: اجمع المقاومات أولًا ثم احسب التيار من <span class='eq-i'>i<sub>s</sub> = v<sub>s</sub> / R<sub>eq</sub></span>.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>أربع مقاومات <span class='ltr'>2 Ω</span> و <span class='ltr'>3 Ω</span> و <span class='ltr'>5 Ω</span> و <span class='ltr'>10 Ω</span> على التوالي مع مصدر <span class='ltr'>40 V</span>. أوجد التيار وجهد المقاومة الكبرى.</p>" +
-        "<ol class='steps'><li><span class='eq-i'>R<sub>eq</sub> = 2 + 3 + 5 + 10 = 20 Ω</span></li><li><span class='eq-i'>i = 40 / 20 = 2 A</span>، وهو نفسه في كل المقاومات.</li><li><span class='eq-i'>v₁₀ = 2 × 10 = 20 V</span></li></ol>" },
+        "<p class='q'>نعوّض أرقامًا في دائرة المحاضرة: <span class='ltr'>v<sub>s</sub> = 140 V</span> و R₁ إلى R₇ قيمها <span class='ltr'>2, 3, 5, 10, 4, 6, 5 Ω</span>. أوجد <span class='ltr'>R<sub>eq</sub></span> والتيار <span class='ltr'>i<sub>s</sub></span> وجهد R₄.</p>" +
+        "<ol class='steps'><li><span class='eq-i'>R<sub>eq</sub> = 2 + 3 + 5 + 10 + 4 + 6 + 5 = 35 Ω</span></li><li><span class='eq-i'>i<sub>s</sub> = 140 / 35 = 4 A</span>، نفس التيار في كل المقاومات.</li><li><span class='eq-i'>v₄ = i<sub>s</sub>R₄ = 4 × 10 = 40 V</span></li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>أضواء الزينة القديمة كانت موصلة على التوالي: إذا احترق مصباح واحد انقطع التيار عن السلسلة كلها. ولهذا صارت أغلب السلاسل الحديثة على التوازي، أو فيها عنصر يوصل التيار حول المصباح المحترق.</p>" }
+        "<p>أضواء الزينة القديمة كانت موصلة على التوالي: إذا احترق مصباح واحد انقطع التيار عن السلسلة كلها، لأن كل المصابيح يمر فيها نفس التيار.</p>" }
     ],
     quiz: [
       { q: "مقاومتان <span class='ltr'>4 Ω</span> و <span class='ltr'>6 Ω</span> على التوالي. المقاومة المكافئة:", options: [
@@ -81,27 +88,35 @@
   var n2 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "T", 0, { name: "ab" }), E([0, 0], [0, 1], "R", 8, { name: "R1" }), E([0, 1], [1, 1], "R", 12, { name: "R2" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 6, { name: "R3" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "R", 4, { name: "R4" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] };
   var r2 = req(n2), par2 = 1 / (1 / 12 + 1 / 6 + 1 / 4), i2 = 50 / r2;
 
+  var x31 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 120, { plus: "a", name: "V120" }), E([0, 0], [0, 1], "R", 4, { name: "R4", ilabel: "iₛ" }), E([0, 1], [1, 1], "R", 18, { name: "R18", ilabel: "i₁", vlabel: "v₁" }), E([0, 1], [0, 2], "R", 3, { name: "R3" }), E([0, 2], [1, 2], "R", 6, { name: "R6", ilabel: "i₂" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
+  var s31 = solve(x31); chk(s31.R4.i, 12, "3.1 is"); chk(s31.R18.v, 72, "3.1 v1"); chk(s31.R18.i, 4, "3.1 i1"); chk(s31.R6.i, 8, "3.1 i2");
+
   L["c1-resistive-2"] = {
     id: "c1-resistive-2", ar: "المقاومات على التوازي", en: "Resistors in Parallel", minutes: 20,
     objectives: ["تتعرف على المقاومات الموصلة على التوازي.", "تحسب المقاومة المكافئة للتوازي، والحالة الخاصة لمقاومتين.", "تختزل شبكة فيها توالي وتوازي معًا."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>تكون العناصر على <b>التوازي</b> <span class='ltr'>(parallel)</span> إذا كانت متصلة بين <b>نفس العقدتين</b>، فيكون لها <b>نفس الجهد</b>.</p>" +
-        "<p>بتطبيق KCL: التيار الكلي = مجموع تيارات الفروع <span class='eq-i'>i = v/R₁ + v/R₂ + … = v(1/R₁ + 1/R₂ + …)</span>. إذن مقلوب المقاومة المكافئة يساوي مجموع مقلوبات المقاومات، أي أن الموصليات تُجمع مباشرة.</p>" },
+        "<p>عندما يتصل عنصران عند <b>نفس زوج العقد</b> نقول إنهما على <b>التوازي</b> <span class='ltr'>(parallel)</span>، والعناصر على التوازي <b>لها نفس الجهد</b> بين أطرافها.</p>" +
+        "<p>في دائرة المحاضرة: مصدر <span class='ltr'>v<sub>s</sub></span> مع أربع مقاومات على التوازي بين العقدتين a و b. من KCL: <span class='eq-i'>i<sub>s</sub> = i₁ + i₂ + i₃ + i₄</span>. ولأن الجهد واحد: <span class='eq-i'>i₁R₁ = i₂R₂ = i₃R₃ = i₄R₄ = v<sub>s</sub></span>، أي <span class='eq-i'>i<sub>k</sub> = v<sub>s</sub>/R<sub>k</sub></span>.</p>" +
+        "<p>بالتعويض: <span class='eq-i'>i<sub>s</sub> = v<sub>s</sub>(1/R₁ + 1/R₂ + 1/R₃ + 1/R₄)</span>، ومنها <span class='eq-i'>i<sub>s</sub>/v<sub>s</sub> = 1/R<sub>eq</sub></span>.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Parallel connection</dt><dd>عناصر بين نفس العقدتين، لها نفس الجهد.</dd><dt>Equivalent conductance</dt><dd><span class='ltr'>G<sub>eq</sub> = G₁ + G₂ + …</span></dd></dl>" },
+        "<dl class='terms'><dt>Parallel connection</dt><dd>عناصر بين نفس زوج العقد، فلها نفس الجهد.</dd><dt>Conductance (G)</dt><dd><span class='ltr'>G = 1/R</span> بالسيمنز؛ الموصليات على التوازي تُجمع.</dd></dl>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq'>1 / R<sub>eq</sub> = 1/R₁ + 1/R₂ + … + 1/Rₙ</div><div class='eq-row'><div class='eq'>R<sub>eq</sub> = R₁R₂ / (R₁ + R₂)</div><div class='eq'>n × R → R / n</div></div>" +
-        "<p class='muted'>الصيغة الثانية لمقاومتين فقط، والثالثة لعدد n من المقاومات المتساوية. المقاومة المكافئة للتوازي أصغر دائمًا من أصغر مقاومة فيها.</p>" },
+        "<div class='eq'>1/R<sub>eq</sub> = Σ 1/R<sub>i</sub> = 1/R₁ + 1/R₂ + … + 1/R<sub>k</sub></div>" +
+        "<div class='eq'>G<sub>eq</sub> = Σ G<sub>i</sub> = G₁ + G₂ + … + G<sub>k</sub></div>" +
+        "<p>وكثيرًا ما تكون مقاومتان فقط على التوازي:</p><div class='eq'>R<sub>eq</sub> = R₁R₂ / (R₁ + R₂)</div><p class='muted'>المقاومة المكافئة للتوازي أصغر دائمًا من أصغر مقاومة فيها.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>تتبع الأسلاك: كل نقاط السلك الواحد عقدة واحدة. مقاومتان بعيدتان في الرسم قد تكونان على التوازي لأن طرفيهما متصلان بنفس العقدتين.</li>" +
-        "<li>لا تنسَ قلب الناتج في النهاية عند استخدام <span class='ltr'>1/R<sub>eq</sub></span>.</li>" +
-        "<li>لاختزال شبكة كاملة: ابدأ من الجهة البعيدة عن الطرفين، واختزل التوالي والتوازي خطوة خطوة.</li></ul>" },
+        "<ul class='ticks'><li>المعيار: هل العنصران بين نفس العقدتين؟ وليس: هل هما مرسومان متجاورين.</li>" +
+        "<li>في دائرة توالي-توازي: اختزل من الطرف البعيد عن المصدر نحو المصدر، ثم ارجع لتوزيع التيارات والجهود.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>أوجد المقاومة المكافئة لـ <span class='ltr'>10 Ω ∥ 40 Ω</span>، ثم لـ <span class='ltr'>6 Ω ∥ 12 Ω ∥ 4 Ω</span>.</p>" +
-        "<ol class='steps'><li><span class='eq-i'>(10 × 40) / (10 + 40) = 400 / 50 = 8 Ω</span></li><li><span class='eq-i'>1/R = 1/6 + 1/12 + 1/4 = 2/12 + 1/12 + 3/12 = 6/12</span></li><li><span class='eq-i'>R = 12 / 6 = 2 Ω</span>، وهي أصغر من 4 Ω كما توقعنا.</li></ol>" },
+        "<p class='q'>مثال 3.1: أوجد <span class='ltr'>i<sub>s</sub></span> و <span class='ltr'>i₁</span> و <span class='ltr'>i₂</span> في الدائرة.</p>" + fig(x31, "مصدر 120 V مع 4 Ω و 18 Ω و 3 Ω و 6 Ω") +
+        "<ol class='steps'><li>3 Ω و 6 Ω على التوالي: <span class='eq-i'>3 + 6 = 9 Ω</span>.</li>" +
+        "<li>9 Ω على التوازي مع 18 Ω: <span class='eq-i'>(18 × 9)/(18 + 9) = 6 Ω</span>.</li>" +
+        "<li>مع 4 Ω على التوالي: <span class='eq-i'>R<sub>eq</sub> = 4 + 6 = 10 Ω ← i<sub>s</sub> = 120/10 = 12 A</span></li>" +
+        "<li><span class='eq-i'>v₁ = (12)(6) = 72 V</span></li>" +
+        "<li><span class='eq-i'>i₁ = 72/18 = 4 A</span> و <span class='eq-i'>i₂ = 72/9 = 8 A</span>، وتحقق: <span class='ltr'>4 + 8 = 12 A</span>.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>كل أجهزة المنزل موصلة على التوازي مع الشبكة، فلكل جهاز نفس الجهد (220 V أو 127 V حسب المأخذ) ويعمل باستقلال عن الآخر. وكل جهاز تشغّله يقلل المقاومة المكافئة للمنزل، فيزيد التيار الكلي من القاطع الرئيسي.</p>" }
+        "<p>أجهزة البيت كلها على التوازي مع خط الكهرباء: كل جهاز يأخذ نفس الجهد 220 V، وكلما شغّلت جهازًا إضافيًا قلّت المقاومة المكافئة وزاد التيار الكلي من العداد.</p>" }
     ],
     quiz: [
       { q: "مقاومتان <span class='ltr'>30 Ω</span> و <span class='ltr'>60 Ω</span> على التوازي:", options: [
@@ -149,27 +164,47 @@
   var c3 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 30, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", 10, { name: "R1" }), E([0, 1], [1, 1], "R", 40, { name: "R2", vlabel: "vₒ" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 40, { name: "RL" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
   var s3 = solve(c3);
 
+  var x32 = { rows: 3, cols: 2, edges: [E([0, 0], [1, 0], "V", 100, { plus: "a", name: "V100" }), E([1, 0], [2, 0], "W"), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 25000, { name: "R1", vtext: "25 kΩ" }), E([1, 1], [2, 1], "R", 100000, { name: "R2", vtext: "100 kΩ", vlabel: "vₒ" }), E([2, 0], [2, 1], "W")] };
+  var s32 = solve(x32); chk(s32.R2.v, 80, "3.2 vo");
+  var x33 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "I", 10, { dir: "ba", name: "I10" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 16, { name: "R16" }), E([0, 1], [0, 2], "R", 1.6, { name: "R1.6", ilabel: "iₒ" }), E([0, 2], [1, 2], "R", 4, { name: "R4" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "R", 6, { name: "R6", ilabel: "i₆" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] };
+  var s33 = solve(x33); chk(s33["R1.6"].i, 8, "3.3 io"); chk(s33.R6.i, 3.2, "3.3 i6"); chk(s33.R6.p, 61.44, "3.3 p6");
+  var x313 = { rows: 3, cols: 3, edges: [E([0, 0], [1, 0], "V", 20, { plus: "a", name: "V20" }), E([1, 0], [2, 0], "W"), E([0, 0], [0, 1], "R", 40, { name: "R40" }), E([0, 1], [2, 1], "R", 10, { name: "R2", vtext: "", vlabel: "vₒ" }), E([0, 1], [0, 2], "W"), E([0, 2], [2, 2], "R", 24, { name: "RL", vtext: "" }), E([2, 0], [2, 1], "W"), E([2, 1], [2, 2], "W")] };
+  var s313 = solve(x313); chk(s313.R2.v, 3, "P3.13 loaded vo");
+
   L["c1-resistive-3"] = {
     id: "c1-resistive-3", ar: "دائرة مقسّم الجهد ومقسّم التيار", en: "The Voltage-Divider and Current-Divider Circuits", minutes: 25,
     objectives: ["تحسب جهد الخرج لمقسّم الجهد بدون حمل ومع حمل.", "تحسب تيار فرع في مقسّم التيار.", "تفهم لماذا يغيّر الحمل جهد الخرج."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p><b>مقسّم الجهد</b> <span class='ltr'>(voltage divider)</span> مقاومتان على التوالي مع مصدر، ونأخذ الخرج من إحداهما. يُستخدم للحصول على جهد أقل من جهد المصدر.</p>" +
-        "<p><b>مقسّم التيار</b> <span class='ltr'>(current divider)</span> مقاومتان على التوازي مع مصدر تيار، ويتوزع التيار بينهما. الفرع ذو المقاومة الأصغر يأخذ تيارًا أكبر.</p>" +
-        "<p>عند توصيل <b>حمل</b> <span class='ltr'>R<sub>L</sub></span> على خرج مقسّم الجهد، يصبح الحمل على التوازي مع <span class='ltr'>R₂</span>، فتقل المقاومة السفلية وينخفض جهد الخرج.</p>" },
-      { id: "terms", title: "المصطلحات", en: "Terminology", html: "<dl class='terms'><dt>Voltage divider</dt><dd>مقاومات على التوالي تقسم جهد المصدر.</dd><dt>Current divider</dt><dd>مقاومات على التوازي تقسم تيار المصدر.</dd><dt>Load (R<sub>L</sub>)</dt><dd>العنصر الذي نوصله على الخرج ليستخدم الجهد.</dd></dl>" },
+        "<p><b>مقسّم الجهد</b> <span class='ltr'>(voltage divider)</span>: في الدوائر الإلكترونية نحتاج أكثر من مستوى جهد من مصدر واحد. مقاومتان R₁ و R₂ على التوالي مع <span class='ltr'>v<sub>s</sub></span>: <span class='eq-i'>i = v<sub>s</sub>/(R₁ + R₂)</span>، ثم بقانون أوم نحسب جهد كل مقاومة.</p>" +
+        "<p><b>مقسّم الجهد المحمَّل:</b> إذا وصلنا حملًا <span class='ltr'>R<sub>L</sub></span> على التوازي مع R₂ (الشكل 3.13)، نستبدل R₂ بـ <span class='ltr'>R<sub>eq</sub> = R₂R<sub>L</sub>/(R₂ + R<sub>L</sub>)</span>، فينخفض جهد الخرج.</p>" +
+        "<p><b>مقسّم التيار</b> <span class='ltr'>(current divider)</span>: مقاومتان على التوازي مع مصدر تيار <span class='ltr'>i<sub>s</sub></span> (الشكل 3.15). جهدهما واحد: <span class='eq-i'>v = i₁R₁ = i₂R₂ = (R₁R₂/(R₁ + R₂)) i<sub>s</sub></span>.</p>" },
+      { id: "terms", title: "المصطلحات", en: "Terminology", html:
+        "<dl class='terms'><dt>Voltage divider</dt><dd>مقاومات على التوالي تقسم جهد المصدر.</dd><dt>Load (R<sub>L</sub>)</dt><dd>المقاومة التي نوصلها على خرج المقسّم.</dd><dt>Current divider</dt><dd>مقاومات على التوازي تقسم تيار المصدر.</dd></dl>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq-row'><div class='eq'>vₒ = vₛ · R₂ / (R₁ + R₂)</div><div class='eq'>i₁ = iₛ · R₂ / (R₁ + R₂)</div></div>" +
-        "<p class='muted'>لاحظ الفرق: في مقسّم الجهد نضع في البسط <b>نفس</b> المقاومة التي نريد جهدها. في مقسّم التيار نضع في البسط المقاومة <b>الأخرى</b>.</p>" },
+        "<div class='eq'>v₁ = v<sub>s</sub> R₁/(R₁ + R₂)   ،   v₂ = v<sub>s</sub> R₂/(R₁ + R₂)</div>" +
+        "<div class='eq'>vₒ = v<sub>s</sub> R<sub>eq</sub>/(R₁ + R<sub>eq</sub>)  ،  R<sub>eq</sub> = R₂R<sub>L</sub>/(R₂ + R<sub>L</sub>)</div>" +
+        "<div class='eq'>vₒ = R₂ v<sub>s</sub> / (R₁[1 + R₂/R<sub>L</sub>] + R₂)</div>" +
+        "<div class='eq'>i₁ = i<sub>s</sub> R₂/(R₁ + R₂)   ،   i₂ = i<sub>s</sub> R₁/(R₁ + R₂)</div>" +
+        "<p class='muted'>انتبه: في قسمة التيار يكون في البسط المقاومة <b>الأخرى</b>.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>استخدم قانون مقسّم الجهد فقط إذا كان <b>نفس التيار</b> يمر في المقاومتين. إذا وُصل حمل على الخرج، اجمع <span class='ltr'>R₂ ∥ R<sub>L</sub></span> أولًا.</li>" +
-        "<li>لكي لا يتأثر الخرج كثيرًا بالحمل، اجعل <span class='ltr'>R<sub>L</sub></span> أكبر بكثير من <span class='ltr'>R₂</span>.</li>" +
-        "<li>صيغة مقسّم التيار بمقاومتين فقط. لأكثر من فرعين استخدم الصيغة العامة في الدرس التالي.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>مصدر <span class='ltr'>12 V</span> مع <span class='ltr'>R₁ = 6 kΩ</span> و <span class='ltr'>R₂ = 3 kΩ</span>. أوجد جهد الخرج، ثم جهد الخرج بعد توصيل حمل <span class='ltr'>3 kΩ</span>.</p>" +
-        "<ol class='steps'><li><b>بدون حمل:</b> <span class='eq-i'>vₒ = 12 × 3 / (6 + 3) = 4 V</span></li><li><b>مع الحمل:</b> <span class='eq-i'>R₂ ∥ R<sub>L</sub> = 3 ∥ 3 = 1.5 kΩ</span></li><li><span class='eq-i'>vₒ = 12 × 1.5 / (6 + 1.5) = 2.4 V</span>. انخفض الخرج من 4 V إلى 2.4 V بسبب الحمل.</li></ol>" },
+        "<ul class='ticks'><li>مقسّم الجهد: المقاومات على التوالي ولا يُسحب تيار من نقطة الخرج، أو نضم الحمل إلى R₂ أولًا.</li>" +
+        "<li>مقسّم التيار: مقاومتان على التوازي يغذيهما تيار معروف. إذا كانت المقاومات أكثر، اختزل أولًا ثم قسّم على مراحل.</li>" +
+        "<li>عندما <span class='ltr'>R<sub>L</sub> → ∞</span> (بدون حمل) نرجع لقانون المقسّم العادي.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Examples", html:
+        "<p class='q'>مثال 3.2: أوجد جهد الخرج <span class='ltr'>vₒ</span>.</p>" + fig(x32, "مقسم جهد 100 V مع 25 kΩ و 100 kΩ") +
+        "<ol class='steps'><li><span class='eq-i'>vₒ = 100 × 100000/(100000 + 25000) = 100 × 100/125 = 80 V</span></li></ol>" +
+        "<p class='q'>مثال 3.3: أوجد القدرة المستهلكة في المقاومة <span class='ltr'>6 Ω</span>.</p>" + fig(x33, "مصدر تيار 10 A مع 16 Ω و 1.6 Ω و 4 Ω و 6 Ω") +
+        "<ol class='steps'><li>بسّط: <span class='eq-i'>(4 × 6)/(4 + 6) + 1.6 = 2.4 + 1.6 = 4 Ω</span></li>" +
+        "<li>قسمة التيار بين 16 Ω و 4 Ω: <span class='eq-i'>iₒ = (16/(16 + 4))(10) = 8 A</span>، وهو تيار 1.6 Ω.</li>" +
+        "<li>قسّم iₒ بين 4 Ω و 6 Ω: <span class='eq-i'>i₆ = (4/(6 + 4))(8) = 3.2 A</span></li>" +
+        "<li><span class='eq-i'>p = (3.2)²(6) = 61.44 W</span></li></ol>" +
+        "<p class='q'>مسألة 3.13 (التيوتوريال): في مقسّم الجهد، قيمة <span class='ltr'>vₒ</span> بدون حمل <span class='ltr'>4 V</span>. عند توصيل الحمل <span class='ltr'>R<sub>L</sub></span> بين a و b تنخفض إلى <span class='ltr'>3 V</span>. أوجد <span class='ltr'>R<sub>L</sub></span>.</p>" + fig(x313, "مقسم جهد 20 V مع 40 Ω و R2 والحمل RL") +
+        "<ol class='steps'><li>بدون حمل: <span class='eq-i'>4 = 20 R₂/(40 + R₂) ← R₂ = 10 Ω</span></li>" +
+        "<li>مع الحمل: <span class='eq-i'>3 = 20 R<sub>eq</sub>/(40 + R<sub>eq</sub>) ← R<sub>eq</sub> = 120/17 ≈ 7.06 Ω</span></li>" +
+        "<li><span class='eq-i'>1/R<sub>L</sub> = 17/120 − 1/10 ← R<sub>L</sub> = 24 Ω</span></li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>مقسّم الجهد موجود في كل مكان: مقبض الصوت (Potentiometer) مقسّم جهد قابل للتعديل، وحساسات الضوء والحرارة (LDR و Thermistor) توصل مع مقاومة ثابتة كمقسّم جهد ليقرأ المتحكم الدقيق جهدًا يتغير مع الضوء أو الحرارة.</p>" }
+        "<p>مقبض الصوت (potentiometer) مقسّم جهد متغير. ومسألة 3.13 تشرح لماذا يتغير جهد المقسّم عند توصيل حمل: الحمل يقلل المقاومة السفلية فينخفض الخرج.</p>" }
     ],
     quiz: [
       { q: "مقسّم جهد: <span class='ltr'>vₛ = 10 V</span>، <span class='ltr'>R₁ = 4 Ω</span>، <span class='ltr'>R₂ = 1 Ω</span>. جهد R₂:", options: [
@@ -213,29 +248,35 @@
   var c4 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 36, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", 4, { name: "R1" }), E([0, 1], [1, 1], "R", 6, { name: "R2" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 12, { name: "R3", ilabel: "i₃" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
   var s4 = solve(c4);
 
+  var x34 = { rows: 4, cols: 5, edges: [E([0, 0], [1, 0], "I", 8, { dir: "ba", name: "I8" }), E([1, 0], [3, 0], "W"), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 36, { name: "R36" }), E([1, 1], [2, 1], "R", 44, { name: "R44" }), E([2, 1], [3, 1], "W"), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 10, { name: "R10" }), E([1, 2], [3, 2], "W"), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "R", 40, { name: "R40" }), E([1, 3], [2, 3], "R", 10, { name: "R10’" }), E([2, 3], [3, 3], "R", 30, { name: "R30", vlabel: "vₒ" }), E([0, 3], [0, 4], "W"), E([0, 4], [3, 4], "R", 24, { name: "R24", ilabel: "iₒ" }), E([3, 0], [3, 1], "W"), E([3, 1], [3, 2], "W"), E([3, 2], [3, 3], "W"), E([3, 3], [3, 4], "W")] };
+  var s34 = solve(x34); chk(s34.R24.i, 2, "3.4 io"); chk(s34.R24.v, 48, "3.4 v"); chk(s34.R30.v, 18, "3.4 vo");
+
   L["c1-resistive-4"] = {
     id: "c1-resistive-4", ar: "قسمة الجهد وقسمة التيار", en: "Voltage Division and Current Division", minutes: 25,
     objectives: ["تطبق قسمة الجهد على أي عدد من المقاومات على التوالي.", "تطبق قسمة التيار على أي عدد من الفروع على التوازي.", "تستخدمهما داخل دائرة أكبر بعد إيجاد المقاومة المكافئة."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>قانونا المقسّم في الدرس السابق حالتان خاصتان من قاعدتين عامتين:</p>" +
-        "<p><b>قسمة الجهد:</b> جهد أي مقاومة في مجموعة توالي = نسبة مقاومتها إلى المقاومة الكلية × الجهد الكلي على المجموعة.</p>" +
-        "<p><b>قسمة التيار:</b> تيار أي فرع في مجموعة توازي = نسبة المقاومة المكافئة للمجموعة إلى مقاومة هذا الفرع × التيار الكلي الداخل إليها.</p>" },
-      { id: "terms", title: "المصطلحات", en: "Terminology", html: "<dl class='terms'><dt>Voltage division</dt><dd>توزيع جهد مجموعة توالي على عناصرها.</dd><dt>Current division</dt><dd>توزيع تيار مجموعة توازي على فروعها.</dd></dl>" },
+        "<p>نعمّم المقسّمين على أي عدد من المقاومات.</p>" +
+        "<p><b>قسمة الجهد:</b> مقاومات على التوالي <span class='ltr'>R₁ … R<sub>n</sub></span> مع جهد v. <span class='ltr'>R<sub>eq</sub></span> هي مجموعها، والتيار <span class='ltr'>i = v/R<sub>eq</sub></span>، فجهد أي مقاومة <span class='ltr'>R<sub>j</sub></span>: <span class='eq-i'>v<sub>j</sub> = iR<sub>j</sub> = (R<sub>j</sub>/R<sub>eq</sub>) v</span>.</p>" +
+        "<p><b>قسمة التيار:</b> مقاومات على التوازي يغذيها تيار i. نحسب <span class='ltr'>R<sub>eq</sub></span> للتوازي، فالجهد المشترك <span class='ltr'>v = iR<sub>eq</sub></span>، ثم بقانون أوم: <span class='eq-i'>i<sub>j</sub> = v/R<sub>j</sub> = (R<sub>eq</sub>/R<sub>j</sub>) i</span>.</p>" },
+      { id: "terms", title: "المصطلحات", en: "Terminology", html:
+        "<dl class='terms'><dt>Voltage division</dt><dd>نصيب كل مقاومة من الجهد يتناسب مع قيمتها.</dd><dt>Current division</dt><dd>نصيب كل فرع من التيار يتناسب عكسيًا مع مقاومته.</dd><dt>R₁ ∥ R₂</dt><dd>رمز التوازي بين مقاومتين.</dd></dl>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq-row'><div class='eq'>vⱼ = (Rⱼ / R<sub>eq</sub>) · v</div><div class='eq'>iⱼ = (R<sub>eq</sub> / Rⱼ) · i</div></div>" +
-        "<p class='muted'>في قسمة الجهد R<sub>eq</sub> مقاومة مجموعة <b>التوالي</b>. في قسمة التيار R<sub>eq</sub> مقاومة مجموعة <b>التوازي</b>.</p>" },
+        "<div class='eq'>v<sub>j</sub> = (R<sub>j</sub> / R<sub>eq</sub>) v   (توالي)</div>" +
+        "<div class='eq'>v = i(R₁ ∥ R₂ ∥ … ∥ R<sub>n</sub>) = iR<sub>eq</sub></div>" +
+        "<div class='eq'>i<sub>j</sub> = v / R<sub>j</sub> = (R<sub>eq</sub> / R<sub>j</sub>) i   (توازي)</div>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>في دائرة أكبر: احسب المقاومة المكافئة التي يراها المصدر، ثم التيار الكلي، ثم ارجع خطوة خطوة بقسمة الجهد والتيار.</li>" +
-        "<li>قسمة التيار تحتاج التيار الداخل إلى مجموعة التوازي بالضبط، وقسمة الجهد تحتاج الجهد على مجموعة التوالي بالضبط.</li>" +
-        "<li>تحقق من نتيجتك: مجموع تيارات الفروع = التيار الكلي، ومجموع الجهود = الجهد الكلي.</li></ul>" },
+        "<ul class='ticks'><li>استخدم القسمة لتصل إلى المطلوب مباشرة دون حل كل الدائرة.</li>" +
+        "<li>كما في مثال 3.4: استخدم قسمة التيار لإيجاد تيار فرع، ثم قانون أوم للجهد، ثم قسمة الجهد داخل الفرع.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'><b>قسمة جهد:</b> <span class='ltr'>20 V</span> على مقاومات <span class='ltr'>2 Ω</span> و <span class='ltr'>3 Ω</span> و <span class='ltr'>5 Ω</span> على التوالي. جهد المقاومة 5 Ω:</p>" +
-        "<ol class='steps'><li><span class='eq-i'>v₅ = (5 / 10) × 20 = 10 V</span></li></ol>" +
-        "<p class='q'><b>قسمة تيار:</b> <span class='ltr'>6 A</span> تدخل مجموعة <span class='ltr'>3 Ω ∥ 6 Ω ∥ 2 Ω</span>. تيار المقاومة 2 Ω:</p>" +
-        "<ol class='steps'><li><span class='eq-i'>R<sub>eq</sub> = 1 / (1/3 + 1/6 + 1/2) = 1 Ω</span></li><li><span class='eq-i'>i₂ = (1 / 2) × 6 = 3 A</span>. وللتحقق: تيار 3 Ω = 2 A، وتيار 6 Ω = 1 A، والمجموع 6 A ✓</li></ol>" },
+        "<p class='q'>مثال 3.4: استخدم قسمة التيار لإيجاد <span class='ltr'>iₒ</span>، وقسمة الجهد لإيجاد <span class='ltr'>vₒ</span>.</p>" + fig(x34, "مصدر تيار 8 A مع أربعة فروع على التوازي") +
+        "<ol class='steps'><li><span class='eq-i'>R<sub>eq</sub> = (36 + 44) ∥ 10 ∥ (40 + 10 + 30) ∥ 24 = 80 ∥ 10 ∥ 80 ∥ 24</span></li>" +
+        "<li><span class='eq-i'>R<sub>eq</sub> = 1/(1/80 + 1/10 + 1/80 + 1/24) = 6 Ω</span></li>" +
+        "<li>قسمة التيار: <span class='eq-i'>iₒ = (6/24)(8) = 2 A</span></li>" +
+        "<li>قانون أوم: <span class='eq-i'>v = (24)(2) = 48 V</span></li>" +
+        "<li>قسمة الجهد في فرع 40 + 10 + 30: <span class='eq-i'>vₒ = (30/80)(48) = 18 V</span></li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>مقاومة الشنت (Shunt) في أجهزة قياس التيار تطبيق مباشر لقسمة التيار: مقاومة صغيرة جدًا على التوازي مع ملف الجهاز، فيمر فيها أغلب التيار ويمر في الجهاز جزء صغير معروف النسبة، فيقيس تيارات أكبر بكثير من قدرته.</p>" }
+        "<p>الأميتر يقيس تيارات كبيرة بمقاومة صغيرة جدًا (shunt) على التوازي مع ملفه: معظم التيار يمر في المقاومة الصغيرة، وجزء صغير معروف يمر في الجهاز. هذه قسمة تيار.</p>" }
     ],
     quiz: [
       { q: "في قسمة التيار <span class='ltr'>iⱼ = (R<sub>eq</sub>/Rⱼ) i</span>، المقدار R<sub>eq</sub> هو:", options: [
@@ -278,33 +319,39 @@
   }
   var b1 = bridge(20, 30, 50, 14, 9), b2 = bridge(40, 40, 20, 4, 16), rb2 = req(b2);
 
+  var x37 = bridge(100, 125, 25, 40, 37.5);
+  x37.edges[0] = E([1, 0], [2, 0], "V", 40, { plus: "a", name: "V40" }); x37.edges[2] = E([0, 0], [0, 1], "R", 5, { name: "5Ω" });
+  x37.edges.forEach(function (e) { if (e.type === "R") e.vtext = ""; if (e.name === "R1") e.name = "100Ω"; if (e.name === "R2") e.name = "125Ω"; if (e.name === "R5") e.name = "25Ω"; if (e.name === "R3") e.name = "40Ω"; if (e.name === "R4") e.name = "37.5Ω"; });
+  var s37 = solve(x37); chk(Math.abs(s37.V40.i), 0.5, "3.7 i"); chk(Math.abs(s37.V40.p), 20, "3.7 p");
+
   L["c1-resistive-5"] = {
     id: "c1-resistive-5", ar: "تحويل دلتا إلى واي", en: "Delta-to-Wye (Pi-to-Tee) Equivalent Circuits", minutes: 30,
     objectives: ["تتعرف على شبكة لا يمكن اختزالها بالتوالي والتوازي.", "تحوّل بين Δ و Y في الاتجاهين.", "تحسب المقاومة المكافئة لدائرة جسر."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>بعض الشبكات لا يوجد فيها أي مقاومتين على التوالي أو التوازي، مثل <b>دائرة الجسر</b> <span class='ltr'>(bridge)</span>: المقاومة R5 في الرسم تصل بين فرعين فتمنع الاختزال المباشر.</p>" +
+        "<p>أحيانًا نجد مقاومات <b>ليست على التوالي ولا على التوازي</b>. في هذه الحالة (إذا لم نستخدم طريقة العقد أو الحلقات) نحوّل جزءًا من الدائرة من شكل إلى آخر.</p>" +
+        "<p>الشكلان اللذان يسببان هذه الصعوبة هما <b>الواي</b> <span class='ltr'>(Y)</span> و<b>الدلتا</b> <span class='ltr'>(Δ)</span>، ويسميان أيضًا <b>تي</b> <span class='ltr'>(T)</span> و<b>باي</b> <span class='ltr'>(π)</span>.</p>" +
         fig(b1, "دائرة جسر بين الطرفين a و b") +
-        "<p>الحل: نستبدل ثلاث مقاومات تشكّل مثلثًا <span class='ltr'>(Δ أو Pi)</span> بثلاث مقاومات تلتقي في نقطة واحدة <span class='ltr'>(Y أو Tee)</span>، بحيث تبقى المقاومة بين كل زوج من الأطراف كما هي. بعد التحويل يصبح الاختزال بالتوالي والتوازي ممكنًا.</p>" },
-      { id: "terms", title: "المصطلحات", en: "Terminology", html: "<dl class='terms'><dt>Delta (Δ) / Pi (π)</dt><dd>ثلاث مقاومات بين ثلاث عقد، كل مقاومة بين عقدتين.</dd><dt>Wye (Y) / Tee (T)</dt><dd>ثلاث مقاومات تخرج من نقطة مركزية إلى ثلاث عقد.</dd><dt>Bridge circuit</dt><dd>شبكة فيها فرع يصل بين مسارين، فلا تُختزل بالتوالي والتوازي.</dd></dl>" },
+        "<p>بعد التحويل تبقى المقاومة بين كل زوج من الأطراف a و b و c كما هي، فلا تتغير بقية الدائرة، ويصبح الاختزال بالتوالي والتوازي ممكنًا.</p>" },
+      { id: "terms", title: "المصطلحات", en: "Terminology", html: "<dl class='terms'><dt>Delta (Δ) / Pi (π)</dt><dd>ثلاث مقاومات R<sub>a</sub> و R<sub>b</sub> و R<sub>c</sub> بين ثلاث عقد.</dd><dt>Wye (Y) / Tee (T)</dt><dd>ثلاث مقاومات R₁ و R₂ و R₃ تخرج من نقطة مركزية إلى العقد الثلاث.</dd></dl>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<p><b>من Δ إلى Y:</b> مقاومة Y عند أي عقدة = حاصل ضرب ضلعي Δ المتصلين بهذه العقدة ÷ مجموع أضلاع Δ الثلاثة.</p>" +
-        "<div class='eq'>R₁ = R<sub>b</sub>R<sub>c</sub> / (R<sub>a</sub> + R<sub>b</sub> + R<sub>c</sub>)</div>" +
-        "<p><b>من Y إلى Δ:</b> ضلع Δ المقابل لأي عقدة = مجموع حواصل ضرب مقاومات Y مثنى مثنى ÷ مقاومة Y عند تلك العقدة.</p>" +
-        "<div class='eq'>R<sub>a</sub> = (R₁R₂ + R₂R₃ + R₃R₁) / R₁</div>" +
-        "<p class='muted'>إذا كانت أضلاع Δ متساوية <span class='ltr'>(R<sub>Δ</sub>)</span> فإن مقاومات Y متساوية أيضًا: <span class='ltr'>R<sub>Y</sub> = R<sub>Δ</sub> / 3</span>.</p>" },
+        "<p><b>من Δ إلى Y:</b> كل مقاومة في Y = حاصل ضرب مقاومتي Δ في الفرعين الأقرب إليها ÷ مجموع مقاومات Δ.</p>" +
+        "<div class='eq'>R₁ = R<sub>b</sub>R<sub>c</sub> / (R<sub>a</sub> + R<sub>b</sub> + R<sub>c</sub>)</div><div class='eq'>R₂ = R<sub>c</sub>R<sub>a</sub> / (R<sub>a</sub> + R<sub>b</sub> + R<sub>c</sub>)</div><div class='eq'>R₃ = R<sub>a</sub>R<sub>b</sub> / (R<sub>a</sub> + R<sub>b</sub> + R<sub>c</sub>)</div>" +
+        "<p><b>من Y إلى Δ:</b> كل مقاومة في Δ = مجموع حواصل الضرب الممكنة لمقاومات Y ÷ مقاومة Y الأبعد عنها.</p>" +
+        "<div class='eq'>R<sub>a</sub> = (R₁R₂ + R₂R₃ + R₃R₁) / R₁</div><div class='eq'>R<sub>b</sub> = (R₁R₂ + R₂R₃ + R₃R₁) / R₂</div><div class='eq'>R<sub>c</sub> = (R₁R₂ + R₂R₃ + R₃R₁) / R₃</div>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>استخدم التحويل فقط عندما لا تجد أي توالي أو توازي. جرّب الاختزال العادي أولًا.</li>" +
-        "<li>اختر مثلثًا تتصل عقده الثلاث ببقية الدائرة. بعد التحويل تظهر عقدة مركزية جديدة.</li>" +
-        "<li>إذا كان الجسر <b>متزنًا</b> <span class='ltr'>(R1/R3 = R2/R4)</span>، فلا يمر تيار في R5 ويمكن حذفها مباشرة.</li></ul>" },
+        "<ul class='ticks'><li>جرّب التوالي والتوازي أولًا. استخدم التحويل فقط إذا لم تجد أيًا منهما.</li>" +
+        "<li>إذا كان المطلوب تيار المصدر وقدرته فقط، يكفي إيجاد المقاومة المكافئة بين طرفيه.</li>" +
+        "<li>يمكن تحويل الدلتا العلوية أو السفلية؛ اختر ما يجعل الاختزال أسهل.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>في الجسر أعلاه: <span class='ltr'>R1 = 20 Ω</span>، <span class='ltr'>R2 = 30 Ω</span>، <span class='ltr'>R5 = 50 Ω</span>، <span class='ltr'>R3 = 14 Ω</span>، <span class='ltr'>R4 = 9 Ω</span>. أوجد <span class='ltr'>R<sub>ab</sub></span>.</p>" +
-        "<ol class='steps'><li><b>المثلث:</b> R1 و R2 و R5 تشكّل Δ بين العقدة العليا (a) والعقدتين الوسطيين. المجموع <span class='eq-i'>20 + 30 + 50 = 100 Ω</span>.</li>" +
-        "<li><b>مقاومات Y:</b> عند a: <span class='eq-i'>20×30/100 = 6 Ω</span>. عند عقدة R1-R5: <span class='eq-i'>20×50/100 = 10 Ω</span>. عند عقدة R2-R5: <span class='eq-i'>30×50/100 = 15 Ω</span>.</li>" +
-        "<li><b>توالي:</b> <span class='eq-i'>10 + R3 = 10 + 14 = 24 Ω</span> و <span class='eq-i'>15 + R4 = 15 + 9 = 24 Ω</span>.</li>" +
-        "<li><b>توازي:</b> <span class='eq-i'>24 ∥ 24 = 12 Ω</span>.</li><li><b>توالي مع مقاومة Y عند a:</b> <span class='eq-i'>R<sub>ab</sub> = 6 + 12 = " + CV.num(req(b1)) + " Ω</span></li></ol>" },
+        "<p class='q'>مثال 3.7: أوجد التيار والقدرة التي يعطيها مصدر <span class='ltr'>40 V</span>.</p>" + fig(x37, "مصدر 40 V مع 5 Ω وشبكة جسر 100 و 125 و 25 و 40 و 37.5 Ω") +
+        "<ol class='steps'><li>المطلوب فقط تيار المصدر، فنحتاج المقاومة المكافئة بين طرفيه.</li>" +
+        "<li>نحوّل الدلتا العلوية (100 و 125 و 25 Ω، مجموعها 250 Ω) إلى Y: <span class='eq-i'>R₁ = (100 × 125)/250 = 50 Ω</span>، <span class='eq-i'>R₂ = (125 × 25)/250 = 12.5 Ω</span>، <span class='eq-i'>R₃ = (100 × 25)/250 = 10 Ω</span></li>" +
+        "<li>الآن: 10 + 40 = 50 Ω على التوازي مع 12.5 + 37.5 = 50 Ω، أي 25 Ω.</li>" +
+        "<li><span class='eq-i'>R<sub>eq</sub> = 5 + 50 + (50)(50)/100 = 80 Ω</span></li>" +
+        "<li><span class='eq-i'>i = 40/80 = 0.5 A</span>، والقدرة <span class='eq-i'>p = −iv = −0.5 × 40 = −20 W</span>، أي المصدر يعطي 20 W.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>جسر ويتستون <span class='ltr'>(Wheatstone bridge)</span> يُستخدم لقياس مقاومة مجهولة بدقة عالية، وفي حساسات الوزن والضغط (Strain gauges): تغيّر صغير جدًا في مقاومة أحد الأضلاع يخل باتزان الجسر فيظهر جهد يمكن قياسه. وتحويل Δ-Y أساسي أيضًا في أنظمة الثلاثة أطوار التي ستدرسها في Circuits 2.</p>" }
+        "<p>محركات المصانع ومحولات التوزيع توصّل ملفاتها إما Y أو Δ، والتحويل بين الشكلين هو نفس الفكرة التي تستخدمها لاحقًا في الدوائر ثلاثية الطور في سيركت 2.</p>" }
     ],
     quiz: [
       { q: "Δ متساوي الأضلاع، كل ضلع <span class='ltr'>30 Ω</span>. مقاومة كل فرع في Y المكافئ:", options: [
