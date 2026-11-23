@@ -29,15 +29,29 @@
   }
 
   /* ================= 1. The sinusoidal source ================= */
+  /* Lecture circuits (Dr. Abdullah Noman, Ch. 9). Numbers are checked when the file loads (and recomputed in Python when written). */
+  var chkC = function (got, mag, ang, what) { if (Math.abs(Cx.abs(got) - mag) > 0.002 * Math.max(1, mag) || (mag > 1e-9 && Math.abs(((Cx.arg(got) - ang + 540) % 360) - 180) > 0.02)) throw new Error("lesson number mismatch: " + what + " = " + Cx.abs(got) + "∠" + Cx.arg(got)); };
+
   L["c1-sinusoidal-1"] = {
     id: "c1-sinusoidal-1", ar: "المصدر الجيبي", en: "The Sinusoidal Source", minutes: 20,
     objectives: ["تقرأ من دالة الجهد الجيبي: القيمة العظمى، والتردد، والزاوية.", "تحوّل بين ω و f والدورة T.", "تحسب القيمة الفعالة (rms)."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>المصدر الجيبي يعطي جهدًا يتغير مع الزمن على شكل جيب تمام: <span class='eq-i'>v(t) = V<sub>m</sub> cos(ωt + φ)</span>.</p><ul class='ticks'><li><b>V<sub>m</sub></b>: القيمة العظمى (السعة).</li><li><b>ω</b>: التردد الزاوي بالراديان/ثانية، و <span class='ltr'>ω = 2πf</span>.</li><li><b>φ</b>: زاوية الطور، وتحدد قيمة الجهد عند <span class='ltr'>t = 0</span>.</li></ul>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>ω = 2πf</div><div class='eq'>T = 1/f</div><div class='eq'>V<sub>rms</sub> = V<sub>m</sub>/√2</div></div><p class='muted'>القيمة الفعالة هي قيمة الجهد المستمر الذي يعطي نفس القدرة في مقاومة. علاقة √2 صحيحة للموجة الجيبية فقط.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>احسب cos(ωt + φ) والآلة الحاسبة على الدرجات إذا كانت φ بالدرجات، وانتبه أن ωt بالراديان: حوّل أحدهما ليتطابقا.</li><li>جهد المقبس المكتوب (220 V) قيمة فعالة، والقيمة العظمى أكبر بـ √2.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>جهد مقبس 220 V (rms) بتردد 60 Hz. اكتب v(t).</p><ol class='steps'><li>" + eqi("V<sub>m</sub> = 220√2 ≈ 311 V") + "</li><li>" + eqi("ω = 2π × 60 ≈ 377 rad/s") + "</li><li>" + eqi("v(t) = 311 cos(377t) V") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>شبكة الكهرباء في السعودية تعمل بتردد 60 Hz. المقابس المنزلية 220 V أو 127 V بالقيمة الفعالة، أي أن الجهد يصل لحظيًا إلى حوالي 311 V أو 180 V. ولهذا تُصمم العوازل لتتحمل القيمة العظمى وليس الفعالة.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>ندرس الآن دوائر تغذيها مصادر <b>متغيرة جيبيًا</b> مع الزمن. ولهذا أهمية كبيرة: (1) توليد الطاقة الكهربائية ونقلها وتوزيعها واستهلاكها يتم كله في حالة جيبية مستقرة. (2) فهم السلوك الجيبي يمكّننا من التنبؤ بسلوك الدوائر. (3) الحالة الجيبية المستقرة تبسّط تصميم الأنظمة الكهربائية.</p>" +
+        "<p>والجميل أن كل طرق التحليل من الفصول السابقة تصلح هنا أيضًا.</p>" +
+        "<p>المصدر الجيبي (مستقل أو تابع) يعطي جهدًا أو تيارًا يتغير جيبيًا مع الزمن. نستخدم دالة <b>جيب التمام</b> دائمًا:</p>" +
+        "<div class='eq'>v = V<sub>m</sub> cos(ωt + φ)</div>" +
+        "<p>V<sub>m</sub> القيمة العظمى (V)، و ω التردد الزاوي (rad/s)، و T الدورة (s)، و f التردد بالهيرتز (دورة في الثانية)، و φ زاوية الطور بالدرجات.</p>" +
+        "<p>القيمة الفعالة <span class='ltr'>(rms)</span>: الجذر التربيعي لمتوسط مربع الدالة خلال دورة. للجهد الجيبي تعتمد فقط على القيمة العظمى، ولا تعتمد على التردد ولا على الزاوية. وأهميتها كبيرة في حسابات القدرة.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>ω = 2πf</div><div class='eq'>f = 1 / T</div><div class='eq'>V<sub>rms</sub> = √( (1/T) ∫ V<sub>m</sub>² cos²(ωt + φ) dt ) = V<sub>m</sub> / √2</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>ωt بالراديان و φ بالدرجات: انتبه لوضع الآلة الحاسبة.</li><li>إذا أعطيت قيمة الدالة عند t = 0 فهي تحدد φ: <span class='eq-i'>v(0) = V<sub>m</sub> cos φ</span>.</li><li>الجهد المكتوب على الأجهزة (220 V) قيمة فعالة، لا عظمى.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 9.1: تيار جيبي قيمته العظمى 20 A، يكمل دورة كاملة في 1 ms، وقيمته عند t = 0 تساوي 10 A. (a) ما التردد بالهيرتز؟ (b) ما التردد بالراديان لكل ثانية؟ (c) اكتب i(t) بدالة cos و φ بالدرجات. (d) ما القيمة الفعالة؟</p>" +
+        "<ol class='steps'><li><span class='eq-i'>T = 1 ms ← f = 1/T = 1000 Hz</span></li><li><span class='eq-i'>ω = 2πf = 2000π rad/s</span></li><li><span class='eq-i'>i(0) = 20 cos φ = 10 ← φ = 60°</span>، إذن <span class='eq-i'>i(t) = 20 cos(2000πt + 60°) A</span></li><li><span class='eq-i'>I<sub>rms</sub> = 20/√2 = 14.14 A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>شبكة الكهرباء في السعودية تعمل بتردد 60 Hz، والمقبس المنزلي 220 V فعالة، أي أن قيمته العظمى حوالي 311 V.</p>" }
     ],
     quiz: [
       { q: "<span class='ltr'>v(t) = 100 cos(500t + 20°)</span>. التردد الزاوي:", options: [{ t: "<span class='ltr'>500 rad/s</span>", correct: true, why: "المعامل أمام t." }, { t: "<span class='ltr'>500 Hz</span>", type: "unit", why: "500 هي ω بالراديان/ثانية، و f = 500/2π ≈ 79.6 Hz." }, { t: "<span class='ltr'>20°</span>", type: "conceptual", why: "20° هي زاوية الطور." }] },
@@ -65,11 +79,23 @@
     id: "c1-sinusoidal-2", ar: "الفيزور", en: "The Phasor", minutes: 25,
     objectives: ["تحوّل دالة جيبية إلى فيزور والعكس.", "تحوّل الفيزور بين الشكلين القطبي والديكارتي.", "تجمع موجتين جيبيتين بجمع فيزوريهما."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>في الحالة المستقرة، كل الجهود والتيارات في الدائرة لها نفس التردد ω. الذي يختلف بينها فقط: <b>المقدار</b> و<b>الزاوية</b>. الفيزور عدد مركّب يحمل هاتين المعلومتين:</p><div class='eq'>V<sub>m</sub> cos(ωt + φ)  ⟷  V = V<sub>m</sub>∠φ</div><p>بهذا تتحول المعادلات التفاضلية إلى معادلات جبرية بالأعداد المركبة.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>a + jb = √(a² + b²) ∠ tan⁻¹(b/a)</div><div class='eq'>M∠θ = M cos θ + j M sin θ</div></div><p class='muted'>عند حساب الزاوية تحقق من الربع: إذا كان a سالبًا أضف 180° لناتج tan⁻¹.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>الجمع والطرح أسهل بالشكل الديكارتي، والضرب والقسمة أسهل بالشكل القطبي.</li><li>إذا أُعطيت دالة بـ sin، حوّلها أولًا: <span class='ltr'>sin(x) = cos(x − 90°)</span>.</li><li>لا تجمع المقادير مباشرة؛ اجمع الأعداد المركبة.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>اجمع <span class='ltr'>v₁ = 20 cos(ωt + 30°)</span> و <span class='ltr'>v₂ = 40 cos(ωt − 60°)</span>.</p><ol class='steps'><li>" + eqi("V₁ = 20∠30° = 17.32 + j10") + "</li><li>" + eqi("V₂ = 40∠−60° = 20 − j34.64") + "</li><li>" + eqi("V = 37.32 − j24.64 = 44.72∠−33.43°") + "</li><li>" + eqi("v(t) = 44.72 cos(ωt − 33.43°)") + ". لاحظ أن 44.72 ≠ 20 + 40.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مهندسو الشبكات يقيسون فيزورات الجهد في محطات بعيدة بأجهزة متزامنة بالأقمار الصناعية (PMU)، ومنها يعرفون حالة الشبكة واستقرارها لحظة بلحظة.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>الطور</b> <span class='ltr'>(phasor)</span> عدد مركّب يحمل معلومتي القيمة العظمى وزاوية الطور للدالة الجيبية. أساسه متطابقة أويلر:</p>" +
+        "<div class='eq'>e<sup>±jθ</sup> = cos θ ± j sin θ</div>" +
+        "<p>إذن <span class='eq-i'>v = V<sub>m</sub> cos(ωt + φ) = ℜ{V<sub>m</sub>e<sup>jφ</sup>e<sup>jωt</sup>}</span>، وتمثيل الطور هو <span class='eq-i'>V = 𝒫{V<sub>m</sub> cos(ωt + φ)} = V<sub>m</sub>e<sup>jφ</sup> = V<sub>m</sub>∠φ</span>.</p>" +
+        "<p>تحويل الطور ينقل الدالة من <b>المجال الزمني</b> إلى مجال الأعداد المركّبة، ويسمى <b>المجال الترددي</b> لأن الاستجابة تعتمد على ω.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<p>تذكير بالأعداد المركّبة: الشكل القطبي والمستطيل.</p>" +
+        "<div class='eq'>Z = a + jb = r∠θ</div><div class='eq'>r = |Z| = √(a² + b²) ، θ = tan⁻¹(b/a)</div><div class='eq'>a = r cos θ ، b = r sin θ</div><div class='eq'>cos θ = sin(θ + 90°) ، sin θ = cos(θ − 90°)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>الجمع والطرح بالشكل المستطيل، والضرب والقسمة بالشكل القطبي.</li><li>حوّل الدالة إلى cos قبل أخذ الطور: sin تُكتب cos(… − 90°).</li><li>الطور لا يحمل ω؛ ω نفسها لكل دوال الدائرة.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال 9.5: إذا كان <span class='eq-i'>y₁ = 20 cos(ωt − 30°)</span> و <span class='eq-i'>y₂ = 40 cos(ωt + 60°)</span>، اكتب <span class='eq-i'>y = y₁ + y₂</span> كدالة جيبية واحدة بطريقة الأطوار.</p>" +
+        "<ol class='steps'><li><span class='eq-i'>Y = Y₁ + Y₂ = 20∠−30° + 40∠60°</span></li><li><span class='eq-i'>20∠−30° = 20 cos(−30°) + j20 sin(−30°) = 17.32 − j10</span></li><li><span class='eq-i'>40∠60° = 40 cos 60° + j40 sin 60° = 20 + j34.64</span></li><li><span class='eq-i'>Y = 37.32 + j24.64 = 44.72∠33.43°</span></li><li>التحويل العكسي: <span class='eq-i'>y = 44.72 cos(ωt + 33.43°)</span></li></ol>" +
+        "<p class='q'>تمرين 9.1 و 9.2: أوجد الطور، ثم الدالة الزمنية.</p>" +
+        "<ol class='steps'><li><span class='eq-i'>v = 170 cos(377t − 40°) V ← V = 170∠−40° V</span></li><li><span class='eq-i'>i = 10 sin(1000t + 20°) A = 10 cos(1000t − 70°) ← I = 10∠−70° A</span></li><li><span class='eq-i'>V = 18.6∠−54° V ← v = 18.6 cos(ωt − 54°) V</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>الآلات الحاسبة العلمية فيها وضع للأعداد المركّبة (CMPLX) يحوّل بين القطبي والمستطيل مباشرة، وهو أسرع طريقة في الاختبار لجمع الأطوار.</p>" }
     ],
     quiz: [
       { q: "فيزور <span class='ltr'>i(t) = 5 cos(ωt − 45°)</span>:", options: [{ t: "<span class='ltr'>5∠−45°</span>", correct: true, why: "المقدار والزاوية مباشرة." }, { t: "<span class='ltr'>5∠45°</span>", type: "sign", why: "الزاوية −45°." }, { t: "<span class='ltr'>5∠(ω − 45°)</span>", type: "conceptual", why: "الفيزور لا يحمل ω؛ التردد معروف ومشترك." }] }
@@ -97,11 +123,24 @@
     id: "c1-sinusoidal-3", ar: "العناصر السلبية في المجال الترددي", en: "The Passive Circuit Elements in the Frequency Domain", minutes: 25,
     objectives: ["تحسب ممانعة المقاومة والملف والمكثف.", "تعرف علاقة الطور بين الجهد والتيار في كل عنصر.", "تطبق قانون أوم بالفيزورات."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>في المجال الترددي، كل عنصر يُوصف بممانعته <span class='ltr'>Z</span>، ويصبح قانون أوم <span class='eq-i'>V = Z I</span> بالأعداد المركبة.</p><table class='tbl'><thead><tr><th>العنصر</th><th>الممانعة</th><th>الطور</th></tr></thead><tbody><tr><td>مقاومة</td><td class='ltr'>Z = R</td><td>الجهد والتيار في نفس الطور</td></tr><tr><td>ملف</td><td class='ltr'>Z = jωL</td><td>الجهد يسبق التيار بـ 90°</td></tr><tr><td>مكثف</td><td class='ltr'>Z = 1/(jωC) = −j/(ωC)</td><td>التيار يسبق الجهد بـ 90°</td></tr></tbody></table>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>Z<sub>L</sub> = jωL</div><div class='eq'>Z<sub>C</sub> = −j / (ωC)</div><div class='eq'>V = Z I</div></div><p class='muted'>X<sub>L</sub> = ωL و X<sub>C</sub> = 1/(ωC) تسميان المفاعلة (reactance)، وكلاهما بالأوم.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>إذا أُعطيت f فاحسب ω = 2πf أولًا، وإذا أُعطيت ω فاضرب فيها مباشرة.</li><li>ممانعة المكثف سالبة الجزء التخيلي. خطأ الإشارة هنا أكثر خطأ شائع في الفصل كله.</li><li>عند التردد العالي: الملف يقترب من دائرة مفتوحة، والمكثف من القصر.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>ω = 500 rad/s. ملف 40 mH ومكثف 100 µF.</p><ol class='steps'><li>" + eqi("Z<sub>L</sub> = j × 500 × 0.04 = j20 Ω") + "</li><li>" + eqi("Z<sub>C</sub> = −j / (500 × 100×10⁻⁶) = −j20 Ω") + "</li><li>على التوالي: " + eqi("j20 − j20 = 0") + ". هذا الرنين، وستدرسه في Circuits 2.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>شاحن الجوال اللاسلكي يعتمد على ملفين يتبادلان الطاقة عند تردد محدد، ومكثفات تُختار لتلغي مفاعلة الملفات عند هذا التردد بالضبط.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>العناصر الخاملة R و L و C. نوجد العلاقة بين طور الجهد وطور التيار عند أطراف كل عنصر.</p>" +
+        "<p><b>المقاومة:</b> من قانون أوم <span class='eq-i'>V = RI</span>، والجهد والتيار <b>في نفس الطور</b>.</p>" +
+        "<p><b>الملف:</b> من <span class='eq-i'>v = L di/dt</span> نحصل على <span class='eq-i'>V = jωL I = ωL I<sub>m</sub>∠(θ<sub>i</sub> + 90°)</span>، أي التيار <b>متأخر</b> عن الجهد بـ 90°.</p>" +
+        "<p><b>المكثف:</b> من <span class='eq-i'>i = C dv/dt</span> نحصل على <span class='eq-i'>V = I/(jωC)</span>، أي الجهد متأخر عن التيار بـ 90°: التيار <b>متقدم</b> على الجهد بـ 90°.</p>" +
+        "<p><b>المعاوقة</b> Z: <span class='eq-i'>V = ZI</span>. جزؤها التخيلي يسمى <b>المفاعلة</b> (reactance).</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<table class='tbl'><thead><tr><th>العنصر</th><th>المجال الزمني</th><th>المجال الترددي</th><th>المعاوقة Z</th><th>المسامحة Y</th></tr></thead><tbody><tr><td>R</td><td class='ltr'>v = Ri</td><td class='ltr'>V = RI</td><td class='ltr'>R</td><td class='ltr'>1/R</td></tr><tr><td>L</td><td class='ltr'>v = L di/dt</td><td class='ltr'>V = jωL I</td><td class='ltr'>jωL</td><td class='ltr'>1/(jωL)</td></tr><tr><td>C</td><td class='ltr'>i = C dv/dt</td><td class='ltr'>V = I/(jωC)</td><td class='ltr'>1/(jωC)</td><td class='ltr'>jωC</td></tr></tbody></table>" +
+        "<div class='eq'>X<sub>L</sub> = ωL</div><div class='eq'>X<sub>C</sub> = −1/(ωC)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>قبل التحليل حوّل كل ملف إلى jωL وكل مكثف إلى −j/(ωC) بقيمة ω من المصدر.</li><li>انتبه للوحدات: mH و µF.</li><li>المفاعلة تتغير مع التردد، أما المقاومة فلا.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>تمرين 9.3: التيار في ملف 20 mH هو <span class='eq-i'>10 cos(10000t + 30°) mA</span>. احسب (a) المفاعلة (b) المعاوقة (c) طور الجهد (d) v(t).</p>" +
+        "<ol class='steps'><li><span class='eq-i'>X<sub>L</sub> = ωL = (10⁴)(20 × 10⁻³) = 200 Ω</span></li><li><span class='eq-i'>Z<sub>L</sub> = j200 Ω</span></li><li><span class='eq-i'>V<sub>L</sub> = IZ<sub>L</sub> = (10∠30°)(200∠90°) × 10⁻³ = 2∠120° V</span></li><li><span class='eq-i'>v<sub>L</sub> = 2 cos(10000t + 120°) V</span></li></ol>" +
+        "<p class='q'>تمرين 9.4: الجهد على مكثف 5 µF هو <span class='eq-i'>30 cos(4000t + 25°) V</span>. احسب المفاعلة والمعاوقة وطور التيار و i(t).</p>" +
+        "<ol class='steps'><li><span class='eq-i'>X<sub>C</sub> = −1/(ωC) = −1/(4000 × 5 × 10⁻⁶) = −50 Ω</span></li><li><span class='eq-i'>Z<sub>C</sub> = −j50 Ω</span></li><li><span class='eq-i'>I = V/Z<sub>C</sub> = 30∠25° / 50∠−90° = 0.6∠115° A</span></li><li><span class='eq-i'>i = 0.6 cos(4000t + 115°) A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>المكثف يمرر الترددات العالية بسهولة (مفاعلته صغيرة)، والملف يعيقها. لهذا تستخدم سماعات الصوت مكثفًا لتوجيه الترددات العالية إلى السماعة الصغيرة (tweeter).</p>" }
     ],
     quiz: [
       { q: "في الملف، الجهد بالنسبة للتيار:", options: [{ t: "يسبقه بـ 90°", correct: true, why: "V = jωL I، و j = 1∠90°." }, { t: "يتأخر عنه بـ 90°", type: "sign", why: "هذا في المكثف." }, { t: "في نفس الطور", type: "conceptual", why: "هذا في المقاومة." }] },
@@ -125,15 +164,27 @@
   };
 
   /* ================= 4. Kirchhoff's laws in the frequency domain ================= */
+  var x96 = { rows: 2, cols: 3, omega: 5000, edges: [E([0, 0], [1, 0], "V", 750, { phase: 30, plus: "a", name: "Vs", vtext: "750∠30° V" }), E([0, 0], [0, 1], "R", 90, { name: "R90" }), E([0, 1], [0, 2], "L", 0.032, { name: "L", vtext: "j160 Ω" }), E([0, 2], [1, 2], "C", 5e-6, { name: "C", vtext: "−j40 Ω" })].concat(b3()) };
+  var s96 = acs(x96); chkC(s96.byName.R90.i, 5, -23.13, "9.6 I");
+
   L["c1-sinusoidal-4"] = {
     id: "c1-sinusoidal-4", ar: "قانونا كيرشوف في المجال الترددي", en: "Kirchhoff’s Laws in the Frequency Domain", minutes: 20,
     objectives: ["تطبق KCL و KVL على الفيزورات.", "تفهم لماذا لا تُجمع المقادير مباشرة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>KCL و KVL ينطبقان على الفيزورات كما ينطبقان على القيم اللحظية: مجموع فيزورات التيارات عند عقدة صفر، ومجموع فيزورات الجهود حول حلقة صفر. لكن الجمع جمع أعداد مركبة.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>Σ I = 0  (node)</div><div class='eq'>Σ V = 0  (loop)</div></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>الفولتميتر يقيس المقدار فقط (الفعال). مجموع قراءات الفولتميتر على عناصر حلقة <b>لا يساوي</b> جهد المصدر عادة، وهذا لا يخالف KVL.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>دائرة توالي: جهد المقاومة <span class='ltr'>60∠0°</span> وجهد الملف <span class='ltr'>80∠90°</span>. جهد المصدر:</p><ol class='steps'><li>" + eqi("V = 60 + j80 = 100∠53.13° V") + "</li><li>المقدار 100 وليس 140.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>فني يقيس 120 V على المقاومة و 160 V على الملف في دائرة مصدرها 200 V قد يظن أن الجهاز معطل، بينما القياس صحيح تمامًا: الجهدان متعامدان.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>KVL في المجال الترددي:</b> إذا كانت <span class='eq-i'>v₁ + v₂ + … + v<sub>n</sub> = 0</span> حول مسار مغلق في الحالة الجيبية المستقرة، فهي تصبح <span class='eq-i'>V<sub>m1</sub> cos(ωt + θ₁) + … + V<sub>mn</sub> cos(ωt + θ<sub>n</sub>) = 0</span>، وبما أن ω واحدة للجميع: <span class='eq-i'>V₁ + V₂ + … + V<sub>n</sub> = 0</span>.</p>" +
+        "<p>وبنفس الطريقة <b>KCL</b>: مجموع أطوار التيارات عند أي عقدة = صفر.</p>" +
+        "<p><b>المعاوقات على التوالي:</b> <span class='eq-i'>V<sub>ab</sub> = Z₁I + Z₂I + … + Z<sub>n</sub>I</span>، إذن <span class='eq-i'>Z<sub>ab</sub> = Z₁ + Z₂ + … + Z<sub>n</sub></span>.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>ΣV = 0 حول أي مسار مغلق</div><div class='eq'>ΣI = 0 عند أي عقدة</div><div class='eq'>Z<sub>ab</sub> = Z₁ + Z₂ + … + Z<sub>n</sub> (توالي)</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>القوانين نفسها بأعداد مركّبة: اجمع الأطوار كأعداد مركّبة، لا القيم العظمى.</li><li>مجموع القيم العظمى للجهود لا يساوي جهد المصدر عادة، لأن الزوايا مختلفة.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 9.6: مقاومة 90 Ω وملف 32 mH ومكثف 5 µF على التوالي مع <span class='eq-i'>v<sub>s</sub> = 750 cos(5000t + 30°) V</span>. (a) ارسم الدائرة في المجال الترددي. (b) أوجد التيار i بطريقة الأطوار.</p>" +
+        fig(x96, "مثال 9.6 في المجال الترددي: 750∠30° V و 90 Ω و j160 Ω و −j40 Ω") +
+        "<ol class='steps'><li>من v<sub>s</sub>: ω = 5000 rad/s. <span class='eq-i'>Z<sub>L</sub> = j(5000)(32 × 10⁻³) = j160 Ω</span> ، <span class='eq-i'>Z<sub>C</sub> = −j10⁶/((5000)(5)) = −j40 Ω</span> ، <span class='eq-i'>V<sub>s</sub> = 750∠30° V</span></li><li><span class='eq-i'>Z<sub>ab</sub> = 90 + j160 − j40 = 90 + j120 = 150∠53.13° Ω</span></li><li><span class='eq-i'>I = 750∠30° / 150∠53.13° = 5∠−23.13° A</span></li><li><span class='eq-i'>i = 5 cos(5000t − 23.13°) A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>المهندس الذي يقيس الجهود في دائرة تيار متردد بالفولتميتر قد يجد أن مجموعها أكبر من جهد المصدر! السبب أن الجهاز يقيس المقدار فقط، بينما KVL يتحقق للأطوار المركّبة.</p>" }
     ],
     quiz: [{ q: "تياران يدخلان عقدة: 3∠0° و 4∠90°. التيار الخارج:", options: [{ t: "<span class='ltr'>5∠53.13°</span>", correct: true, why: "3 + j4." }, { t: "<span class='ltr'>7∠45°</span>", type: "conceptual", why: "جمعت المقادير." }] }],
     practice: {
@@ -153,15 +204,30 @@
   /* ================= 5. Series, parallel, Δ-Y ================= */
   var z5 = { rows: 2, cols: 3, omega: W0, edges: [E([0, 0], [1, 0], "T", 0, { name: "ab" }), E([0, 0], [0, 1], "R", 6, { name: "R1" }), E([0, 1], [1, 1], "L", 0.004, { name: "L1" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "C", 1 / 8000, { name: "C1" })].concat(b3()) };
   var zp5 = AC.port(z5).zth;
+  var x97 = { rows: 3, cols: 4, omega: 200000, edges: [E([0, 0], [1, 0], "I", 8, { phase: 0, dir: "ba", name: "Is", vtext: "8∠0° A" }), E([1, 0], [2, 0], "W"), E([0, 0], [0, 1], "W"), E([0, 1], [2, 1], "R", 10, { name: "R10" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "R", 6, { name: "R6" }), E([1, 2], [2, 2], "L", 40e-6, { name: "L", vtext: "j8 Ω" }), E([0, 2], [0, 3], "W"), E([0, 3], [2, 3], "C", 1e-6, { name: "C", vtext: "−j5 Ω" }), E([2, 0], [2, 1], "W"), E([2, 1], [2, 2], "W"), E([2, 2], [2, 3], "W")] };
+  var s97 = acs(x97); chkC(s97.byName.R10.v, 40, -36.87, "9.7 V"); chkC(s97.byName.C.i, 8, 53.13, "9.7 I3");
+
   L["c1-sinusoidal-5"] = {
     id: "c1-sinusoidal-5", ar: "التبسيط بالتوالي والتوازي و Δ-Y", en: "Series, Parallel, and Delta-to-Wye Simplifications", minutes: 25,
     objectives: ["تجمع الممانعات على التوالي والتوازي.", "تطبق تحويل Δ-Y على الممانعات.", "تحسب الممانعة المكافئة لشبكة."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>كل قواعد الفصل الثالث تنطبق على الممانعات كما هي، مع حساب مركّب: التوالي جمع، والتوازي <span class='ltr'>Z₁Z₂/(Z₁ + Z₂)</span>، وتحويل Δ-Y بنفس القوانين.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>Z = Z₁ + Z₂</div><div class='eq'>Z = Z₁Z₂ / (Z₁ + Z₂)</div></div><p class='muted'>الممانعة المكافئة <span class='ltr'>Z = R + jX</span>: X موجبة تعني سلوكًا حثيًا، وسالبة تعني سلوكًا سعويًا.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>اجمع على التوالي بالشكل الديكارتي. وفي التوازي، اضرب واقسم بالشكل القطبي أو استخدم المرافق.</li><li>ملف ومكثف على التوازي قد يعطيان ممانعة أكبر من كليهما، وهذا مختلف عن المقاومات.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>مقاومة 4 Ω على التوالي مع (j6 ∥ −j3).</p><ol class='steps'><li>" + eqi("(j6)(−j3)/(j6 − j3) = 18/(j3) = −j6 Ω") + "</li><li>" + eqi("Z = 4 − j6 = 7.21∠−56.31° Ω") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مصممو مرشحات الصوت في السماعات (crossover) يجمعون ممانعات الملفات والمكثفات ليوجّهوا الترددات المنخفضة للسماعة الكبيرة والعالية للصغيرة.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>كل قواعد التبسيط من الفصل الثالث تصلح بالمعاوقات.</p>" +
+        "<p><b>التوازي:</b> <span class='eq-i'>1/Z<sub>ab</sub> = 1/Z₁ + 1/Z₂ + … + 1/Z<sub>n</sub></span>، ولمعاوقتين <span class='eq-i'>Z<sub>ab</sub> = Z₁Z₂/(Z₁ + Z₂)</span>. ونستخدم <b>المسامحة</b> <span class='eq-i'>Y = 1/Z = G + jB</span>: جزؤها الحقيقي G الموصلية، والتخيلي B السماحية (susceptance)، وتقاس بالسيمنز.</p>" +
+        "<p><b>Δ إلى Y وبالعكس:</b> نفس قوانين المقاومات بالمعاوقات.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>Y = 1/Z = G + jB</div><div class='eq'>Y<sub>ab</sub> = Y₁ + Y₂ + … + Y<sub>n</sub> (توازي)</div><div class='eq'>Z₁ = Z<sub>b</sub>Z<sub>c</sub>/(Z<sub>a</sub> + Z<sub>b</sub> + Z<sub>c</sub>)</div><div class='eq'>Z<sub>a</sub> = (Z₁Z₂ + Z₂Z₃ + Z₃Z₁)/Z₁</div>" +
+        "<table class='tbl'><thead><tr><th>العنصر</th><th>المسامحة Y</th><th>السماحية</th></tr></thead><tbody><tr><td>R</td><td>G</td><td>—</td></tr><tr><td>L</td><td class='ltr'>j(−1/ωL)</td><td class='ltr'>−1/ωL</td></tr><tr><td>C</td><td class='ltr'>jωC</td><td class='ltr'>ωC</td></tr></tbody></table>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>مع فروع كثيرة على التوازي اجمع المسامحات، فهو أسهل من قانون التوازي.</li><li>عند Δ و Y انتبه أن الضرب والقسمة لأعداد مركّبة.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال 9.7: مصدر تيار <span class='eq-i'>i<sub>s</sub> = 8 cos 200000t A</span> يغذي ثلاثة فروع على التوازي: 10 Ω، و (6 Ω مع 40 µH)، و 1 µF. أوجد v و i₁ و i₂ و i₃.</p>" +
+        fig(x97, "مثال 9.7 في المجال الترددي: 8∠0° A مع 10 Ω و 6 + j8 Ω و −j5 Ω") +
+        "<ol class='steps'><li><span class='eq-i'>Z<sub>L</sub> = j(200000)(40 × 10⁻⁶) = j8 Ω</span> ، <span class='eq-i'>Z<sub>C</sub> = −j/((200000)(10⁻⁶)) = −j5 Ω</span></li><li><span class='eq-i'>Y₁ = 1/10 = 0.1 S</span> ، <span class='eq-i'>Y₂ = 1/(6 + j8) = 0.06 − j0.08 S</span> ، <span class='eq-i'>Y₃ = 1/(−j5) = j0.2 S</span></li><li><span class='eq-i'>Y = 0.16 + j0.12 = 0.2∠36.87° S ← Z = 5∠−36.87° Ω</span></li><li><span class='eq-i'>V = ZI = (5∠−36.87°)(8∠0°) = 40∠−36.87° V</span></li><li><span class='eq-i'>I₁ = 4∠−36.87° A ، I₂ = 4∠−90° A ، I₃ = 8∠53.13° A</span></li><li><span class='eq-i'>v = 40 cos(200000t − 36.87°) V</span> ، <span class='eq-i'>i₃ = 8 cos(200000t + 53.13°) A</span></li></ol>" +
+        "<p class='q'>مثال 9.8: استخدم تحويل Δ إلى Y لإيجاد I<sub>o</sub> من مصدر 120∠0° V.</p>" +
+        "<ol class='steps'><li>نحوّل الدلتا b-c-d (10 Ω، و 20 + j60 Ω، و −j20 Ω، مجموعها 30 + j40 Ω) إلى Y.</li><li>المتصلة بـ b: <span class='eq-i'>Z₁ = (20 + j60)(10)/(30 + j40) = 12 + j4 Ω</span>، وبـ c: <span class='eq-i'>Z₂ = 10(−j20)/(30 + j40) = −3.2 − j2.4 Ω</span>، وبـ d: <span class='eq-i'>Z₃ = (20 + j60)(−j20)/(30 + j40) = 8 − j24 Ω</span></li><li>فرع abn: <span class='eq-i'>−j4 + 12 + j4 = 12 Ω</span>، وفرع acn: <span class='eq-i'>63.2 + j2.4 − 3.2 − j2.4 = 60 Ω</span></li><li><span class='eq-i'>Z = 12 ∥ 60 + 8 − j24 = 10 + 8 − j24 = 18 − j24 Ω</span></li><li><span class='eq-i'>I<sub>o</sub> = 120∠0° / (18 − j24) = 4∠53.13° = 2.4 + j3.2 A</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>شبكات الكهرباء ثلاثية الطور توصّل أحمالها Δ أو Y، والتحويل بينهما بالمعاوقات هو أساس تحليلها في سيركت 2.</p>" }
     ],
     quiz: [{ q: "ممانعتان <span class='ltr'>3 + j4</span> و <span class='ltr'>3 − j4</span> على التوالي:", options: [{ t: "<span class='ltr'>6 Ω</span>", correct: true, why: "الجزءان التخيليان يلغي أحدهما الآخر." }, { t: "<span class='ltr'>10 Ω</span>", type: "conceptual", why: "جمعت المقادير 5 + 5." }] }],
     practice: {
@@ -187,11 +253,20 @@
     id: "c1-sinusoidal-6", ar: "تحويل المصادر ومكافئ ثيفنن-نورتن", en: "Source Transformations and Thévenin-Norton Equivalent Circuits", minutes: 25,
     objectives: ["تطبق تحويل المصادر بالفيزورات.", "تحسب V<sub>Th</sub> و Z<sub>Th</sub> لشبكة تيار متردد.", "تحسب I<sub>N</sub>."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>نفس قواعد الفصل الرابع: مصدر جهد V<sub>s</sub> مع ممانعة Z على التوالي يكافئ مصدر تيار <span class='ltr'>V<sub>s</sub>/Z</span> مع Z على التوازي. ومكافئ ثيفنن: <span class='ltr'>V<sub>Th</sub></span> فيزور جهد الدائرة المفتوحة، و <span class='ltr'>Z<sub>Th</sub></span> الممانعة المكافئة بعد إطفاء المصادر المستقلة.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq-row'><div class='eq'>I<sub>s</sub> = V<sub>s</sub> / Z</div><div class='eq'>I<sub>N</sub> = V<sub>Th</sub> / Z<sub>Th</sub></div></div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>Z<sub>Th</sub> عدد مركب: احتفظ بجزئيه، فهما يحددان الحمل المناسب لاحقًا.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: "<p class='q'>حوّل <span class='ltr'>20∠0° V</span> مع <span class='ltr'>4 + j4 Ω</span>.</p><ol class='steps'><li>" + eqi("I<sub>s</sub> = 20 / (5.657∠45°) = 3.536∠−45° A") + " على التوازي مع 4 + j4 Ω.</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>مكافئ ثيفنن لشبكة الكهرباء عند نقطة ما يحدد تيار القصر المتوقع، ومنه تُختار سعة القواطع الكهربائية.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p><b>تحويل المصادر</b> في المجال الترددي: مصدر جهد V<sub>s</sub> على التوالي مع معاوقة Z<sub>s</sub> يكافئ مصدر تيار I<sub>s</sub> على التوازي مع نفس المعاوقة، حيث <span class='eq-i'>V<sub>s</sub> = Z<sub>s</sub>I<sub>s</sub></span>.</p>" +
+        "<p><b>ثيفنن ونورتن:</b> أي دائرة خطية في المجال الترددي (فيها مصادر مستقلة وتابعة) تكافئ بالنسبة للطرفين a و b مصدر جهد V<sub>Th</sub> مع معاوقة Z<sub>Th</sub>، أو مصدر تيار I<sub>N</sub> مع Z<sub>N</sub>. وطرق حساب Z<sub>Th</sub> هي نفسها من الفصل السابق (i<sub>sc</sub>، أو مصدر الاختبار).</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>V<sub>s</sub> = Z<sub>s</sub>I<sub>s</sub> ، I<sub>s</sub> = V<sub>s</sub>/Z<sub>s</sub></div><div class='eq'>Z<sub>Th</sub> = V<sub>Th</sub>/I<sub>sc</sub></div><div class='eq'>Z<sub>N</sub> = Z<sub>Th</sub> ، I<sub>N</sub> = I<sub>sc</sub></div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>نفس خطوات الفصل الرابع، لكن بالأعداد المركّبة.</li><li>مع المصادر التابعة استخدم i<sub>sc</sub> أو مصدر الاختبار.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Example", html:
+        "<p class='q'>مثال 9.9: استخدم تحويل المصادر لإيجاد الطور V<sub>o</sub> (مصدر 40∠0° V).</p>" +
+        "<ol class='steps'><li>40∠0° V مع (1 + j3) Ω ← مصدر تيار <span class='eq-i'>I = 40/(1 + j3) = 4 − j12 A</span> على التوازي مع (1 + j3) Ω.</li><li>فرعان على التوازي: <span class='eq-i'>Z = (1 + j3)(9 − j3)/10 = 1.8 + j2.4 Ω</span></li><li>نعيد التحويل إلى مصدر جهد: <span class='eq-i'>(4 − j12)(1.8 + j2.4) = 36 − j12 V</span> على التوالي مع 1.8 + j2.4 Ω، ثم مع 0.2 + j0.6 Ω: المجموع 2 + j3 Ω.</li><li>قسمة الجهد على فرع الخرج (10 − j19) Ω: <span class='eq-i'>V<sub>o</sub> = (36 − j12)(10 − j19)/(12 − j16) = 36.12 − j18.84 V</span></li></ol>" +
+        "<p class='q'>مثال 9.10: أوجد مكافئ ثيفنن بالنسبة للطرفين a و b (مصدر 120∠0° V، و 12 Ω و 60 Ω، و −j40 Ω، و 120 Ω، ومصدر جهد تابع 10V<sub>x</sub>).</p>" +
+        "<ol class='steps'><li>تحويل 120 V مع 12 Ω إلى 10 A مع 12 Ω، ثم <span class='eq-i'>12 ∥ 60 = 10 Ω</span>، ونعيده مصدر 100 V مع 10 Ω.</li><li>KVL: <span class='eq-i'>100 = 10I − j40I + 120I + 10V<sub>x</sub></span> مع <span class='eq-i'>V<sub>x</sub> = 100 − 10I</span> ← <span class='eq-i'>I = −900/(30 − j40) = 18∠−126.87° A</span></li><li><span class='eq-i'>V<sub>x</sub> = 100 − 180∠−126.87° = 208 + j144 V</span></li><li><span class='eq-i'>V<sub>Th</sub> = 10V<sub>x</sub> + 120I = 784 − j288 = 835.22∠−20.17° V</span></li><li>بمصدر اختبار بين a و b (بعد تعطيل 120 V): <span class='eq-i'>Z<sub>Th</sub> = V<sub>T</sub>/I<sub>T</sub> = 91.2 − j38.4 Ω</span></li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>عند تحليل مشكلة في شبكة كهرباء عند نقطة معينة، يمثل المهندسون كل الشبكة خلفها بمكافئ ثيفنن (جهد ومعاوقة)، ومنه يحسبون تيار القصر عند تلك النقطة لاختيار القواطع.</p>" }
     ],
     quiz: [{ q: "V<sub>Th</sub> = 10∠0° و Z<sub>Th</sub> = 2∠−30°. تيار نورتن:", options: [{ t: "<span class='ltr'>5∠30° A</span>", correct: true, why: "قسمة المقادير وطرح الزوايا." }, { t: "<span class='ltr'>5∠−30° A</span>", type: "sign", why: "عند القسمة نطرح زاوية المقام: 0 − (−30) = +30." }] }],
     practice: {
@@ -221,11 +296,17 @@
     id: "c1-sinusoidal-7", ar: "طريقة جهود العقد", en: "The Node-Voltage Method", minutes: 30,
     objectives: ["تكتب معادلات العقد بالممانعات.", "تحل نظام معادلات مركّب.", "تحسب تيارات الفروع من جهود العقد."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>نفس طريقة الفصل الرابع، مع استبدال R بـ Z وكل القيم بفيزورات: <span class='eq-i'>Σ (Vₖ − Vⱼ)/Z = 0</span>. الحل يحتاج حساب أعداد مركبة، فرتّب المعادلات في مصفوفة إن أمكن.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>Σ (Vₖ − Vⱼ) / Zₖⱼ + Σ I<sub>out</sub> = 0</div>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>استخدم الموصلية Y = 1/Z لتسهيل المعادلات: 1/(jX) = −j/X.</li><li>تحقق من الحل بالتعويض في معادلة واحدة على الأقل.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(n7ex, "دائرة تيار متردد بعقدتين") + "<p class='q'>Vs = 10∠0° V، R1 = 2 Ω، Z<sub>L</sub> = j2، Z<sub>C</sub> = −j6، R2 = 4 Ω.</p><ol class='steps'><li>" + eqi("(V₁ − 10)/2 + V₁/(j2) + (V₁ − V₂)/(−j6) = 0") + "</li><li>" + eqi("(V₂ − V₁)/(−j6) + V₂/4 = 0") + "</li><li>" + eqi("V₁ = 6 + j4 V , V₂ = j4 V") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>دراسات تدفق الأحمال في شبكات الكهرباء الكبيرة (Load flow) هي معادلات عقد بفيزورات لآلاف العقد، تحلها برامج متخصصة كل بضع دقائق.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>طريقة جهود العقد في المجال الترددي هي نفسها: نختار مرجعًا، ونكتب KCL عند كل عقدة أساسية بالأطوار والمعاوقات، ومع المصدر التابع نضيف معادلة القيد.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>Σ (V<sub>k</sub> − V<sub>j</sub>)/Z = 0 عند كل عقدة</div><div class='eq'>+ معادلة القيد للمصدر التابع</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>حوّل الدائرة أولًا إلى المجال الترددي.</li><li>رتّب المعادلات بالشكل القياسي ثم حلها كأعداد مركّبة (الآلة الحاسبة في وضع CMPLX).</li><li>تحقق بـ KCL بعد الحل.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 9.11: استخدم طريقة جهود العقد لإيجاد I<sub>a</sub> و I<sub>b</sub> و I<sub>c</sub> (مصدر 10.6∠0° A، و 10 Ω، و 1 + j2 Ω، و −j5 Ω، و 5 Ω، ومصدر جهد تابع 20I<sub>x</sub>).</p>" +
+        "<ol class='steps'><li>عقدتان أساسيتان غير مرجعيتين V₁ و V₂.</li><li>العقدة 1: <span class='eq-i'>−10.6 + V₁/10 + (V₁ − V₂)/(1 + j2) = 0 ← V₁(1.1 + j0.2) − V₂ = 10.6 + j21.2</span></li><li>العقدة 2: <span class='eq-i'>(V₂ − V₁)/(1 + j2) + V₂/(−j5) + (V₂ − 20I<sub>x</sub>)/5 = 0</span> مع القيد <span class='eq-i'>I<sub>x</sub> = (V₁ − V₂)/(1 + j2)</span> ← <span class='eq-i'>−5V₁ + (4.8 + j0.6)V₂ = 0</span></li><li><span class='eq-i'>V₁ = 68.40 − j16.80 V ، V₂ = 68 − j26 V</span></li><li><span class='eq-i'>I<sub>a</sub> = V₁/10 = 6.84 − j1.68 A</span> ، <span class='eq-i'>I<sub>x</sub> = 3.76 + j1.68 A</span></li><li><span class='eq-i'>I<sub>b</sub> = (V₂ − 20I<sub>x</sub>)/5 = −1.44 − j11.92 A</span> ، <span class='eq-i'>I<sub>c</sub> = V₂/(−j5) = 5.2 + j13.6 A</span></li><li>التحقق: <span class='eq-i'>I<sub>a</sub> + I<sub>x</sub> = 10.6 A</span> ✓</li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>برامج تحليل شبكات القدرة (load flow) تحل معادلات العقد بالأطوار لآلاف العقد في نفس الوقت، وهي نفس الطريقة التي في هذا الدرس.</p>" }
     ],
     quiz: [{ q: "موصلية ملف ممانعته j4 Ω:", options: [{ t: "<span class='ltr'>−j0.25 S</span>", correct: true, why: "1/(j4) = −j/4." }, { t: "<span class='ltr'>j0.25 S</span>", type: "sign", why: "1/j = −j." }] }],
     practice: {
@@ -251,11 +332,17 @@
     id: "c1-sinusoidal-8", ar: "طريقة تيارات الحلقات", en: "The Mesh-Current Method", minutes: 30,
     objectives: ["تكتب KVL لكل حلقة بالممانعات.", "تحل المعادلات المركبة.", "تحسب تيار الفرع المشترك."],
     sections: [
-      { id: "concept", title: "الفكرة", en: "Concept", html: "<p>نفس طريقة الحلقات في الفصل الرابع: لكل حلقة تيار فيزور مع عقارب الساعة، و KVL بالممانعات: <span class='eq-i'>Σ Z(Iₖ − Iⱼ) = Σ V<sub>s</sub></span>.</p>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: "<div class='eq'>[Z][I] = [V]</div><p class='muted'>العنصر القطري في مصفوفة Z = مجموع ممانعات الحلقة، والعنصر خارج القطر = سالب الممانعة المشتركة.</p>" },
-      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html: "<ul class='ticks'><li>اكتب المعادلات بصيغة المصفوفة؛ تقل أخطاء الإشارة.</li><li>للحل اليدوي: طريقة كرامر مع محددات 2×2 مركّبة.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html: fig(m8ex, "دائرة تيار متردد بحلقتين") + "<p class='q'>Vs = 10∠0°، R1 = 3، Z<sub>L</sub> = j2، R2 = 4، Z<sub>C</sub> = −j2.</p><ol class='steps'><li>" + eqi("(3 + j2)I₁ − j2 I₂ = 10") + "</li><li>" + eqi("−j2 I₁ + (j2 + 4 − j2)I₂ = 0 → I₂ = j0.5 I₁") + "</li><li>" + eqi("I₁ = 2 − j1 A , I₂ = 0.5 + j1 A") + "</li></ol>" },
-      { id: "realworld", title: "في الواقع", en: "Real-World", html: "<p>دوائر المرشحات في أجهزة الراديو تُحلل بالحلقات لحساب التيار في الهوائي أو في مرحلة التكبير عند كل تردد.</p>" }
+      { id: "concept", title: "الفكرة", en: "Concept", html:
+        "<p>طريقة تيارات الحلقات في المجال الترددي: تيار لكل حلقة في اتجاه عقارب الساعة، و KVL حول كل حلقة بالمعاوقات، ومع المصدر التابع نضيف معادلة القيد بدلالة تيارات الحلقات.</p>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>Σ Z·I = Σ V<sub>s</sub> حول كل حلقة</div><div class='eq'>+ القيد: مثل I<sub>x</sub> = I₁ − I₂</div>" },
+      { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
+        "<ul class='ticks'><li>الطريقة مناسبة عندما تكون الحلقات أقل من العقد.</li><li>بعد إيجاد تيارات الحلقات، احسب الجهود المطلوبة بـ V = ZI.</li><li>تحقق بجمع الجهود حول مسار مغلق.</li></ul>" },
+      { id: "example", title: "مثال محلول", en: "Worked Example", html:
+        "<p class='q'>مثال 9.12: استخدم طريقة تيارات الحلقات لإيجاد V₁ و V₂ و V₃ (مصدر 150∠0° V، ومصدر جهد تابع 39I<sub>x</sub>).</p>" +
+        "<ol class='steps'><li>حلقتان ومصدر تابع: معادلتان ومعادلة قيد.</li><li>الحلقة 1: <span class='eq-i'>150 = (1 + j2)I₁ + (12 − j16)(I₁ − I₂) ← 150 = (13 − j14)I₁ − (12 − j16)I₂</span></li><li>الحلقة 2: <span class='eq-i'>0 = (12 − j16)(I₂ − I₁) + (1 + j3)I₂ + 39I<sub>x</sub></span> مع <span class='eq-i'>I<sub>x</sub> = I₁ − I₂</span> ← <span class='eq-i'>0 = (27 + j16)I₁ − (26 + j13)I₂</span></li><li><span class='eq-i'>I₁ = −26 − j52 A ، I₂ = −24 − j58 A ، I<sub>x</sub> = −2 + j6 A</span></li><li><span class='eq-i'>V₁ = (1 + j2)I₁ = 78 − j104 V</span> ، <span class='eq-i'>V₂ = (12 − j16)I<sub>x</sub> = 72 + j104 V</span> ، <span class='eq-i'>V₃ = (1 + j3)I₂ = 150 − j130 V</span></li><li>التحقق: <span class='eq-i'>−150 + V₁ + V₂ = −150 + 78 − j104 + 72 + j104 = 0</span> ✓</li></ol>" },
+      { id: "realworld", title: "في الواقع", en: "Real-World", html:
+        "<p>في دوائر المرشحات (filters) والأجهزة الصوتية يحسب المصممون التيارات بالحلقات عند كل تردد، ليعرفوا كيف تتغير الاستجابة مع التردد.</p>" }
     ],
     quiz: [{ q: "الفرع المشترك بين حلقتين فيه ملف j5. حدّه في معادلة الحلقة الأولى:", options: [{ t: "<span class='ltr'>j5(I₁ − I₂)</span>", correct: true, why: "تيار الفرع المشترك في اتجاه I₁ هو I₁ − I₂." }, { t: "<span class='ltr'>j5 I₁</span>", type: "conceptual", why: "الفرع مشترك." }] }],
     practice: {
