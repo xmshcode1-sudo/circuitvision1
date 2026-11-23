@@ -32,96 +32,79 @@
   L["c1-variables-1"] = {
     id: "c1-variables-1", ar: "نظرة عامة على تحليل الدوائر", en: "Circuit Analysis: An Overview", minutes: 15,
     objectives: [
-      "تعرف ما هو نموذج الدائرة ولماذا نستخدمه.",
-      "تعرف متى يصح تحليل الدائرة بالنموذج المجمّع (Lumped).",
-      "تستخدم وحدات SI وبادئاتها بدون أخطاء تحويل."
+      "تعرف تعريف الدائرة الكهربائية كنموذج رياضي لنظام حقيقي.",
+      "تعرف ممّ تتكون الدائرة: مصادر، وعناصر خاملة غير مفاعلة (R) ومفاعلة (L و C).",
+      "تعرف متغيرات الدائرة الأربعة: التيار والجهد والقدرة والطاقة."
     ],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>الدائرة الكهربائية الحقيقية (شاحن جوال، لوحة تحكم، شبكة كهرباء) معقدة جدًا. لذلك لا نحللها كما هي، بل نبني لها <b>نموذج دائرة</b> <span class='ltr'>(circuit model)</span>: مجموعة من <b>العناصر المثالية</b> المتصلة ببعضها، كل عنصر منها يوصف بمعادلة رياضية بسيطة.</p>" +
-        "<p>نظرية الدوائر هي حالة خاصة من نظرية المجال الكهرومغناطيسي. تصح عندما تكون أبعاد الدائرة صغيرة جدًا مقارنة بطول موجة الإشارة. عندها نعتبر أن الإشارة تصل إلى كل نقاط السلك في نفس اللحظة، ويسمى هذا <b>النموذج المجمّع</b> <span class='ltr'>(lumped model)</span>.</p>" +
-        "<div class='flow'><span>النظام الحقيقي</span><i>←</i><span>نموذج الدائرة</span><i>←</i><span>التحليل الرياضي</span><i>←</i><span>المقارنة بالقياس</span></div>" +
-        "<p class='muted'>الخطوة الأخيرة مهمة: إذا اختلفت نتيجة التحليل عن القياس كثيرًا، فالخطأ غالبًا في النموذج نفسه وليس في الحساب.</p>" },
+        "<p>الدائرة الكهربائية <span class='ltr'>(electric circuit)</span> هي <b>نموذج رياضي</b> يقرّب سلوك نظام كهربائي حقيقي. نحللها بالحساب بدل أن نجرّب على الجهاز نفسه.</p>" +
+        "<p>في الهندسة الكهربائية نريد غالبًا <b>نقل الطاقة</b> من نقطة إلى أخرى، ولهذا نوصل أجهزة كهربائية ببعضها. هذا التوصيل يسمى <b>دائرة كهربائية</b>، وكل مكوّن فيها يسمى <b>عنصرًا</b> <span class='ltr'>(element)</span>.</p>" +
+        "<p>تتكون الدوائر من: <b>مصادر</b> (مولدات) تعطي الطاقة، و<b>عناصر</b> قد تكون خاملة غير مفاعلة مثل المقاومة، أو <b>مفاعلة</b> <span class='ltr'>(reactive)</span> مثل المكثف والملف.</p>" +
+        "<div class='flow'><span>النظام الحقيقي</span><i>←</i><span>نموذج الدائرة</span><i>←</i><span>التحليل الرياضي</span><i>←</i><span>المقارنة بالقياس</span></div>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
         "<dl class='terms'>" +
-        "<dt>Circuit model</dt><dd>تمثيل مبسّط للنظام الحقيقي بعناصر مثالية.</dd>" +
-        "<dt>Ideal circuit element</dt><dd>عنصر نظري يوصف بعلاقة رياضية دقيقة بين الجهد والتيار.</dd>" +
-        "<dt>Lumped-parameter system</dt><dd>نظام أبعاده صغيرة جدًا مقارنة بطول الموجة، فيصح تحليله بنظرية الدوائر.</dd>" +
-        "<dt>SI units</dt><dd>النظام الدولي للوحدات، وهو أساس كل الحسابات الهندسية.</dd>" +
+        "<dt>Electric circuit</dt><dd>نموذج رياضي لنظام كهربائي، وهو توصيل بين عناصر كهربائية.</dd>" +
+        "<dt>Element</dt><dd>كل مكوّن في الدائرة.</dd>" +
+        "<dt>Source (generator)</dt><dd>عنصر يعطي الطاقة للدائرة.</dd>" +
+        "<dt>Passive, non-reactive</dt><dd>عنصر خامل لا يخزن طاقة، مثل المقاومة R.</dd>" +
+        "<dt>Reactive</dt><dd>عنصر يخزن الطاقة، مثل المكثف C والملف L.</dd>" +
         "</dl>" },
-      { id: "laws", title: "القوانين والوحدات", en: "Equations & Units", html:
-        "<div class='eq'>λ = c / f</div>" +
-        "<table class='tbl'><thead><tr><th>الرمز</th><th>المعنى</th><th>الوحدة</th></tr></thead><tbody>" +
-        "<tr><td class='ltr'>λ</td><td>طول الموجة <span class='ltr'>(wavelength)</span></td><td class='ltr'>m</td></tr>" +
-        "<tr><td class='ltr'>c</td><td>سرعة الضوء ≈ <span class='ltr'>3 × 10⁸</span></td><td class='ltr'>m/s</td></tr>" +
-        "<tr><td class='ltr'>f</td><td>التردد <span class='ltr'>(frequency)</span></td><td class='ltr'>Hz</td></tr></tbody></table>" +
-        "<p><b>البادئات الأكثر استخدامًا</b> <span class='ltr'>(SI prefixes)</span></p>" +
-        "<div class='prefixes ltr'><span><b>p</b>10⁻¹²</span><span><b>n</b>10⁻⁹</span><span><b>µ</b>10⁻⁶</span><span><b>m</b>10⁻³</span><span><b>k</b>10³</span><span><b>M</b>10⁶</span><span><b>G</b>10⁹</span><span><b>T</b>10¹²</span></div>" },
+      { id: "laws", title: "متغيرات الدائرة", en: "Circuit Variables", html:
+        "<p>كل تحليل في المقرر يدور حول أربعة متغيرات <span class='ltr'>(I, V, P, E)</span>:</p>" +
+        "<table class='tbl'><thead><tr><th>المتغير</th><th>الرمز</th><th>الوحدة</th></tr></thead><tbody>" +
+        "<tr><td>التيار <span class='ltr'>(current)</span></td><td class='ltr'>I</td><td>أمبير <span class='ltr'>(A)</span></td></tr>" +
+        "<tr><td>الجهد <span class='ltr'>(voltage)</span></td><td class='ltr'>V</td><td>فولت <span class='ltr'>(V)</span></td></tr>" +
+        "<tr><td>القدرة <span class='ltr'>(power)</span></td><td class='ltr'>P</td><td>واط <span class='ltr'>(W)</span></td></tr>" +
+        "<tr><td>الطاقة <span class='ltr'>(energy)</span></td><td class='ltr'>W</td><td>جول <span class='ltr'>(J)</span></td></tr>" +
+        "</tbody></table>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>قبل أي تحليل، تأكد أن النموذج المجمّع صالح: أبعاد الدائرة أصغر بكثير من <span class='ltr'>λ</span>. قاعدة عملية: أقل من عُشر طول الموجة تقريبًا.</li>" +
-        "<li>عند الترددات المنخفضة مثل <span class='ltr'>60 Hz</span> يكون <span class='ltr'>λ</span> آلاف الكيلومترات، فكل الدوائر العادية تعتبر lumped.</li>" +
-        "<li>عند الترددات العالية جدًا (GHz) قد يكون مسار بطول بضعة سنتيمترات غير صغير، ونحتاج نظرية خطوط النقل بدلًا من نظرية الدوائر.</li>" +
-        "<li>حوّل كل القيم إلى وحدات SI الأساسية قبل التعويض. معظم أخطاء الطلاب في هذا الفصل أخطاء بادئات وليست أخطاء فهم.</li></ul>" },
+        "<ul class='ticks'><li>قبل أي حساب: حدّد العناصر في الرسم، أيها مصدر وأيها مقاومة أو ملف أو مكثف.</li>" +
+        "<li>الملف والمكثف لا يظهر أثرهما إلا عندما يتغير الجهد أو التيار مع الزمن، وهذا ما ندرسه في فصل الحالة الجيبية.</li>" +
+        "<li>إذا اختلف التحليل عن القياس كثيرًا، فالخطأ غالبًا في النموذج نفسه وليس في الحساب.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>شبكة الكهرباء في السعودية تعمل بتردد <span class='ltr'>60 Hz</span>. احسب طول الموجة، ثم قارنه بطول الموجة عند <span class='ltr'>1 GHz</span>.</p>" +
-        "<ol class='steps'>" +
-        "<li><b>اختيار القانون:</b> المطلوب طول موجة من تردد معلوم، فنستخدم <span class='eq-i'>λ = c / f</span>.</li>" +
-        "<li><b>التعويض عند 60 Hz:</b> <span class='eq-i'>λ = (3 × 10⁸) / 60 = 5 × 10⁶ m = 5000 km</span>.</li>" +
-        "<li><b>التعويض عند 1 GHz:</b> حوّل أولًا <span class='eq-i'>1 GHz = 10⁹ Hz</span>، ثم <span class='eq-i'>λ = (3 × 10⁸) / 10⁹ = 0.3 m = 30 cm</span>.</li>" +
-        "<li><b>التفسير:</b> عند 60 Hz أي دائرة في مبنى أو جهاز أصغر بكثير من 5000 km، فهي lumped. أما عند 1 GHz فمسار طوله 10 cm يساوي ثلث طول الموجة، فلا يصح اعتباره lumped.</li></ol>" },
+        "<p class='q'>دائرة فيها بطارية، ومقاومة، ومكثف، وملف. صنّف كل عنصر.</p>" +
+        "<ol class='steps'><li>البطارية: <b>مصدر</b>، تعطي الطاقة للدائرة.</li>" +
+        "<li>المقاومة: عنصر <b>خامل غير مفاعل</b>، تحول الطاقة إلى حرارة ولا تخزنها.</li>" +
+        "<li>المكثف والملف: عناصر <b>مفاعلة</b>، تخزن الطاقة وتعيدها للدائرة.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>مهندسو تصميم لوحات الدوائر المطبوعة <span class='ltr'>(PCB)</span> في أجهزة Wi-Fi والجوالات يتعاملون مع هذه المشكلة يوميًا: مسار نحاسي بطول بضعة سنتيمترات يتصرف كخط نقل عند <span class='ltr'>2.4 GHz</span>، فيصممون عرضه وطوله بحسابات خاصة. أما فني الكهرباء الذي يمدد أسلاك منزل فلا يحتاج ذلك أبدًا، لأن 60 Hz تجعل كل أسلاك المبنى lumped.</p>" }
+        "<p>شاحن الجوال نظام حقيقي فيه آلاف المكونات. لكن لحساب التيار الذي يسحبه من البطارية يكفي نموذج بسيط: مصدر ومقاومة تمثل الحمل. هذه هي فكرة نموذج الدائرة.</p>" }
     ],
     quiz: [
-      { q: "مقاومة قيمتها <span class='ltr'>4.7 kΩ</span>. كم قيمتها بالأوم؟", options: [
-        { t: "<span class='ltr'>4700 Ω</span>", correct: true, why: "k تعني 10³، إذن 4.7 × 1000 = 4700 Ω." },
-        { t: "<span class='ltr'>470 Ω</span>", type: "unit", why: "ضربت في 100 بدل 1000. البادئة k تعني 10³." },
-        { t: "<span class='ltr'>0.0047 Ω</span>", type: "unit", why: "قسمت بدل أن تضرب. k تكبّر القيمة: 4.7 kΩ = 4.7 × 10³ Ω." }
+      { q: "الدائرة الكهربائية في هذا المقرر هي:", options: [
+        { t: "نموذج رياضي يقرّب سلوك نظام كهربائي حقيقي", correct: true, why: "هذا تعريف المحاضرة: نحلل النموذج بدل الجهاز." },
+        { t: "الجهاز الحقيقي نفسه بكل تفاصيله", type: "conceptual", why: "الجهاز الحقيقي معقد. نحن نحلل نموذجًا مبسطًا منه." },
+        { t: "مجموعة أسلاك فقط", type: "conceptual", why: "الدائرة توصيل بين عناصر: مصادر ومقاومات وملفات ومكثفات." }
       ]},
-      { q: "أي بادئة تساوي <span class='ltr'>10⁻⁶</span>؟", options: [
-        { t: "<span class='ltr'>m</span> (milli)", type: "unit", why: "milli تساوي 10⁻³ وليس 10⁻⁶." },
-        { t: "<span class='ltr'>µ</span> (micro)", correct: true, why: "micro = 10⁻⁶." },
-        { t: "<span class='ltr'>n</span> (nano)", type: "unit", why: "nano تساوي 10⁻⁹." }
+      { q: "أي عنصر مما يلي <b>مفاعل</b> (reactive)؟", options: [
+        { t: "المقاومة", type: "conceptual", why: "المقاومة خاملة غير مفاعلة: لا تخزن الطاقة." },
+        { t: "المكثف", correct: true, why: "المكثف والملف عناصر مفاعلة تخزن الطاقة." },
+        { t: "البطارية", type: "conceptual", why: "البطارية مصدر يعطي الطاقة." }
       ]},
-      { q: "متى يصح تحليل الدائرة بالنموذج المجمّع (lumped)؟", options: [
-        { t: "عندما يكون الجهد منخفضًا", type: "conceptual", why: "قيمة الجهد لا تحدد صلاحية النموذج. المعيار هو أبعاد الدائرة مقارنة بطول الموجة." },
-        { t: "عندما تكون أبعاد الدائرة أصغر بكثير من طول الموجة", correct: true, why: "عندها تصل الإشارة لكل نقاط الدائرة في نفس اللحظة تقريبًا." },
-        { t: "دائمًا، في كل الدوائر", type: "conceptual", why: "عند الترددات العالية جدًا لا يصح النموذج المجمّع ونحتاج نظرية المجال أو خطوط النقل." }
-      ]},
-      { q: "تيار قيمته <span class='ltr'>250 mA</span> يساوي:", options: [
-        { t: "<span class='ltr'>2.5 A</span>", type: "unit", why: "قسمت على 100 بدل 1000. m = 10⁻³." },
-        { t: "<span class='ltr'>0.25 A</span>", correct: true, why: "250 × 10⁻³ = 0.25 A." },
-        { t: "<span class='ltr'>250 000 A</span>", type: "unit", why: "ضربت في 1000 بدل القسمة. milli تصغّر القيمة." }
+      { q: "ما وحدة القدرة؟", options: [
+        { t: "الجول (J)", type: "unit", why: "الجول وحدة الطاقة. القدرة معدل الطاقة: J/s = W." },
+        { t: "الواط (W)", correct: true, why: "القدرة بالواط، والواط = جول لكل ثانية." },
+        { t: "الكولوم (C)", type: "unit", why: "الكولوم وحدة الشحنة." }
       ]}
     ],
     practice: {
-      prompt: "دائرة راوتر Wi-Fi تعمل بتردد <span class='ltr'>2.4 GHz</span>، وفيها مسار نحاسي طوله <span class='ltr'>5 cm</span>. هل يصح تحليل هذا المسار كجزء من دائرة lumped؟ حلّها على خطوات. استخدم <span class='ltr'>c = 3 × 10⁸ m/s</span>.",
+      prompt: "دائرة إنارة فيها مولد، ومصباح نمثله بمقاومة، ومكثف لتحسين الأداء، وملف داخل المحرك. صنّف العناصر.",
       steps: [
-        { id: "s1", label: "احسب طول الموجة <span class='ltr'>λ</span>.", symbol: "λ =", answer: 0.125,
-          units: [{ l: "mm", f: 1e-3 }, { l: "cm", f: 1e-2 }, { l: "m", f: 1 }, { l: "km", f: 1e3 }], unitDefault: 2,
-          diagnose: [
-            { value: 8, type: "formula", why: "قسمت التردد على سرعة الضوء <span class='ltr'>(f / c)</span>. القانون الصحيح <span class='ltr'>λ = c / f</span>، ويمكنك التحقق بالوحدات: <span class='ltr'>(m/s) ÷ (1/s) = m</span>.", review: R("c1-variables-1", "laws", "القوانين والوحدات"), hint: "اكتب القانون بالوحدات أولًا وتأكد أن الناتج بالمتر." },
-            { value: 125, type: "unit", why: "عوّضت التردد كأنه <span class='ltr'>2.4 MHz</span>. البادئة G تعني <span class='ltr'>10⁹</span>، أي <span class='ltr'>f = 2.4 × 10⁹ Hz</span>.", review: R("c1-variables-1", "laws", "جدول البادئات"), hint: "اكتب f بالهيرتز كاملة قبل التعويض." }
-          ],
-          hints: ["المطلوب طول موجة وعندك التردد. ما القانون الذي يربطهما؟", "<span class='ltr'>λ = c / f</span>، مع <span class='ltr'>f = 2.4 × 10⁹ Hz</span>."],
-          solution: "<span class='eq-i'>λ = (3 × 10⁸) / (2.4 × 10⁹) = 0.125 m = 12.5 cm</span>" },
-        { id: "s2", label: "احسب النسبة بين طول المسار وطول الموجة <span class='ltr'>d / λ</span>.", symbol: "d / λ =", answer: 0.4,
-          units: [{ l: "(بدون وحدة)", f: 1 }],
-          diagnose: [
-            { value: 2.5, type: "substitution", why: "عكست النسبة فحسبت <span class='ltr'>λ / d</span>. المطلوب طول المسار مقسومًا على طول الموجة.", hint: "البسط هو طول المسار d." },
-            { value: 0.04, type: "unit", why: "حوّلت 5 cm إلى 0.005 m. التحويل الصحيح: <span class='ltr'>5 cm = 0.05 m</span> لأن <span class='ltr'>c = 10⁻²</span>.", hint: "اكتب الطولين بنفس الوحدة قبل القسمة." },
-            { value: 40, type: "unit", why: "قسمت 5 (بالسنتيمتر) على 0.125 (بالمتر). اكتب الطولين بنفس الوحدة قبل القسمة.", hint: "<span class='ltr'>5 cm = 0.05 m</span>." }
-          ],
-          hints: ["حوّل الطولين لنفس الوحدة.", "<span class='ltr'>d = 0.05 m</span> و <span class='ltr'>λ = 0.125 m</span>."],
-          solution: "<span class='eq-i'>d / λ = 0.05 / 0.125 = 0.4</span>" },
-        { id: "s3", kind: "choice", label: "هل يصح اعتبار هذا المسار جزءًا من دائرة lumped؟",
-          options: [
-            { t: "نعم، لأن طول المسار أقل من طول الموجة", type: "conceptual", why: "أن يكون أقل لا يكفي. يجب أن يكون <b>أصغر بكثير</b> (أقل من عُشر λ تقريبًا). هنا المسار يساوي 40% من λ.", review: R("c1-variables-1", "when", "متى نستخدم النموذج المجمّع") },
-            { t: "لا، لأن طوله يساوي 0.4 من طول الموجة، وهذا ليس صغيرًا", correct: true },
-            { t: "يعتمد على قيمة الجهد في المسار", type: "conceptual", why: "صلاحية النموذج المجمّع لا تعتمد على الجهد، بل على أبعاد الدائرة مقارنة بطول الموجة.", review: R("c1-variables-1", "concept", "الفكرة") }
-          ],
-          hints: ["القاعدة العملية: أبعاد الدائرة أقل من عُشر طول الموجة تقريبًا."],
-          solution: "لا. النسبة 0.4 أكبر بكثير من 0.1، فالمسار يتصرف كخط نقل ولا يصح تحليله كدائرة lumped." }
+        { id: "s1", kind: "choice", label: "المولد في هذه الدائرة:", options: [
+            { t: "مصدر يعطي الطاقة", correct: true },
+            { t: "عنصر خامل غير مفاعل", type: "conceptual", why: "المولد يعطي الطاقة للدائرة، فهو مصدر." },
+            { t: "عنصر مفاعل", type: "conceptual", why: "العنصر المفاعل يخزن الطاقة ويعيدها، أما المولد فيعطيها." }
+          ], hints: ["من الذي يعطي الطاقة في الدائرة؟"], solution: "المولد مصدر." },
+        { id: "s2", kind: "choice", label: "المصباح (المقاومة):", options: [
+            { t: "عنصر مفاعل", type: "conceptual", why: "المقاومة لا تخزن طاقة، بل تحولها إلى حرارة وضوء." },
+            { t: "عنصر خامل غير مفاعل", correct: true },
+            { t: "مصدر", type: "conceptual", why: "المصباح يستهلك الطاقة ولا يعطيها." }
+          ], hints: ["هل المقاومة تخزن الطاقة؟"], solution: "المقاومة خاملة غير مفاعلة." },
+        { id: "s3", kind: "choice", label: "المكثف والملف:", options: [
+            { t: "عناصر مفاعلة تخزن الطاقة", correct: true },
+            { t: "عناصر غير مفاعلة", type: "conceptual", why: "المكثف يخزن طاقة في المجال الكهربائي والملف في المجال المغناطيسي، فهما مفاعلان." },
+            { t: "مصادر", type: "conceptual", why: "قد يعيدان طاقة خزناها، لكنهما لا يولدان طاقة، فليسا مصدرين." }
+          ], hints: ["أي العناصر وصفتها المحاضرة بأنها reactive؟"], solution: "المكثف والملف عناصر مفاعلة." }
       ]
     },
     lab: { title: "قياس تأثير التردد", desc: "في المعمل الذكي ستغيّر تردد مصدر جيبي وتلاحظ متى تبقى نتائج تحليل الدائرة صحيحة." }
@@ -131,42 +114,43 @@
   L["c1-variables-2"] = {
     id: "c1-variables-2", ar: "الجهد والتيار", en: "Voltage and Current", minutes: 20,
     objectives: [
-      "تعرّف الشحنة والجهد والتيار ووحدات كل منها.",
-      "تحسب التيار من الشحنة، والجهد من الطاقة والشحنة.",
-      "تفهم معنى اتجاه المرجع للتيار وقطبية المرجع للجهد."
+      "تعرّف الجهد بأنه الطاقة لكل وحدة شحنة: V = dw/dq.",
+      "تعرّف التيار بأنه معدل سريان الشحنة: I = dq/dt.",
+      "تعرف اتجاه التيار الاصطلاحي والفرق بين DC و AC."
     ],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>كل الظواهر الكهربائية سببها <b>الشحنة</b> <span class='ltr'>(charge)</span>، ووحدتها الكولوم <span class='ltr'>(C)</span>. شحنة الإلكترون <span class='ltr'>−1.6022 × 10⁻¹⁹ C</span>.</p>" +
-        "<p><b>فصل</b> الشحنات يحتاج طاقة، وينتج عنه <b>جهد</b> <span class='ltr'>(voltage)</span>: الطاقة لكل وحدة شحنة. و<b>حركة</b> الشحنات تنتج <b>تيارًا</b> <span class='ltr'>(current)</span>: معدل مرور الشحنة عبر مقطع.</p>" +
-        "<p>عند رسم دائرة نحدد <b>اتجاه مرجع</b> للتيار (سهم) و<b>قطبية مرجع</b> للجهد (+ و −) قبل أن نعرف القيم الفعلية. إذا خرجت قيمة التيار سالبة، فهذا يعني أن التيار الفعلي عكس السهم، وليس أن الحل خطأ.</p>" },
+        "<p><b>الجهد</b> <span class='ltr'>(V)</span>، ويسمى فرق الجهد الكهربائي، هو القوة التي تدفع التيار. وبدقة: هو <b>الطاقة لكل وحدة شحنة</b>: <span class='eq-i'>V = dw/dq</span>، ووحدته الفولت.</p>" +
+        "<p><b>التيار</b> <span class='ltr'>(I)</span> هو سريان الشحنة الكهربائية في موصل: <span class='eq-i'>I = dq/dt</span>، ووحدته الأمبير. الأمبير الواحد = كولوم واحد يمر بنقطة في الدائرة كل ثانية، أي حوالي <span class='ltr'>6.24 × 10¹⁸</span> إلكترون في الثانية.</p>" +
+        "<p><b>اتجاه التيار عكس اتجاه حركة الإلكترونات.</b> نرسم التيار كأنه حركة شحنات موجبة.</p>" +
+        "<p>للتيار نوعان: <b>مستمر</b> <span class='ltr'>(DC)</span> تسري فيه الشحنة في اتجاه واحد دائمًا، و<b>متردد</b> <span class='ltr'>(AC)</span> يعكس فيه اتجاهه بشكل دوري.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Charge (q)</dt><dd>كمية الشحنة، بالكولوم C.</dd>" +
-        "<dt>Voltage (v)</dt><dd>الطاقة اللازمة لنقل وحدة شحنة بين نقطتين، بالفولت <span class='ltr'>V = J/C</span>.</dd>" +
-        "<dt>Current (i)</dt><dd>معدل تدفق الشحنة، بالأمبير <span class='ltr'>A = C/s</span>.</dd>" +
-        "<dt>Reference direction</dt><dd>اتجاه نختاره للتيار على الرسم. الإشارة السالبة تعني أن الاتجاه الفعلي معاكس.</dd>" +
-        "<dt>Reference polarity</dt><dd>علامتا + و − نختارهما للجهد بين طرفين.</dd></dl>" },
+        "<dl class='terms'>" +
+        "<dt>Voltage (potential difference)</dt><dd>الطاقة لكل وحدة شحنة، بالفولت.</dd>" +
+        "<dt>Current</dt><dd>معدل سريان الشحنة في الموصل، بالأمبير.</dd>" +
+        "<dt>Charge (q)</dt><dd>الشحنة الكهربائية بالكولوم (C).</dd>" +
+        "<dt>DC / AC</dt><dd>تيار مستمر في اتجاه واحد / تيار يعكس اتجاهه دوريًا.</dd>" +
+        "</dl>" },
       { id: "laws", title: "القوانين والوحدات", en: "Equations & Units", html:
-        "<div class='eq-row'><div class='eq'>v = dw / dq</div><div class='eq'>i = dq / dt</div></div>" +
-        "<p>عندما تكون القيم ثابتة مع الزمن تصبح العلاقات بسيطة:</p>" +
-        "<div class='eq-row'><div class='eq'>V = W / Q</div><div class='eq'>I = Q / t</div></div>" +
+        "<div class='eq'>V = dw / dq</div><div class='eq'>I = dq / dt</div>" +
         "<table class='tbl'><thead><tr><th>الرمز</th><th>المعنى</th><th>الوحدة</th></tr></thead><tbody>" +
-        "<tr><td class='ltr'>w, W</td><td>الطاقة</td><td class='ltr'>J</td></tr><tr><td class='ltr'>q, Q</td><td>الشحنة</td><td class='ltr'>C</td></tr>" +
-        "<tr><td class='ltr'>t</td><td>الزمن</td><td class='ltr'>s</td></tr><tr><td class='ltr'>v</td><td>الجهد</td><td class='ltr'>V = J/C</td></tr>" +
-        "<tr><td class='ltr'>i</td><td>التيار</td><td class='ltr'>A = C/s</td></tr></tbody></table>" },
+        "<tr><td class='ltr'>V</td><td>الجهد</td><td>فولت <span class='ltr'>(V)</span></td></tr>" +
+        "<tr><td class='ltr'>w</td><td>الطاقة</td><td>جول <span class='ltr'>(J)</span></td></tr>" +
+        "<tr><td class='ltr'>q</td><td>الشحنة</td><td>كولوم <span class='ltr'>(C)</span></td></tr>" +
+        "<tr><td class='ltr'>I</td><td>التيار</td><td>أمبير <span class='ltr'>(A)</span></td></tr>" +
+        "<tr><td class='ltr'>t</td><td>الزمن</td><td>ثانية <span class='ltr'>(s)</span></td></tr>" +
+        "</tbody></table><p class='muted'><span class='ltr'>1 A = 1 C/s</span> و <span class='ltr'>1 V = 1 J/C</span>.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>إذا أُعطيت كمية شحنة تمر خلال زمن، استخدم <span class='eq-i'>I = Q / t</span>، والزمن بالثواني دائمًا.</li>" +
-        "<li>إذا أُعطيت الشحنة كدالة في الزمن <span class='ltr'>q(t)</span>، فالتيار هو مشتقتها <span class='eq-i'>i = dq/dt</span>.</li>" +
-        "<li>إذا أُعطيت طاقة لازمة لنقل شحنة، استخدم <span class='eq-i'>V = W / Q</span>. انتبه: نقسم على الشحنة وليس على التيار.</li></ul>" },
+        "<ul class='ticks'><li>إذا كانت الشحنة تمر بانتظام فالتيار ثابت: <span class='eq-i'>I = q / t</span>.</li>" +
+        "<li>إذا أعطيت الطاقة اللازمة لنقل شحنة فالجهد: <span class='eq-i'>V = w / q</span>.</li>" +
+        "<li>التيار السالب في الحل يعني أن الاتجاه الفعلي عكس السهم الذي رسمته، وليس أن الحل خطأ.</li></ul>" },
       { id: "example", title: "أمثلة محلولة", en: "Worked Examples", html:
-        "<p class='q'><b>مثال 1:</b> تمر شحنة <span class='ltr'>120 C</span> عبر مقطع سلك خلال دقيقة واحدة. ما التيار؟</p>" +
-        "<ol class='steps'><li><b>تحويل الوحدات:</b> <span class='eq-i'>t = 1 min = 60 s</span>.</li><li><b>القانون:</b> <span class='eq-i'>I = Q / t = 120 / 60 = 2 A</span>.</li></ol>" +
-        "<p class='q'><b>مثال 2:</b> الشحنة الداخلة إلى طرف عنصر تعطى بالعلاقة <span class='eq-i'>q(t) = 20(1 − e<sup>−5t</sup>) mC</span>. أوجد التيار، وقيمته عند <span class='ltr'>t = 0</span>.</p>" +
-        "<ol class='steps'><li><b>القانون:</b> التيار مشتقة الشحنة <span class='eq-i'>i = dq/dt</span>.</li><li><b>الاشتقاق:</b> <span class='eq-i'>i(t) = 20 × 5 e<sup>−5t</sup> = 100 e<sup>−5t</sup> mA</span> (لأن mC/s = mA).</li><li><b>عند t = 0:</b> <span class='eq-i'>i(0) = 100 mA</span>، ثم يتناقص التيار أسيًا مع الزمن.</li></ol>" +
-        "<p class='q'><b>مثال 3:</b> نقل شحنة <span class='ltr'>4 C</span> من النقطة a إلى b يحتاج طاقة <span class='ltr'>20 J</span>. ما الجهد بين النقطتين؟</p>" +
-        "<ol class='steps'><li><span class='eq-i'>V = W / Q = 20 / 4 = 5 V</span>.</li></ol>" },
+        "<p class='q'>تمر شحنة <span class='ltr'>120 C</span> بانتظام في موصل خلال دقيقة واحدة، ونقلها بين طرفيه يحتاج <span class='ltr'>1440 J</span>. أوجد التيار والجهد، وعدد الإلكترونات التي تمر في الثانية.</p>" +
+        "<ol class='steps'><li><span class='eq-i'>I = q / t = 120 / 60 = 2 A</span></li>" +
+        "<li><span class='eq-i'>V = w / q = 1440 / 120 = 12 V</span></li>" +
+        "<li>كل ثانية يمر <span class='ltr'>2 C</span>، أي <span class='eq-i'>2 × 6.24 × 10¹⁸ = 1.248 × 10¹⁹</span> إلكترون، وتتحرك الإلكترونات عكس اتجاه التيار.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>سعة بطارية الجوال تكتب بوحدة <span class='ltr'>mAh</span>، وهي في الحقيقة وحدة <b>شحنة</b> وليست وحدة تيار: <span class='ltr'>1 mAh = 10⁻³ A × 3600 s = 3.6 C</span>. بطارية <span class='ltr'>5000 mAh</span> تخزن شحنة <span class='ltr'>18 000 C</span>. لو سحب الجوال تيارًا ثابتًا <span class='ltr'>500 mA</span> فإنها تكفي نظريًا <span class='ltr'>10</span> ساعات.</p>" }
+        "<p>بطارية السيارة تعطي جهدًا مستمرًا <span class='ltr'>(DC)</span> تقريبًا 12 V، أما مقبس البيت فيعطي جهدًا مترددًا <span class='ltr'>(AC)</span> يعكس اتجاهه 60 مرة في الثانية في السعودية.</p>" }
     ],
     quiz: [
       { q: "الأمبير الواحد يساوي:", options: [
@@ -213,45 +197,43 @@
 
   /* ------------------------------------------------------------------ */
   L["c1-variables-3"] = {
-    id: "c1-variables-3", ar: "العنصر المثالي واصطلاح الإشارة", en: "The Ideal Basic Circuit Element", minutes: 20,
+    id: "c1-variables-3", ar: "العنصر الأساسي المثالي", en: "The Ideal Basic Circuit Element", minutes: 20,
     objectives: [
-      "تعرف الصفات الثلاث للعنصر المثالي الأساسي.",
-      "تطبق اصطلاح الإشارة السالب (Passive Sign Convention) في أي اتجاهات مرجع.",
-      "تحدد هل العنصر يمتص القدرة أم يولّدها من إشارة p."
+      "تطبّق اصطلاح الإشارة الخاملة (passive sign convention).",
+      "تختار p = vi أو p = −vi حسب اتجاه مرجع التيار وقطبية الجهد.",
+      "تفسّر إشارة القدرة: موجبة = امتصاص، سالبة = إعطاء."
     ],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>العنصر المثالي الأساسي له ثلاث صفات: <b>طرفان فقط</b>، ويوصف رياضيًا بالكامل عن طريق <b>الجهد والتيار</b> بين طرفيه، و<b>لا يمكن تقسيمه</b> إلى عناصر أبسط.</p>" +
-        "<p>لكي نحسب القدرة بإشارة صحيحة نستخدم <b>اصطلاح الإشارة السالب</b> <span class='ltr'>(Passive Sign Convention)</span>:</p>" +
-        "<div class='callout'>إذا كان اتجاه مرجع التيار <b>داخلًا</b> إلى الطرف الموجب لجهد العنصر، فإن <span class='eq-i'>p = vi</span>. وإذا كان <b>خارجًا</b> منه (أي داخلًا إلى الطرف السالب)، فإن <span class='eq-i'>p = −vi</span>.</div>" +
-        "<p>بعدها: إذا كانت <span class='ltr'>p &gt; 0</span> فالعنصر <b>يمتص</b> القدرة، وإذا كانت <span class='ltr'>p &lt; 0</span> فهو <b>يولّد</b> (يعطي) القدرة.</p>" },
+        "<p>العنصر الأساسي المثالي له طرفان، ونصفه بجهد <span class='ltr'>v</span> بين طرفيه وتيار <span class='ltr'>i</span> يمر فيه. <b>اتجاه التيار وقطبية الجهد</b> يحددان إشارة القدرة.</p>" +
+        "<p><b>اصطلاح الإشارة الخاملة</b> <span class='ltr'>(passive sign convention)</span>: إذا كان مرجع التيار في اتجاه <b>هبوط</b> الجهد، أي يدخل من الطرف الموجب، نستخدم إشارة موجبة: <span class='eq-i'>p = vi</span>. وإذا كان مرجع التيار في اتجاه <b>ارتفاع</b> الجهد، أي يدخل من الطرف السالب: <span class='eq-i'>p = −vi</span>.</p>" +
+        "<p>الشحنات الموجبة التي تمر عبر هبوط في الجهد <b>تفقد</b> طاقة (العنصر يمتص)، والتي تمر عبر ارتفاع في الجهد <b>تكسب</b> طاقة (العنصر يعطي).</p>" },
       { id: "diagram", title: "الحالات الأربع", en: "The Four Cases", html:
-        "<div class='cases'>" +
-        "<figure>" + elem({ plusTop: true, arrow: "down", aria: "التيار يدخل الطرف الموجب" }) + "<figcaption>التيار يدخل الطرف <b>+</b><br><span class='eq-i'>p = vi</span></figcaption></figure>" +
-        "<figure>" + elem({ plusTop: true, arrow: "up", aria: "التيار يخرج من الطرف الموجب" }) + "<figcaption>التيار يخرج من الطرف <b>+</b><br><span class='eq-i'>p = −vi</span></figcaption></figure>" +
-        "<figure>" + elem({ plusTop: false, arrow: "down", aria: "التيار يدخل الطرف السالب" }) + "<figcaption>التيار يدخل الطرف <b>−</b><br><span class='eq-i'>p = −vi</span></figcaption></figure>" +
-        "<figure>" + elem({ plusTop: false, arrow: "up", aria: "التيار يخرج من الطرف السالب" }) + "<figcaption>التيار يخرج من الطرف <b>−</b><br><span class='eq-i'>p = vi</span></figcaption></figure>" +
-        "</div>" },
+        "<div class='lfig'>" + elem({ plusTop: true, arrow: "down", name: "(a)" }) + elem({ plusTop: false, arrow: "up", name: "(b)" }) + "</div>" +
+        "<p class='muted'>(a) و (b): التيار يدخل من الطرف الموجب، إذن <span class='ltr'>p = vi</span>.</p>" +
+        "<div class='lfig'>" + elem({ plusTop: true, arrow: "up", name: "(c)" }) + elem({ plusTop: false, arrow: "down", name: "(d)" }) + "</div>" +
+        "<p class='muted'>(c) و (d): التيار يدخل من الطرف السالب، إذن <span class='ltr'>p = −vi</span>.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Ideal basic circuit element</dt><dd>عنصر بطرفين، يوصف بالجهد والتيار، ولا يمكن تقسيمه.</dd>" +
-        "<dt>Passive sign convention</dt><dd>القاعدة التي تحدد إشارة معادلة القدرة حسب اتجاهات المرجع.</dd>" +
-        "<dt>Absorbed power</dt><dd>قدرة يمتصها العنصر (p موجبة).</dd><dt>Delivered power</dt><dd>قدرة يعطيها العنصر للدائرة (p سالبة).</dd></dl>" },
+        "<dl class='terms'><dt>Passive sign convention</dt><dd>إشارة موجبة في العلاقة عندما يدخل مرجع التيار من طرف الجهد الموجب.</dd>" +
+        "<dt>Absorbing</dt><dd>العنصر يأخذ قدرة من الدائرة <span class='ltr'>(p &gt; 0)</span>.</dd>" +
+        "<dt>Supplying / delivering</dt><dd>العنصر يعطي قدرة للدائرة <span class='ltr'>(p &lt; 0)</span>.</dd></dl>" },
       { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq-row'><div class='eq'>p = vi</div><div class='eq'>p = −vi</div></div>" +
-        "<p>الأولى عندما يدخل مرجع التيار من الطرف +، والثانية عندما يدخل من الطرف −. القيم v و i تُعوَّض <b>بإشاراتها</b> كما هي.</p>" },
+        "<div class='eq'>p = vi   (التيار يدخل من +)</div><div class='eq'>p = −vi   (التيار يدخل من −)</div>" +
+        "<ul class='ticks'><li><span class='ltr'>p &gt; 0</span>: القدرة تُعطى للدائرة داخل الصندوق، أي العنصر يمتص.</li>" +
+        "<li><span class='ltr'>p &lt; 0</span>: القدرة تُسحب من الدائرة داخل الصندوق، أي العنصر يعطي.</li></ul>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>في كل مرة تحسب فيها قدرة عنصر. الخطوة الأولى دائمًا: انظر إلى الرسم وحدد هل سهم التيار يدخل الطرف + أم −.</li>" +
-        "<li>القاعدة تتعلق <b>باتجاهات المرجع</b> المرسومة، وليس بالاتجاه الفعلي للتيار. لا تغيّر المعادلة لأن قيمة i سالبة.</li>" +
-        "<li>عوّض الجهد والتيار بإشاراتهما. إشارة سالبة واحدة منسية تقلب النتيجة من امتصاص إلى توليد.</li></ul>" },
+        "<ul class='ticks'><li>قبل كتابة p انظر للرسم: من أي طرف يدخل سهم التيار؟</li>" +
+        "<li>المراجع (السهم والقطبية) اختيارية، لكن بعد اختيارها يجب الالتزام بها في كل المعادلات.</li>" +
+        "<li>نفس العنصر قد تكتبه بـ vi أو بـ −vi حسب المراجع، والنتيجة الفيزيائية لا تتغير.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<div class='ex-split'><div>" + elem({ plusTop: true, arrow: "up", v: "10 V", i: "2 A", aria: "عنصر جهده 10 فولت والتيار 2 أمبير خارج من الطرف الموجب" }) + "</div><div>" +
-        "<p class='q'>عنصر جهده <span class='ltr'>v = 10 V</span> (الطرف + في الأعلى)، وتيار المرجع <span class='ltr'>i = 2 A</span> يخرج من الطرف العلوي. احسب القدرة وحدد هل يمتصها أم يولّدها.</p>" +
-        "<ol class='steps'><li><b>حدد الحالة:</b> السهم يخرج من الطرف +، أي يدخل من الطرف −.</li>" +
-        "<li><b>اختر المعادلة:</b> <span class='eq-i'>p = −vi</span>.</li>" +
-        "<li><b>عوّض:</b> <span class='eq-i'>p = −(10)(2) = −20 W</span>.</li>" +
-        "<li><b>فسّر:</b> p سالبة، إذن العنصر <b>يولّد</b> <span class='ltr'>20 W</span>، مثل بطارية تغذي الدائرة.</li></ol></div></div>" },
+        "<p class='q'>مثال 1 من المحاضرة: هبوط جهد <span class='ltr'>4 V</span> على عنصر، وتيار <span class='ltr'>3 A</span> كما في الحالات الأربع (a) إلى (d). حدّد v و i بالنسبة لاصطلاح الإشارة الخاملة، ثم القدرة: هل الصندوق يمتص أم يعطي؟</p>" +
+        "<div class='lfig'>" + elem({ plusTop: true, arrow: "down", v: "4 V", i: "3 A", name: "(a)" }) + elem({ plusTop: false, arrow: "up", v: "4 V", i: "3 A", name: "(b)" }) + elem({ plusTop: true, arrow: "up", v: "4 V", i: "3 A", name: "(c)" }) + elem({ plusTop: false, arrow: "down", v: "4 V", i: "3 A", name: "(d)" }) + "</div>" +
+        "<ol class='steps'><li>(a) و (b): التيار يدخل من الطرف الموجب: <span class='eq-i'>v = +4 V, i = +3 A</span>.</li>" +
+        "<li>(c) و (d): التيار يخرج من الطرف الموجب: <span class='eq-i'>v = +4 V, i = −3 A</span>.</li>" +
+        "<li>(a) و (b): <span class='eq-i'>p = (+4)(+3) = 12 W</span>، الصندوق <b>يمتص</b>.</li>" +
+        "<li>(c) و (d): <span class='eq-i'>p = (+4)(−3) = −12 W</span>، الصندوق <b>يعطي</b>.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>بطارية الجوال مثال حي على الحالتين. أثناء الشحن يدخل التيار من طرفها الموجب، فهي <b>تمتص</b> القدرة وتخزنها. أثناء الاستخدام يخرج التيار من طرفها الموجب نحو الدائرة، فهي <b>تولّد</b> القدرة. نفس العنصر ونفس القطبية، والذي تغيّر هو اتجاه التيار.</p>" }
+        "<p>بطارية الجوال أثناء الشحن يدخلها التيار من طرفها الموجب فتمتص قدرة، وأثناء التشغيل يخرج التيار من طرفها الموجب فتعطي قدرة. نفس العنصر، والإشارة تخبرك بالحالة.</p>" }
     ],
     quiz: [
       { q: "مرجع التيار يدخل الطرف الموجب لعنصر. ما معادلة القدرة؟", options: [
@@ -306,40 +288,34 @@
 
   /* ------------------------------------------------------------------ */
   L["c1-variables-4"] = {
-    id: "c1-variables-4", ar: "القدرة والطاقة", en: "Power and Energy", minutes: 20,
+    id: "c1-variables-4", ar: "القدرة والطاقة", en: "Power and Energy", minutes: 15,
     objectives: [
-      "تحسب القدرة من الجهد والتيار، والطاقة من القدرة والزمن.",
-      "تحوّل بين الجول والكيلوواط ساعة بدون أخطاء.",
-      "تتحقق من توازن القدرة في الدائرة."
+      "تعرّف القدرة بأنها معدل استهلاك أو إنتاج الطاقة: P = dw/dt.",
+      "تشتق P = VI من تعريفي الجهد والتيار.",
+      "تحسب القدرة والطاقة وتتحقق من توازن القدرة في الدائرة."
     ],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p><b>القدرة</b> <span class='ltr'>(power)</span> هي معدل استهلاك الطاقة أو توليدها، ووحدتها الواط <span class='ltr'>(W = J/s)</span>. ومن تعريفي الجهد والتيار:</p>" +
-        "<div class='eq'>p = dw/dt = (dw/dq)(dq/dt) = v i</div>" +
-        "<p><b>الطاقة</b> هي تكامل القدرة على الزمن. وإذا كانت القدرة ثابتة فالطاقة = القدرة × الزمن.</p>" +
-        "<p>في أي دائرة، <b>مجموع القدرات يساوي صفرًا</b> (مع اصطلاح الإشارة): ما تولّده المصادر يساوي تمامًا ما تمتصه بقية العناصر. هذه أداة ممتازة للتحقق من حلك.</p>" },
+        "<p><b>القدرة</b> <span class='ltr'>(P)</span> هي معدل استهلاك الطاقة أو إنتاجها في وحدة الزمن: <span class='eq-i'>P = dw/dt</span>، ووحدتها الواط، و <span class='ltr'>1 W = 1 J/s</span>.</p>" +
+        "<p>بضرب البسط والمقام في <span class='ltr'>dq</span> نربط القدرة بمتغيري الدائرة: <span class='eq-i'>P = dw/dt = (dw/dq)(dq/dt) = V·I</span>. لهذا يكفي أن نعرف الجهد والتيار لنعرف القدرة.</p>" +
+        "<p>الطاقة هي تكامل القدرة على الزمن، وإذا كانت القدرة ثابتة: <span class='eq-i'>w = P·t</span>. وفي أي دائرة، مجموع القدرة الممتصة = مجموع القدرة المعطاة.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Power (p)</dt><dd>معدل تغير الطاقة، بالواط W.</dd><dt>Energy (w)</dt><dd>بالجول J، أو بالكيلوواط ساعة kWh في فواتير الكهرباء.</dd>" +
-        "<dt>Power balance</dt><dd>مجموع القدرات في الدائرة = صفر.</dd></dl>" },
+        "<dl class='terms'><dt>Power</dt><dd>معدل الطاقة، بالواط (W).</dd><dt>Energy</dt><dd>الطاقة بالجول (J). وفي الفواتير بالكيلوواط ساعة: <span class='ltr'>1 kWh = 3.6 × 10⁶ J</span>.</dd>" +
+        "<dt>Power balance</dt><dd>مجموع القدرات في الدائرة كلها يساوي صفرًا.</dd></dl>" },
       { id: "laws", title: "القوانين والوحدات", en: "Equations & Units", html:
-        "<div class='eq-row'><div class='eq'>p = v i</div><div class='eq'>w = ∫ p dt</div><div class='eq'>W = P t</div></div>" +
-        "<div class='eq'>Σ p = 0</div>" +
-        "<div class='callout'><span class='ltr'>1 kWh = 1000 W × 3600 s = 3.6 × 10⁶ J = 3.6 MJ</span></div>" },
+        "<div class='eq'>P = dw / dt</div><div class='eq'>P = (dw/dq)(dq/dt) = V·I</div><div class='eq'>1 W = 1 J/s</div>" +
+        "<p class='muted'>مع اصطلاح الإشارة الخاملة: <span class='ltr'>p = vi</span> إذا دخل التيار من +، و <span class='ltr'>p = −vi</span> إذا دخل من −.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>لحساب القدرة من الجهد والتيار استخدم <span class='eq-i'>p = vi</span> مع اصطلاح الإشارة من الدرس السابق.</li>" +
-        "<li>لحساب الطاقة خلال زمن والقدرة ثابتة: <span class='eq-i'>W = Pt</span>. إذا أردت النتيجة بالجول فالزمن بالثواني، وإذا أردتها بالـ kWh فالقدرة بالـ kW والزمن بالساعات.</li>" +
-        "<li>بعد حل أي دائرة اجمع قدرات كل العناصر. إذا لم يكن المجموع صفرًا فهناك خطأ في الإشارة أو في الحساب.</li></ul>" },
+        "<ul class='ticks'><li>لحساب قدرة عنصر: اضرب جهده في تياره مع الإشارة الصحيحة.</li>" +
+        "<li>لحساب الطاقة خلال زمن: اضرب القدرة في الزمن بوحدات متوافقة.</li>" +
+        "<li>بعد حل أي دائرة: تحقق أن القدرة المعطاة = القدرة الممتصة. إذا لم تتساويا ففي الحل خطأ.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'><b>توازن القدرة:</b> دائرة من ثلاثة عناصر حُسبت قدراتها كالتالي. تحقق من صحة الحل.</p>" +
-        "<table class='tbl'><thead><tr><th>العنصر</th><th class='ltr'>v</th><th class='ltr'>i</th><th>الحالة</th><th class='ltr'>p</th></tr></thead><tbody>" +
-        "<tr><td>a</td><td class='ltr'>12 V</td><td class='ltr'>2 A</td><td>التيار يخرج من +</td><td class='ltr'>−24 W</td></tr>" +
-        "<tr><td>b</td><td class='ltr'>5 V</td><td class='ltr'>2 A</td><td>التيار يدخل +</td><td class='ltr'>+10 W</td></tr>" +
-        "<tr><td>c</td><td class='ltr'>7 V</td><td class='ltr'>2 A</td><td>التيار يدخل +</td><td class='ltr'>+14 W</td></tr></tbody></table>" +
-        "<ol class='steps'><li><b>اجمع:</b> <span class='eq-i'>Σp = −24 + 10 + 14 = 0</span> ✓</li><li><b>فسّر:</b> العنصر a يولّد 24 W، والعنصران b و c يمتصان معًا 24 W.</li></ol>" +
-        "<p class='q'><b>الطاقة:</b> سخان قدرته <span class='ltr'>1500 W</span> يعمل ساعتين. كم الطاقة؟</p>" +
-        "<ol class='steps'><li><b>بالـ kWh:</b> <span class='eq-i'>W = 1.5 kW × 2 h = 3 kWh</span>.</li><li><b>بالجول:</b> <span class='eq-i'>W = 1500 × 7200 s = 1.08 × 10⁷ J = 10.8 MJ</span>.</li></ol>" },
+        "<p class='q'>من مثال 1: عنصر عليه <span class='ltr'>4 V</span> ويمر فيه <span class='ltr'>3 A</span> داخلًا من طرفه الموجب. احسب قدرته، والطاقة التي يمتصها في دقيقتين.</p>" +
+        "<ol class='steps'><li><span class='eq-i'>p = vi = 4 × 3 = 12 W</span>، موجبة إذن العنصر يمتص.</li>" +
+        "<li><span class='eq-i'>w = p·t = 12 × 120 = 1440 J</span></li>" +
+        "<li>لو عكسنا اتجاه التيار (يخرج من +): <span class='eq-i'>p = 4 × (−3) = −12 W</span>، أي العنصر يعطي 12 W.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>عدّاد الكهرباء في بيتك لا يقيس القدرة بل يقيس <b>الطاقة</b> بالكيلوواط ساعة، والفاتورة تحسب على هذا الأساس. لذلك يستهلك جهاز قدرته صغيرة طاقة كبيرة إذا عمل ساعات طويلة، مثل الثلاجة أو المكيّف في الصيف.</p>" }
+        "<p>عداد الكهرباء يقيس الطاقة بالكيلوواط ساعة. مكيّف قدرته <span class='ltr'>2 kW</span> يعمل 10 ساعات يستهلك <span class='ltr'>20 kWh</span>، وعلى هذه الطاقة تُحسب الفاتورة، لا على القدرة.</p>" }
     ],
     quiz: [
       { q: "الواط يساوي:", options: [

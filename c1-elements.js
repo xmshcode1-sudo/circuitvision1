@@ -21,34 +21,49 @@
     "<tr><td>مصدر تيار يتحكم فيه جهد <span class='ltr'>(VCCS)</span></td><td class='ltr'>iₛ = α vₓ</td><td class='ltr'>A/V = S</td></tr>" +
     "<tr><td>مصدر تيار يتحكم فيه تيار <span class='ltr'>(CCCS)</span></td><td class='ltr'>iₛ = β iₓ</td><td>بدون وحدة</td></tr></tbody></table>";
 
+  /* Lecture circuits (Dr. Abdullah Noman, Part 2). Numbers in the worked examples are checked here when the file loads. */
+  var chk = function (got, want, what) { if (Math.abs(got - want) > 1e-6 * Math.max(1, Math.abs(want))) throw new Error("lesson number mismatch: " + what + " = " + got + ", expected " + want); };
+  var x21a = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "V", 10, { plus: "a", name: "V1" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "V", 10, { plus: "a", name: "V2" }), E([1, 0], [1, 1], "W")] };
+  var x21c = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "V", 10, { plus: "a", name: "V1" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "V", 5, { plus: "a", name: "V2" }), E([1, 0], [1, 1], "W")] };
+  var x3 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "CCVS", 0.25, { plus: "a", ctrl: "I8", vtext: "ib / 4", name: "D" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "V", 0, { plus: "a", vtext: "", name: "vg" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "I", 8, { dir: "ab", name: "I8" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
+
   L["c1-elements-1"] = {
     id: "c1-elements-1", ar: "مصادر الجهد والتيار", en: "Voltage and Current Sources", minutes: 20,
     objectives: ["تميّز بين المصدر المستقل والمصدر التابع وأنواعه الأربعة.", "تحكم على صحة توصيل المصادر المثالية ببعضها.", "تحسب قدرة المصدر وتعرف أنه قد يمتص القدرة لا أن يولّدها فقط."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p><b>مصدر الجهد المثالي</b> يحافظ على جهد محدد بين طرفيه مهما كان التيار المار فيه. <b>مصدر التيار المثالي</b> يحافظ على تيار محدد مهما كان الجهد بين طرفيه. التيار في مصدر الجهد والجهد على مصدر التيار تحددهما <b>بقية الدائرة</b>.</p>" +
-        "<p>المصدر <b>المستقل</b> قيمته ثابتة لا تعتمد على شيء في الدائرة (دائرة في الرسم). المصدر <b>التابع</b> (معيّن في الرسم) قيمته تعتمد على جهد أو تيار في مكان آخر من الدائرة، ويستخدم لنمذجة الترانزستورات ومكبرات العمليات.</p>" +
-        depKinds },
+        "<p>عناصر الدائرة نوعان: <b>عنصر نشط</b> <span class='ltr'>(active)</span> يقدر يولّد طاقة، مثل البطاريات والمولدات ومكبرات العمليات، و<b>عنصر خامل</b> <span class='ltr'>(passive)</span> لا يولّد طاقة، مثل المقاومة والملف والمكثف.</p>" +
+        "<p>أهم العناصر النشطة هي <b>مصادر الجهد والتيار</b>، وهي نوعان: مستقلة وتابعة.</p>" +
+        "<p><b>مصدر الجهد المستقل المثالي</b> يحافظ على جهد محدد بين طرفيه <b>مهما كان التيار</b> المار فيه. و<b>مصدر التيار المستقل المثالي</b> يحافظ على تيار محدد <b>مهما كان الجهد</b> بين طرفيه.</p>" +
+        "<p><b>المصدر التابع</b> (أو المتحكَّم فيه) يعطي جهدًا أو تيارًا تعتمد قيمته على جهد أو تيار في مكان آخر من الدائرة. نرسمه على شكل معيّن (diamond).</p>" + depKinds },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Ideal voltage source</dt><dd>يحافظ على جهد ثابت بين طرفيه مهما كان تياره.</dd><dt>Ideal current source</dt><dd>يحافظ على تيار ثابت مهما كان جهده.</dd>" +
-        "<dt>Independent source</dt><dd>قيمته محددة ولا تتأثر ببقية الدائرة.</dd><dt>Dependent (controlled) source</dt><dd>قيمته دالة في جهد أو تيار آخر في الدائرة <span class='ltr'>(vₓ أو iₓ)</span>.</dd></dl>" },
-      { id: "laws", title: "قواعد التوصيل الصحيح", en: "Valid Interconnections", html:
-        "<ul class='ticks'><li>مصدرا جهد مثاليان <b>على التوازي</b> يجب أن يكون جهداهما متساويين، وإلا خالفت الدائرة KVL.</li>" +
-        "<li>مصدرا تيار مثاليان <b>على التوالي</b> يجب أن يكون تياراهما متساويين، وإلا خالفت الدائرة KCL.</li>" +
-        "<li>لا يُقصر مصدر جهد بسلك (جهده لن يكون صفرًا)، ولا يُترك مصدر تيار بدون مسار مغلق (تياره لن يكون صفرًا).</li>" +
-        "<li>مصدر جهد على التوالي مع مصدر تيار توصيل <b>صحيح</b>: مصدر التيار يحدد التيار، ومصدر الجهد يحدد الجهد.</li></ul>" },
+        "<dl class='terms'><dt>Active / Passive element</dt><dd>عنصر يولّد طاقة / عنصر لا يولّدها.</dd>" +
+        "<dt>Independent source</dt><dd>مصدر قيمته ثابتة لا تعتمد على بقية الدائرة.</dd>" +
+        "<dt>Dependent (controlled) source</dt><dd>مصدر قيمته تعتمد على جهد أو تيار آخر في الدائرة.</dd>" +
+        "<dt>μ, α, ρ, β</dt><dd>ثوابت الضرب: μ و β بدون وحدة، α بوحدة A/V، و ρ بوحدة V/A.</dd></dl>" },
+      { id: "laws", title: "قواعد التوصيل الصحيح", en: "Valid Connections", html:
+        "<ul class='ticks'><li>مصدرا جهد على التوازي يجب أن يكون لهما <b>نفس الجهد ونفس القطبية</b>، وإلا فالتوصيل غير مسموح.</li>" +
+        "<li>مصدرا تيار على التوالي يجب أن يكون لهما <b>نفس التيار ونفس الاتجاه</b>، وإلا فالتوصيل غير مسموح.</li>" +
+        "<li>مصدر جهد مع مصدر تيار (على التوالي أو التوازي) توصيل <b>صحيح</b> دائمًا: كل منهما يفرض كميته فقط.</li>" +
+        "<li>نفس القواعد للمصادر التابعة: قيمة المصدر التابع يجب أن تساوي ما يفرضه المصدر الآخر.</li></ul>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>قبل حل أي دائرة فيها مصادر مثالية، تحقق أن توصيلها صحيح. الدائرة غير الصحيحة ليس لها حل.</li>" +
-        "<li>لا تفترض أن المصدر يولّد القدرة دائمًا. احسب قدرته باصطلاح الإشارة، فقد تخرج موجبة (يمتص)، مثل بطارية أثناء الشحن.</li>" +
-        "<li>مع المصدر التابع، حدد الكمية المتحكِّمة <span class='ltr'>(vₓ أو iₓ)</span> على الرسم أولًا، فقيمة المصدر لا تُعرف بدونها.</li></ul>" },
+        "<ul class='ticks'><li>قبل حل أي دائرة فيها مصادر متصلة ببعضها مباشرة: تحقق أن التوصيل صحيح.</li>" +
+        "<li>مع المصدر التابع: حدّد أولًا الكمية المتحكِّمة (vₓ أو iₓ) وأين هي في الدائرة.</li>" +
+        "<li>عندما يفرض مصدر مستقل كمية ما، نستخدمها لإيجاد الثابت أو الكمية المتحكمة للمصدر التابع.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<p class='q'>حدد هل كل توصيل من التوصيلات التالية صحيح:</p>" +
-        "<ol class='steps'><li>مصدر <span class='ltr'>10 V</span> على التوازي مع مصدر <span class='ltr'>10 V</span> بنفس القطبية: <b>صحيح</b>، الجهدان متساويان.</li>" +
-        "<li>مصدر <span class='ltr'>10 V</span> على التوازي مع مصدر <span class='ltr'>5 V</span>: <b>غير صحيح</b>، الجهد بين العقدتين لا يمكن أن يكون 10 و 5 معًا.</li>" +
-        "<li>مصدر <span class='ltr'>2 A</span> على التوالي مع مصدر <span class='ltr'>3 A</span>: <b>غير صحيح</b>، التيار في الفرع الواحد لا يمكن أن يكون 2 و 3 معًا.</li>" +
-        "<li>مصدر <span class='ltr'>2 A</span> على التوالي مع مصدر <span class='ltr'>12 V</span>: <b>صحيح</b>، التيار 2 A والجهد على مصدر الجهد 12 V.</li></ol>" },
+        "<p class='q'>مثال 2.1: هل التوصيلات التالية صحيحة؟ (a) مصدرا <span class='ltr'>10 V</span> على التوازي بنفس القطبية. (c) مصدر <span class='ltr'>10 V</span> على التوازي مع مصدر <span class='ltr'>5 V</span>. (b) مصدر <span class='ltr'>5 A</span> على التوالي مع مصدر <span class='ltr'>5 A</span> بنفس الاتجاه. (d) مصدر <span class='ltr'>2 A</span> على التوالي مع مصدر <span class='ltr'>5 A</span>. (e) مصدر <span class='ltr'>5 A</span> على التوالي مع مصدر <span class='ltr'>10 V</span>.</p>" +
+        fig(x21a, "مصدرا جهد 10 V على التوازي") + fig(x21c, "مصدر 10 V على التوازي مع مصدر 5 V") +
+        "<ol class='steps'><li>(a) صحيح: المصدران يفرضان نفس الجهد 10 V بنفس القطبية.</li>" +
+        "<li>(c) غير مسموح: نفس الطرفين لا يمكن أن يكون جهدهما 10 V و 5 V في نفس الوقت.</li>" +
+        "<li>(b) صحيح، و (d) غير مسموح: التيار في التوالي واحد، فلا يكون 2 A و 5 A معًا.</li>" +
+        "<li>(e) صحيح: مصدر التيار يفرض التيار، ومصدر الجهد يفرض الجهد.</li></ol>" +
+        "<p class='q'>مثال 3 (Assessment): في الدائرة، مصدر جهد تابع قيمته <span class='ltr'>i<sub>b</sub> / 4</span> على التوازي مع مصدر جهد مستقل <span class='ltr'>v<sub>g</sub></span> ومصدر تيار <span class='ltr'>8 A</span>، و <span class='ltr'>i<sub>b</sub></span> مرجعه عكس اتجاه مصدر 8 A. (a) ما قيمة <span class='ltr'>v<sub>g</sub></span> ليكون التوصيل صحيحًا؟ (b) ما قدرة مصدر 8 A؟</p>" +
+        fig(x3, "مصدر جهد تابع ومصدر جهد مستقل ومصدر تيار 8 A على التوازي") +
+        "<ol class='steps'><li>مرجع <span class='ltr'>i<sub>b</sub></span> عكس اتجاه مصدر التيار، إذن <span class='eq-i'>i<sub>b</sub> = −8 A</span>.</li>" +
+        "<li>المصدران على التوازي يجب أن يتساويا: <span class='eq-i'>v<sub>g</sub> = i<sub>b</sub> / 4 = −8 / 4 = −2 V</span></li>" +
+        "<li><span class='eq-i'>P<sub>8A</sub> = v<sub>g</sub> × 8 = −2 × 8 = −16 W</span>، أي المصدر <b>يعطي</b> 16 W.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>بطارية السيارة تولّد القدرة عند تشغيل المحرك، لكنها <b>تمتص</b> القدرة أثناء القيادة لأن الدينامو (Alternator) يشحنها. الدينامو يعمل تقريبًا كمصدر يدفع التيار داخلًا من الطرف الموجب للبطارية. ونماذج الترانزستور في مقرر الإلكترونيات تعتمد على المصادر التابعة، مثل <span class='ltr'>i<sub>C</sub> = β i<sub>B</sub></span>.</p>" }
+        "<p>لا توصل بطاريتين مختلفتي الجهد على التوازي (مثل بطارية جديدة وأخرى فارغة): الفرق بينهما يسبب تيارًا كبيرًا جدًا يسخّنهما. هذا هو التوصيل غير المسموح في الواقع. أما المصدر التابع فهو النموذج الذي نمثل به الترانزستور ومكبر العمليات.</p>" }
     ],
     quiz: [
       { q: "مصدر الجهد المثالي يحافظ على:", options: [
@@ -97,34 +112,44 @@
   };
 
   /* ------------------------------------------------------------------ */
+  var x23a = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "I", 1, { dir: "ba", name: "Ia" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 8, { name: "R8", vlabel: "va" }), E([1, 0], [1, 1], "W")] };
+  var x23b = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "V", 50, { plus: "a", name: "Vb" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 5, { name: "G", vtext: "0.2 S", ilabel: "ib" }), E([1, 0], [1, 1], "W")] };
+  var x23c = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "I", 1, { dir: "ab", name: "Ic" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 20, { name: "R20", vlabel: "vc" }), E([1, 0], [1, 1], "W")] };
+  var x23d = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "V", 50, { plus: "b", name: "Vd" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 25, { name: "R25", ilabel: "id" }), E([1, 0], [1, 1], "W")] };
+  var s23a = solve(x23a), s23b = solve(x23b), s23c = solve(x23c), s23d = solve(x23d);
+  chk(s23a.R8.v, 8, "2.3a va"); chk(s23a.R8.p, 8, "2.3a p"); chk(s23b.G.i, 10, "2.3b ib"); chk(s23b.G.p, 500, "2.3b p"); chk(s23c.R20.v, -20, "2.3c vc"); chk(s23c.R20.p, 20, "2.3c p"); chk(s23d.R25.i, -2, "2.3d id"); chk(s23d.R25.p, 100, "2.3d p");
+
   L["c1-elements-2"] = {
     id: "c1-elements-2", ar: "قانون أوم", en: "Ohm’s Law", minutes: 20,
     objectives: ["تطبق قانون أوم مع اصطلاح الإشارة.", "تحسب الموصلية والقدرة في المقاومة بالصيغ المختلفة.", "تعرف أن المقاومة تمتص القدرة دائمًا."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>المقاومة <span class='ltr'>(resistance)</span> هي قدرة المادة على إعاقة مرور التيار، ووحدتها الأوم <span class='ltr'>(Ω)</span>. قانون أوم يربط الجهد والتيار في المقاومة.</p>" +
-        "<div class='callout'>إذا كان مرجع التيار يدخل الطرف + للمقاومة: <span class='eq-i'>v = iR</span>. وإذا دخل من الطرف −: <span class='eq-i'>v = −iR</span>.</div>" +
-        "<p>مقلوب المقاومة هو <b>الموصلية</b> <span class='ltr'>(conductance) G = 1/R</span>، ووحدتها السيمنز <span class='ltr'>(S)</span>. والمقاومة <b>تمتص القدرة دائمًا</b>، وتحوّلها إلى حرارة.</p>" },
+        "<p><b>المقاومة</b> <span class='ltr'>(resistance)</span> هي قدرة المادة على إعاقة سريان التيار، أي سريان الشحنة. والعنصر الذي يمثل هذا السلوك هو <b>المقاوم</b> <span class='ltr'>(resistor)</span>.</p>" +
+        "<p>في التحليل نربط مرجع تيار المقاومة بجهدها بطريقتين: إما في اتجاه <b>هبوط</b> الجهد فيكون <span class='eq-i'>v = iR</span>، أو في اتجاه <b>ارتفاع</b> الجهد فيكون <span class='eq-i'>v = −iR</span>.</p>" +
+        "<p>مقلوب المقاومة يسمى <b>الموصلية</b> <span class='ltr'>(conductance)</span>: <span class='eq-i'>G = 1/R</span> وتقاس بالسيمنز <span class='ltr'>(S)</span>.</p>" +
+        "<p>المقاومة تمتص القدرة دائمًا، والقدرة عليها موجبة مهما كانت اتجاهات المراجع: <span class='eq-i'>p = i²R = v²/R</span>.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Resistance (R)</dt><dd>بالأوم Ω.</dd><dt>Conductance (G)</dt><dd><span class='ltr'>G = 1/R</span>، بالسيمنز S.</dd>" +
-        "<dt>Short circuit</dt><dd>مقاومة صفر: الجهد صفر مهما كان التيار.</dd><dt>Open circuit</dt><dd>مقاومة لا نهائية: التيار صفر مهما كان الجهد.</dd></dl>" },
+        "<dl class='terms'><dt>Resistance (R)</dt><dd>إعاقة سريان الشحنة، بالأوم (Ω).</dd><dt>Resistor</dt><dd>العنصر الذي يمثل المقاومة في نموذج الدائرة.</dd>" +
+        "<dt>Conductance (G)</dt><dd>مقلوب المقاومة، بالسيمنز (S).</dd></dl>" },
       { id: "laws", title: "القوانين والوحدات", en: "Equations & Units", html:
-        "<div class='eq-row'><div class='eq'>v = iR</div><div class='eq'>G = 1 / R</div></div>" +
-        "<div class='eq'>p = i²R = v² / R = v²G</div>" +
-        "<p class='muted'>صيغ القدرة الثلاث كلها موجبة دائمًا، لأن i² و v² موجبان. لذلك لا تحتاج اصطلاح الإشارة لحساب قدرة المقاومة.</p>" },
+        "<div class='eq'>v = iR   ←   i = v / R</div><div class='eq'>v = −iR   (مرجع التيار في اتجاه ارتفاع الجهد)</div><div class='eq'>G = 1 / R  (S)</div>" +
+        "<p>قدرة المقاومة بثلاث طرق كما في المحاضرة:</p>" +
+        "<div class='eq'>p = vi  أو  p = −vi</div><div class='eq'>p = (iR)i = i²R = i² / G</div><div class='eq'>p = v·(v/R) = v² / R = v²G</div>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>استخدم <span class='eq-i'>v = iR</span> أو <span class='eq-i'>v = −iR</span> حسب اتجاه مرجع التيار بالنسبة لقطبية الجهد، وليس حسب ما تتوقعه.</li>" +
-        "<li>إذا عرفت التيار استخدم <span class='eq-i'>p = i²R</span>، وإذا عرفت الجهد استخدم <span class='eq-i'>p = v²/R</span>. الصيغتان تعطيان نفس النتيجة.</li>" +
-        "<li>عند جمع مقاومات على التوازي (الفصل القادم) يكون العمل بالموصلية أسهل.</li></ul>" },
+        "<ul class='ticks'><li>انظر لاتجاه التيار بالنسبة لقطبية الجهد قبل كتابة v = iR أو v = −iR.</li>" +
+        "<li>إذا عندك التيار فقط استخدم <span class='ltr'>p = i²R</span>، وإذا عندك الجهد فقط استخدم <span class='ltr'>p = v²/R</span>.</li>" +
+        "<li>إذا أعطيت الموصلية G بالسيمنز: <span class='ltr'>i = vG</span> و <span class='ltr'>p = v²G</span>.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        "<div class='ex-split'><div>" + CV.elemDiagram({ plusTop: true, arrow: "down", v: "v", i: "2 A", name: "5 Ω", aria: "مقاومة 5 أوم والتيار 2 أمبير يدخل الطرف الموجب" }) + "</div><div>" +
-        "<p class='q'>مقاومة <span class='ltr'>5 Ω</span> يدخل تيار المرجع <span class='ltr'>2 A</span> طرفها الموجب. احسب الجهد والقدرة والموصلية.</p>" +
-        "<ol class='steps'><li><b>الجهد:</b> التيار يدخل الطرف +، إذن <span class='eq-i'>v = iR = (2)(5) = 10 V</span>.</li>" +
-        "<li><b>القدرة:</b> <span class='eq-i'>p = i²R = (2)²(5) = 20 W</span>، وللتحقق <span class='eq-i'>v²/R = 100/5 = 20 W</span>.</li>" +
-        "<li><b>الموصلية:</b> <span class='eq-i'>G = 1/5 = 0.2 S</span>.</li>" +
-        "<li><b>لو عكسنا سهم التيار:</b> يصبح <span class='eq-i'>i = −2 A</span> و <span class='eq-i'>v = −iR = 10 V</span>. نفس الجهد الفعلي، لأن الفيزياء لم تتغير، تغيّر فقط ما رسمناه.</li></ol></div></div>" },
+        "<p class='q'>مثال 2.3: في كل دائرة، إحدى القيمتين v أو i مجهولة. (a) أوجد الجهد والتيار. (b) أوجد القدرة المستهلكة في كل مقاومة.</p>" +
+        "<div class='lfig'>" + CV.draw.render(x23a, { aria: "مصدر 1 A مع مقاومة 8 Ω" }) + CV.draw.render(x23b, { aria: "مصدر 50 V مع موصلية 0.2 S" }) + "</div>" +
+        "<div class='lfig'>" + CV.draw.render(x23c, { aria: "مصدر 1 A مع مقاومة 20 Ω" }) + CV.draw.render(x23d, { aria: "مصدر 50 V مع مقاومة 25 Ω" }) + "</div>" +
+        "<ol class='steps'><li>(a) <span class='ltr'>v<sub>a</sub></span> هبوط في اتجاه التيار: <span class='eq-i'>v<sub>a</sub> = (1)(8) = 8 V</span>، و <span class='eq-i'>p = (8)²/8 = (1)²(8) = 8 W</span></li>" +
+        "<li>(b) <span class='ltr'>i<sub>b</sub></span> في اتجاه هبوط الجهد: <span class='eq-i'>i<sub>b</sub> = (50)(0.2) = 10 A</span>، و <span class='eq-i'>p = (50)²(0.2) = 500 W</span></li>" +
+        "<li>(c) <span class='ltr'>v<sub>c</sub></span> ارتفاع في اتجاه التيار: <span class='eq-i'>v<sub>c</sub> = −(1)(20) = −20 V</span>، و <span class='eq-i'>p = (−20)²/20 = (1)²(20) = 20 W</span></li>" +
+        "<li>(d) <span class='ltr'>i<sub>d</sub></span> في اتجاه ارتفاع الجهد: <span class='eq-i'>i<sub>d</sub> = −50/25 = −2 A</span>، و <span class='eq-i'>p = (50)²/25 = (−2)²(25) = 100 W</span></li></ol>" +
+        "<p class='muted'>لاحظ: الإشارة السالبة في (c) و (d) جاءت من اتجاه المراجع فقط، والقدرة في كل الحالات موجبة لأن المقاومة تمتص دائمًا.</p>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>سخان الماء والمكواة والغلاية كلها مقاومات تحوّل القدرة إلى حرارة بالعلاقة <span class='ltr'>p = v²/R</span>. ولهذا السبب سلك التمديد الرفيع خطر: مقاومته أكبر، فيسخن أكثر عند نفس التيار <span class='ltr'>(p = i²R)</span>.</p>" }
+        "<p>سخان الماء الكهربائي مقاومة تحول القدرة <span class='ltr'>v²/R</span> إلى حرارة. سخان مقاومته <span class='ltr'>24.2 Ω</span> على <span class='ltr'>220 V</span> يستهلك <span class='ltr'>2000 W</span>.</p>" }
     ],
     quiz: [
       { q: "مرجع التيار يدخل الطرف <b>السالب</b> لمقاومة. قانون أوم يصبح:", options: [
@@ -169,35 +194,47 @@
   var c3 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 30, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", 5, { name: "R1", ilabel: "i₁" }), E([0, 1], [1, 1], "R", 10, { name: "R2", ilabel: "i₂" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "I", 1.5, { dir: "ab", name: "Is" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
   var s3 = solve(c3);
 
+  var x28 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 120, { plus: "a", name: "V120" }), E([0, 0], [0, 1], "R", 10, { name: "R10", ilabel: "i₀" }), E([0, 1], [1, 1], "R", 50, { name: "R50", ilabel: "i₁" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "I", 6, { dir: "ba", name: "I6" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
+  var s28 = solve(x28);
+  chk(s28.R10.i, -3, "2.8 io"); chk(s28.R50.i, 3, "2.8 i1"); chk(s28.R50.p, 450, "2.8 p50"); chk(s28.R10.p, 90, "2.8 p10"); chk(s28.I6.p, -900, "2.8 p6A");
+  var xKL = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "R", 1, { name: "X1", vtext: "" }), E([0, 0], [0, 1], "R", 1, { name: "X2", vtext: "" }), E([0, 1], [1, 1], "R", 1, { name: "X3", vtext: "" }), E([0, 1], [0, 2], "R", 1, { name: "X4", vtext: "" }), E([0, 2], [1, 2], "R", 1, { name: "X5", vtext: "" }), E([0, 2], [0, 3], "W"), E([0, 3], [1, 3], "R", 1, { name: "X6", vtext: "" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] };
+
   L["c1-elements-3"] = {
     id: "c1-elements-3", ar: "قانونا كيرشوف", en: "Kirchhoff’s Laws", minutes: 30,
     objectives: ["تكتب معادلة KCL عند أي عقدة بإشارات صحيحة.", "تكتب معادلة KVL حول أي مسار مغلق.", "تجمع KCL و KVL وقانون أوم لحل دائرة بأكثر من حلقة."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p><b>العقدة</b> <span class='ltr'>(node)</span> نقطة يلتقي فيها عنصران أو أكثر، و<b>المسار المغلق</b> <span class='ltr'>(closed path / loop)</span> مسار يبدأ من عقدة ويعود إليها دون المرور بأي عقدة مرتين.</p>" +
-        "<div class='callout'><b>KCL:</b> المجموع الجبري للتيارات عند أي عقدة يساوي صفرًا. أي أن ما يدخل العقدة = ما يخرج منها.<br><b>KVL:</b> المجموع الجبري للجهود حول أي مسار مغلق يساوي صفرًا.</div>" +
-        "<p>KCL نتيجة لحفظ الشحنة (الشحنة لا تتراكم في العقدة)، و KVL نتيجة لحفظ الطاقة. مع قانون أوم، هذان القانونان يكفيان لحل أي دائرة مقاومات.</p>" },
+        "<p>قبل قوانين كيرشوف نحتاج ثلاثة تعريفات من الرسم:</p>" +
+        "<ul><li><b>العقدة</b> <span class='ltr'>(node)</span>: نقطة يلتقي عندها عنصران أو أكثر. نحتاج تحديدها لنطبق KCL.</li>" +
+        "<li><b>الفرع</b> <span class='ltr'>(branch)</span>: كل عنصر في الدائرة يمثل فرعًا.</li>" +
+        "<li><b>الحلقة</b> <span class='ltr'>(loop)</span>: مسار مغلق نبدأ فيه من عقدة ونمر بعناصر ونرجع لنفس العقدة دون أن نمر بأي عقدة وسطى أكثر من مرة.</li></ul>" +
+        fig(xKL, "شبكة فيها ستة فروع X1 إلى X6") +
+        "<p>في هذه الشبكة 4 عقد (A في أعلى X1، و B فوق X3، و C فوق X5 و X6، و D العقدة السفلية)، و 6 فروع، و 6 حلقات: (X1 X2 X3)، (X3 X4 X5)، (X5 X6)، (X1 X2 X4 X5)، (X1 X2 X4 X6)، (X3 X4 X6).</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Node</dt><dd>نقطة التقاء عنصرين أو أكثر. كل الأسلاك المتصلة ببعضها تمثل عقدة واحدة.</dd><dt>Closed path (loop)</dt><dd>مسار يعود لنقطة البداية.</dd>" +
-        "<dt>KCL</dt><dd>Kirchhoff’s Current Law.</dd><dt>KVL</dt><dd>Kirchhoff’s Voltage Law.</dd></dl>" },
-      { id: "laws", title: "القوانين", en: "Equations", html:
-        "<div class='eq-row'><div class='eq'>Σ i<sub>in</sub> = Σ i<sub>out</sub></div><div class='eq'>Σ v = 0  (around a loop)</div></div>" +
-        "<ul class='ticks'><li><b>في KCL:</b> اختر قاعدة واحدة والتزم بها، مثلًا التيار الخارج موجب والداخل سالب.</li>" +
-        "<li><b>في KVL:</b> امشِ حول الحلقة في اتجاه واحد. إذا دخلت العنصر من طرفه + فهذا هبوط (موجب)، وإذا دخلته من طرفه − فهذا ارتفاع (سالب).</li></ul>" },
+        "<dl class='terms'><dt>Node</dt><dd>نقطة التقاء عنصرين أو أكثر.</dd><dt>Branch</dt><dd>كل عنصر في الشبكة.</dd><dt>Loop (closed path)</dt><dd>مسار مغلق لا يمر بعقدة وسطى مرتين.</dd>" +
+        "<dt>KCL</dt><dd>قانون كيرشوف للتيار، يطبق عند العقد.</dd><dt>KVL</dt><dd>قانون كيرشوف للجهد، يطبق حول الحلقات.</dd></dl>" },
+      { id: "laws", title: "القوانين", en: "Laws", html:
+        "<p><b>KCL:</b> المجموع الجبري لكل التيارات عند أي عقدة يساوي صفرًا.</p>" +
+        "<div class='eq'>Σ i<sub>out</sub> − Σ i<sub>in</sub> = 0   ←   Σ i<sub>in</sub> = Σ i<sub>out</sub></div>" +
+        "<p><b>KVL:</b> المجموع الجبري لكل الجهود حول أي مسار مغلق يساوي صفرًا.</p>" +
+        "<div class='eq'>Σ v<sub>rise</sub> − Σ v<sub>drop</sub> = 0   ←   Σ v<sub>rise</sub> = Σ v<sub>drop</sub></div>" +
+        "<p class='muted'>في الشبكة أعلاه: عند A <span class='ltr'>i₁ = i₂</span>، وعند B <span class='ltr'>i₂ = i₃ + i₄</span>، وعند C <span class='ltr'>i₄ = i₅ + i₆</span>، وعند D <span class='ltr'>i₁ = i₃ + i₅ + i₆</span>. وحول الحلقة (X1 X2 X3): <span class='ltr'>v₁ + v₂ = v₃</span>، وحول (X5 X6): <span class='ltr'>v₅ = v₆</span>.</p>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>اكتب KCL عند العقد التي يلتقي فيها <b>ثلاثة عناصر أو أكثر</b>. العقدة بين عنصرين فقط تعطي معادلة بديهية (التيار نفسه).</li>" +
-        "<li>اكتب KVL حول الحلقات <b>التي لا تمر بمصدر تيار</b>، لأن جهد مصدر التيار مجهول ويضيف مجهولًا جديدًا.</li>" +
-        "<li>عدد المعادلات المستقلة يجب أن يساوي عدد المجاهيل. عدد عقد الدائرة n يعطي <span class='ltr'>n − 1</span> معادلة KCL مستقلة.</li></ul>" },
+        "<ul class='ticks'><li>عدّ المجاهيل أولًا، ثم اكتب معادلات مستقلة بعددها: KCL عند العقد و KVL حول الحلقات.</li>" +
+        "<li>مع n عقدة تكفي n − 1 معادلة KCL مستقلة؛ معادلة العقدة الأخيرة تتكرر.</li>" +
+        "<li>تجنب حلقة تمر بمصدر تيار لأن جهده مجهول.</li>" +
+        "<li>بعد الحل تحقق: القدرة المعطاة = القدرة الممتصة.</li></ul>" },
       { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        fig(c3ex, "دائرة سلم: مصدر 24 فولت وأربع مقاومات") +
-        "<p class='q'>أوجد التيارات <span class='ltr'>i₁</span> و <span class='ltr'>i₂</span> و <span class='ltr'>i₃</span> باتجاهات الأسهم.</p>" +
-        "<ol class='steps'><li><b>KCL عند العقدة العليا الوسطى:</b> <span class='eq-i'>i₁ = i₂ + i₃</span></li>" +
-        "<li><b>KVL في الحلقة اليسرى</b> (مع عقارب الساعة): <span class='eq-i'>−24 + 4i₁ + 12i₂ = 0</span></li>" +
-        "<li><b>KVL في الحلقة اليمنى:</b> <span class='eq-i'>−12i₂ + 2i₃ + 4i₃ = 0 → i₂ = 0.5 i₃</span></li>" +
-        "<li><b>التعويض:</b> <span class='eq-i'>i₁ = 1.5 i₃</span>، إذن <span class='eq-i'>24 = 6i₃ + 6i₃ → i₃ = 2 A</span></li>" +
-        "<li><b>النتيجة:</b> <span class='eq-i'>i₂ = 1 A</span> و <span class='eq-i'>i₁ = 3 A</span>. وللتحقق: <span class='ltr'>3 = 1 + 2</span> ✓</li></ol>" },
+        "<p class='q'>مثال 2.8: مصدر <span class='ltr'>120 V</span>، ومقاومة <span class='ltr'>10 Ω</span> يمر فيها <span class='ltr'>i₀</span>، ومقاومة <span class='ltr'>50 Ω</span> يمر فيها <span class='ltr'>i₁</span>، ومصدر تيار <span class='ltr'>6 A</span> يدخل العقدة b. (a) أوجد i₀ و i₁. (b) تحقق من توازن القدرة.</p>" +
+        fig(x28, "مصدر 120 V ومقاومتان 10 Ω و 50 Ω ومصدر تيار 6 A") +
+        "<ol class='steps'><li>مجهولان: i₀ و i₁، نحتاج معادلتين.</li>" +
+        "<li>KCL عند العقدة b: <span class='eq-i'>i₁ − i₀ − 6 = 0</span></li>" +
+        "<li>KVL حول المسار الأيسر: <span class='eq-i'>−120 + 10i₀ + 50i₁ = 0</span></li>" +
+        "<li>بالتعويض: <span class='eq-i'>−120 + 10i₀ + 50(i₀ + 6) = 0 ← i₀ = −3 A, i₁ = 3 A</span></li>" +
+        "<li>القدرات: <span class='eq-i'>p<sub>50Ω</sub> = (3)²(50) = 450 W</span>، <span class='eq-i'>p<sub>10Ω</sub> = (−3)²(10) = 90 W</span>، <span class='eq-i'>p<sub>120V</sub> = −120 i₀ = 360 W</span> (يمتص)، <span class='eq-i'>p<sub>6A</sub> = −(50 i₁)(6) = −900 W</span> (يعطي).</li>" +
+        "<li>التحقق: <span class='eq-i'>360 + 450 + 90 = 900 W</span> = القدرة المعطاة.</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>لوحة توزيع الكهرباء في المنزل تطبيق مباشر لـ KCL: التيار الداخل من القاطع الرئيسي يساوي مجموع تيارات القواطع الفرعية. ولهذا يفصل القاطع الرئيسي إذا شغّلت أجهزة كثيرة معًا حتى لو لم يتجاوز أي قاطع فرعي حدّه.</p>" }
+        "<p>لوحة التوزيع في البيت عقدة كبيرة: التيار الداخل من العداد = مجموع تيارات القواطع الخارجة لكل غرفة. هذا KCL، وعليه يُختار حجم القاطع الرئيسي.</p>" }
     ],
     quiz: [
       { q: "ثلاثة تيارات تدخل عقدة: <span class='ltr'>2 A</span> و <span class='ltr'>5 A</span>، وتيار <span class='ltr'>i</span> يخرج منها. قيمة i:", options: [
@@ -251,46 +288,64 @@
   var c4 = { rows: 2, cols: 2, edges: [E([0, 0], [1, 0], "V", 12, { plus: "a", name: "Vs" }), E([0, 0], [0, 1], "R", 2, { name: "R1", ilabel: "i" }), E([0, 1], [1, 1], "R", 4, { name: "R2", isCtrl: true }), E([1, 0], [1, 1], "VCVS", 0.5, { plus: "a", ctrl: "R2", name: "D" })] };
   var s4 = solve(c4);
 
+  var x222 = { rows: 2, cols: 3, edges: [E([0, 0], [1, 0], "V", 500, { plus: "a", name: "V500" }), E([0, 0], [0, 1], "R", 5, { name: "R5", ilabel: "iΔ" }), E([0, 1], [1, 1], "R", 20, { name: "R20", ilabel: "i₀", vlabel: "v₀" }), E([0, 1], [0, 2], "W"), E([0, 2], [1, 2], "CCCS", 5, { dir: "ba", ctrl: "R5", vtext: "5 iΔ", name: "D" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W")] };
+  var s222 = solve(x222); chk(s222.R5.i, 4, "2.22 iΔ"); chk(s222.R20.i, 24, "2.22 io"); chk(s222.R20.v, 480, "2.22 vo");
+  var x210 = { rows: 2, cols: 4, edges: [E([0, 0], [1, 0], "V", 10, { plus: "a", name: "V10" }), E([0, 0], [0, 1], "W"), E([0, 1], [1, 1], "R", 6, { name: "R6", ilabel: "iₛ" }), E([0, 2], [1, 2], "CCVS", 3, { plus: "a", ctrl: "R6", vtext: "3 iₛ", name: "D" }), E([0, 2], [0, 3], "R", 2, { name: "R2", ilabel: "i₀" }), E([0, 3], [1, 3], "R", 3, { name: "R3", vlabel: "v₀" }), E([1, 0], [1, 1], "W"), E([1, 1], [1, 2], "W"), E([1, 2], [1, 3], "W")] };
+  var s210 = solve(x210); chk(s210.R6.i, 10 / 6, "2.10 is"); chk(s210.R2.i, 1, "2.10 io"); chk(s210.R3.v, 3, "2.10 vo"); chk(s210.D.p, -5, "2.10 p dep");
+
   L["c1-elements-4"] = {
     id: "c1-elements-4", ar: "تحليل دائرة فيها مصادر تابعة", en: "Analysis of a Circuit Containing Dependent Sources", minutes: 30,
     objectives: ["تكتب معادلة القيد للمصدر التابع بدلالة الكمية المتحكِّمة.", "تحل دائرة فيها مصدر تابع بـ KCL و KVL.", "تحسب قدرة المصدر التابع وتتحقق من توازن القدرة."],
     sections: [
       { id: "concept", title: "الفكرة", en: "Concept", html:
-        "<p>المصدر التابع يُعامل في معادلات KCL و KVL مثل أي مصدر، مع فرق واحد: قيمته مجهولة لأنها تعتمد على الكمية المتحكِّمة <span class='ltr'>(iₓ أو vₓ)</span>. لذلك نضيف معادلة إضافية تسمى <b>معادلة القيد</b> <span class='ltr'>(constraint equation)</span> تعبّر عن الكمية المتحكِّمة بدلالة مجاهيل الدائرة.</p>" +
-        "<div class='callout'>الطريقة: (1) حدد الكمية المتحكِّمة على الرسم. (2) اكتب KCL و KVL كالمعتاد. (3) اكتب معادلة القيد. (4) حل المعادلات معًا.</div>" },
+        "<p>نحلل الدائرة التي فيها مصدر تابع بنفس الأدوات: <b>KVL و KCL وقانون أوم</b>. الفرق الوحيد أن المصدر التابع يضيف <b>معادلة قيد</b> تربط قيمته بالكمية المتحكِّمة.</p>" +
+        "<p>الخطوات كما في المحاضرة: (1) حدّد المجاهيل. (2) إذا عرفنا الكمية المتحكِّمة عرفنا قيمة المصدر التابع. (3) اكتب معادلات بعدد المجاهيل من KVL و KCL. (4) احسب المطلوب بقانون أوم، وتحقق من توازن القدرة.</p>" },
       { id: "terms", title: "المصطلحات", en: "Terminology", html:
-        "<dl class='terms'><dt>Controlling variable</dt><dd>الجهد vₓ أو التيار iₓ الذي تعتمد عليه قيمة المصدر التابع.</dd><dt>Constraint equation</dt><dd>معادلة تربط الكمية المتحكِّمة بمجاهيل الدائرة.</dd></dl>" },
-      { id: "laws", title: "القوانين", en: "Equations", html: depKinds +
-        "<p class='muted'>في الرسوم: المعيّن رمز المصدر التابع. السهم داخله يعني مصدر تيار، و + و − يعنيان مصدر جهد.</p>" },
+        "<dl class='terms'><dt>Controlling variable</dt><dd>الجهد أو التيار الذي تعتمد عليه قيمة المصدر التابع (vₓ أو iₓ أو i<sub>Δ</sub>).</dd>" +
+        "<dt>Constraint equation</dt><dd>المعادلة التي تعبّر عن المصدر التابع بدلالة الكمية المتحكِّمة.</dd></dl>" },
+      { id: "laws", title: "القوانين", en: "Equations", html:
+        "<div class='eq'>KVL: Σ v = 0 حول كل حلقة</div><div class='eq'>KCL: Σ i = 0 عند كل عقدة</div><div class='eq'>المصدر التابع: v = μvₓ, ρiₓ  أو  i = αvₓ, βiₓ</div>" },
       { id: "when", title: "متى ولماذا نستخدمه؟", en: "When & Why", html:
-        "<ul class='ticks'><li>لا تعامل المصدر التابع كقيمة ثابتة. قيمته تتغير إذا تغيّرت الكمية المتحكِّمة.</li>" +
-        "<li>انتبه لاتجاه وقطبية الكمية المتحكِّمة كما هي مرسومة. عكسها يعكس إشارة المصدر كله.</li>" +
-        "<li>لا تحذف المصدر التابع عند حساب المكافئات (في فصول لاحقة)، فهو ليس مستقلًا.</li></ul>" },
-      { id: "example", title: "مثال محلول", en: "Worked Example", html:
-        fig(c4ex, "مصدر 20 فولت ومقاومتان ومصدر تيار تابع قيمته نصف iₓ") +
-        "<p class='q'>المصدر التابع تيار قيمته <span class='ltr'>0.5 iₓ</span>، حيث <span class='ltr'>iₓ</span> تيار <span class='ltr'>R1</span>. أوجد <span class='ltr'>iₓ</span> وجهد العقدة العليا الوسطى <span class='ltr'>v</span>.</p>" +
-        "<ol class='steps'><li><b>معادلة القيد:</b> <span class='eq-i'>iₓ = (20 − v) / 4</span></li>" +
-        "<li><b>KCL عند العقدة الوسطى:</b> <span class='eq-i'>iₓ = v/8 + 0.5 iₓ</span></li>" +
-        "<li><b>التبسيط:</b> <span class='eq-i'>0.5 iₓ = v/8 → (20 − v)/8 = v/8 → v = 10 V</span></li>" +
-        "<li><b>النتيجة:</b> <span class='eq-i'>iₓ = (20 − 10)/4 = 2.5 A</span>، وتيار المصدر التابع <span class='eq-i'>0.5 × 2.5 = 1.25 A</span>.</li></ol>" },
+        "<ul class='ticks'><li>اكتب الكمية المتحكِّمة بدلالة المجاهيل التي اخترتها، ولا تعاملها كمجهول جديد بلا معادلة.</li>" +
+        "<li>المصدر التابع قد يعطي قدرة أو يمتصها؛ احسب قدرته بنفس اصطلاح الإشارة.</li>" +
+        "<li>في النهاية: مجموع القدرة المعطاة من المصادر (المستقلة والتابعة) = مجموع القدرة الممتصة.</li></ul>" },
+      { id: "example", title: "أمثلة محلولة", en: "Worked Examples", html:
+        "<p class='q'>مثال (الشكل 2.22): مصدر <span class='ltr'>500 V</span>، ومقاومة <span class='ltr'>5 Ω</span> يمر فيها <span class='ltr'>i<sub>Δ</sub></span>، ومقاومة <span class='ltr'>20 Ω</span> جهدها <span class='ltr'>v₀</span>، ومصدر تيار تابع <span class='ltr'>5 i<sub>Δ</sub></span>. أوجد <span class='ltr'>v₀</span>.</p>" +
+        fig(x222, "مصدر 500 V ومقاومتان 5 Ω و 20 Ω ومصدر تيار تابع 5 iΔ") +
+        "<ol class='steps'><li>تيار مصدر 500 V هو i<sub>Δ</sub>، وإذا عرفنا i₀ نحسب v₀ بقانون أوم.</li>" +
+        "<li>KVL حول الحلقة اليسرى: <span class='eq-i'>500 = 5 i<sub>Δ</sub> + 20 i₀</span></li>" +
+        "<li>KCL عند العقدة b: <span class='eq-i'>i₀ = i<sub>Δ</sub> + 5 i<sub>Δ</sub> = 6 i<sub>Δ</sub></span></li>" +
+        "<li><span class='eq-i'>500 = 5 i<sub>Δ</sub> + 120 i<sub>Δ</sub> ← i<sub>Δ</sub> = 4 A, i₀ = 24 A</span></li>" +
+        "<li><span class='eq-i'>v₀ = 20 i₀ = 20 × 24 = 480 V</span></li></ol>" +
+        "<p class='q'>مثال 2.10: مصدر <span class='ltr'>10 V</span> مع مقاومة <span class='ltr'>6 Ω</span> يمر فيها <span class='ltr'>i<sub>s</sub></span> في الحلقة اليسرى، ومصدر جهد تابع <span class='ltr'>3 i<sub>s</sub></span> مع <span class='ltr'>2 Ω</span> و <span class='ltr'>3 Ω</span> في الحلقة اليمنى. (a) أوجد <span class='ltr'>v₀</span>. (b) تحقق أن القدرة المعطاة = القدرة المستهلكة.</p>" +
+        fig(x210, "حلقتان: مصدر 10 V مع 6 Ω، ومصدر تابع 3 is مع 2 Ω و 3 Ω") +
+        "<ol class='steps'><li>KVL يسار: <span class='eq-i'>10 = 6 i<sub>s</sub> ← i<sub>s</sub> = 1.67 A</span></li>" +
+        "<li>KVL يمين: <span class='eq-i'>3 i<sub>s</sub> = 2 i₀ + 3 i₀ ← i₀ = 1 A</span>، و <span class='eq-i'>v₀ = 3 i₀ = 3 V</span></li>" +
+        "<li>قدرة المصدر المستقل: <span class='eq-i'>p = (10)(−1.67) = −16.7 W</span>، وقدرة المصدر التابع: <span class='eq-i'>p = (3 i<sub>s</sub>)(−i₀) = (5)(−1) = −5 W</span>. المصدران يعطيان معًا <span class='ltr'>21.7 W</span>.</li>" +
+        "<li>المقاومات: <span class='eq-i'>(1.67)²(6) + (1)²(2) + (1)²(3) = 16.7 + 2 + 3 = 21.7 W</span> ✓</li></ol>" },
       { id: "realworld", title: "في الواقع", en: "Real-World", html:
-        "<p>الترانزستور في دوائر التكبير يُمثَّل بمصدر تيار تابع <span class='ltr'>i<sub>C</sub> = β i<sub>B</sub></span>، حيث β قد تكون 100 أو أكثر: تيار صغير في القاعدة يتحكم في تيار أكبر بكثير في المجمّع. هذا أساس كل مكبر صوت ومعالج رقمي.</p>" }
+        "<p>الترانزستور في المكبرات نمثله بمصدر تيار تابع <span class='ltr'>βi_B</span>: تيار صغير في القاعدة يتحكم في تيار أكبر بكثير في المجمّع. هذا مثال 2.11 في المحاضرة (دائرة المكبر).</p>" }
     ],
     quiz: [
-      { q: "في المثال المحلول، لو تضاعف جهد المصدر المستقل إلى <span class='ltr'>40 V</span>، فإن تيار المصدر التابع:", options: [
-        { t: "يبقى 1.25 A لأنه مصدر", type: "conceptual", why: "قيمة المصدر التابع تعتمد على iₓ، و iₓ يتغير مع المصدر المستقل." },
-        { t: "يتضاعف إلى 2.5 A", correct: true, why: "الدائرة خطية: كل التيارات تتضاعف، ومنها iₓ، فيتضاعف 0.5 iₓ." },
-        { t: "يصبح صفرًا", type: "conceptual", why: "لا يوجد سبب لذلك؛ iₓ يزيد ولا يختفي." }
+      { q: "في مثال الشكل 2.22، لماذا <span class='ltr'>i₀ = 6 i<sub>Δ</sub></span>؟", options: [
+        { t: "من KCL عند العقدة b: يدخلها i<sub>Δ</sub> و 5i<sub>Δ</sub> ويخرج i₀", correct: true, why: "مجموع الداخل = مجموع الخارج: i₀ = i<sub>Δ</sub> + 5i<sub>Δ</sub>." },
+        { t: "من KVL حول الحلقة اليسرى", type: "conceptual", why: "KVL يعطي 500 = 5i<sub>Δ</sub> + 20i₀. العلاقة بين التيارين جاءت من KCL." },
+        { t: "لأن 20 Ω أكبر من 5 Ω بأربع مرات", type: "conceptual", why: "النسبة بين التيارين لا تأتي من نسبة المقاومات هنا، بل من المصدر التابع و KCL." }
       ]},
       { q: "معادلة القيد للمصدر التابع تعبّر عن:", options: [
-        { t: "الكمية المتحكِّمة بدلالة مجاهيل الدائرة", correct: true, why: "هذا ما يجعل عدد المعادلات يساوي عدد المجاهيل." },
-        { t: "قدرة المصدر التابع", type: "conceptual", why: "القدرة تُحسب بعد الحل، وليست معادلة القيد." },
-        { t: "KVL حول المصدر التابع فقط", type: "conceptual", why: "معادلة القيد تربط iₓ أو vₓ بالمجاهيل، وليست KVL." }
+        { t: "قيمة المصدر بدلالة الكمية المتحكِّمة", correct: true, why: "مثل i = 5 i<sub>Δ</sub> أو v = 3 i<sub>s</sub>." },
+        { t: "قيمة ثابتة لا تتغير", type: "conceptual", why: "هذه صفة المصدر المستقل." },
+        { t: "قانون KCL عند عقدة المصدر", type: "conceptual", why: "KCL معادلة منفصلة. القيد يربط المصدر بالكمية التي تتحكم فيه." }
       ]},
-      { q: "مصدر جهد تابع قيمته <span class='ltr'>5 iₓ</span>. وحدة الثابت 5 هي:", options: [
-        { t: "بدون وحدة", type: "unit", why: "الناتج جهد (V) والمتحكم تيار (A)، فالثابت وحدته V/A." },
-        { t: "<span class='ltr'>Ω</span>", correct: true, why: "V/A = Ω، وهذا مصدر CCVS." },
-        { t: "<span class='ltr'>S</span>", type: "unit", why: "S = A/V، وهي وحدة ثابت VCCS." }
+      { q: "مصدر جهد تابع قيمته <span class='ltr'>3 i<sub>s</sub></span>. وحدة الثابت 3 هي:", options: [
+        { t: "<span class='ltr'>V/A</span> (أوم)", correct: true, why: "جهد ÷ تيار = V/A، وهو الثابت ρ لمصدر الجهد المتحكَّم فيه بتيار." },
+        { t: "بدون وحدة", type: "unit", why: "الثابت بدون وحدة يكون عندما تكون الكميتان من نفس النوع (μ و β)." },
+        { t: "<span class='ltr'>A/V</span>", type: "unit", why: "A/V وحدة α لمصدر تيار يتحكم فيه جهد." }
+      ]},
+      { q: "في مثال 2.10، المصدر التابع قدرته <span class='ltr'>−5 W</span>. ماذا يعني ذلك؟", options: [
+        { t: "يعطي 5 W للدائرة", correct: true, why: "القدرة السالبة تعني أن العنصر يعطي القدرة." },
+        { t: "يمتص 5 W", type: "sign", why: "مع اصطلاح الإشارة الخاملة، القدرة الموجبة امتصاص والسالبة إعطاء." },
+        { t: "المصدر التابع لا يمكن أن يعطي قدرة", type: "conceptual", why: "المصدر التابع عنصر نشط، وقد يعطي قدرة كما هنا." }
       ]}
     ],
     practice: {
