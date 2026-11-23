@@ -1,30 +1,26 @@
-% Circuits 1 — The Node-Voltage Method (phasors)
-%title: Node Voltages with Complex Matrices
-%ar-title: جهود العقد بمصفوفة مركبة
+% Circuits 1 — The Node-Voltage Method
+%title: Node Voltages with Complex Matrices (Example 9.11)
+%ar-title: جهود العقد بمصفوفة مركّبة (مثال 9.11)
 %lesson: c1-sinusoidal-7
 %course: circuits-1
 
-%% The equations
-%ar: Vs = 10∠0°، R1 = 2، ZL = j2 (من V1 للأرض)، ZC = −j6 (بين V1 و V2)، R2 = 4 (من V2 للأرض). نفس طريقة DC، والمصفوفة مركبة.
-Vs = 10; R1 = 2; ZL = 2j; ZC = -6j; R2 = 4;
-Y = [1/R1 + 1/ZL + 1/ZC, -1/ZC
-     -1/ZC,               1/ZC + 1/R2];
-V = Y \ [Vs/R1; 0];
-fprintf('V1 = %g%+gj V, V2 = %g%+gj V\n', real(V(1)), imag(V(1)), real(V(2)), imag(V(2)))
-%check: abs(V(1) - (6 + 4j)) < 1e-9 && abs(V(2) - 4j) < 1e-9
+%% Example 9.11
+%ar: من المحاضرة: V1(1.1 + j0.2) − V2 = 10.6 + j21.2، و −5 V1 + (4.8 + j0.6) V2 = 0. نفس طريقة DC والمصفوفة مركبة.
+A = [1.1 + 0.2j, -1
+     -5,          4.8 + 0.6j];
+V = A \ [10.6 + 21.2j; 0];
+fprintf('V1 = %.2f %+.2fj V, V2 = %.2f %+.2fj V\n', real(V(1)), imag(V(1)), real(V(2)), imag(V(2)))
+%check: abs(V(1) - (68.4 - 16.8j)) < 1e-9 && abs(V(2) - (68 - 26j)) < 1e-9
 
-%% Polar form and time functions
-%ar: كل فازور يعطي دالة زمنية: |V| cos(ωt + ∠V).
-for k = 1:2
-    fprintf('v%d(t) = %.3f cos(wt %+.2f deg) V\n', k, abs(V(k)), angle(V(k))*180/pi)
-end
+%% The branch currents
+%ar: Ia = V1/10، و Ix = (V1 − V2)/(1 + j2)، و Ib = (V2 − 20 Ix)/5، و Ic = V2/(−j5). ونتحقق Ia + Ix = 10.6.
+Ia = V(1)/10; Ix = (V(1) - V(2))/(1 + 2j); Ib = (V(2) - 20*Ix)/5; Ic = V(2)/(-5j);
+fprintf('Ia = %.2f%+.2fj, Ix = %.2f%+.2fj, Ib = %.2f%+.2fj, Ic = %.2f%+.2fj A\n', real(Ia), imag(Ia), real(Ix), imag(Ix), real(Ib), imag(Ib), real(Ic), imag(Ic))
+fprintf('Ia + Ix = %.4f %+.4fj A\n', real(Ia + Ix), imag(Ia + Ix))
+%check: abs(Ia + Ix - 10.6) < 1e-9 && abs(Ib + Ic - Ix) < 1e-9
 
-%%! Project idea: sweep the frequency
-%ar: مشروع: المعاوقات تتغير مع التردد. نعيد الحل لكل ω (L = ZL/(jω0) و C من ZC عند ω0 = 1) ونرسم |V2|: هذه بداية «الاستجابة الترددية» (Circuits 2).
-w0 = 1; L = 2/w0; C = 1/(6*w0);
-w = logspace(-2, 2, 300); V2 = zeros(size(w));
-for k = 1:numel(w)
-    zl = 1j*w(k)*L; zc = 1/(1j*w(k)*C);
-    v = [1/R1 + 1/zl + 1/zc, -1/zc; -1/zc, 1/zc + 1/R2] \ [Vs/R1; 0]; V2(k) = v(2);
-end
-semilogx(w, abs(V2)); grid on; xlabel('\omega (rad/s)'); ylabel('|V_2| (V)'); title('|V_2| vs frequency (\omega_0 = 1 is the lesson''s case)')
+%%! Project idea: phasor diagram of the currents
+%ar: مشروع: نرسم Ia و Ix و Ib و Ic كأسهم: Ia + Ix يقع على المحور الحقيقي (تيار المصدر 10.6∠0°).
+P = [Ia Ix Ib Ic];
+hold on; for k = 1:4, plot([0 real(P(k))], [0 imag(P(k))], '-o', 'linewidth', 2); end; hold off
+grid on; axis equal; xlabel('Re (A)'); ylabel('Im (A)'); legend('I_a', 'I_x', 'I_b', 'I_c'); title('Example 9.11: branch-current phasors')

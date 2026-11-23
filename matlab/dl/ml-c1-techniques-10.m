@@ -1,35 +1,24 @@
 % Circuits 1 — More on Deriving a Thevenin Equivalent
-%title: Thevenin with a Dependent Source: voc / isc and the Test Source
-%ar-title: ثيفنن مع مصدر تابع: voc/isc ومصدر الاختبار
+%title: RTh by Deactivating Sources and by a Test Source
+%ar-title: مقاومة ثيفنن بتعطيل المصادر وبمصدر الاختبار
 %lesson: c1-techniques-10
 %course: circuits-1
 
-%% Open-circuit voltage
-%ar: الدائرة: 24 V ثم R1 = 4 (تيارها ix) إلى العقدة v، ومن v: R2 = 8 للأسفل، ومصدر تابع 2ix للأسفل، ثم R3 = 12 إلى الطرف a.
-%ar: مجهولان ix و v: القيد 4 ix + v = 24، و KCL مفتوح الطرفين: ix − v/8 − 2 ix = 0.
-A = [4 1; -1 -1/8];
-x = A \ [24; 0];
-voc = x(2);
-fprintf('voc = %g V (ix = %g A)\n', voc, x(1))
+%% Method 1: deactivate the independent sources
+%ar: 25 V ← قصر و 3 A ← مفتوح، فـ RTh = 4 + 5 ∥ 20 = 8 Ω.
+RTh = 4 + 5*20/(5 + 20);
+fprintf('RTh = %g ohm\n', RTh)
 
-%% Short-circuit current
-%ar: بقصر a-b يمر تيار في R3 أيضًا: KCL يصير ix − v/8 − 2 ix − v/12 = 0، و isc = v/12.
-A = [4 1; -1 -1/8 - 1/12];
-x = A \ [24; 0];
-isc = x(2)/12;
-RTh = voc/isc;
-fprintf('isc = %g A, RTh = %g ohm\n', isc, RTh)
+%% Method 2: a test source (Example 4.11)
+%ar: نعطل 5 V ونضع vT: iT = vT/25 + 20 i، و i = −3 vT/2000. نجرّب vT = 1 V.
+vT = 1;
+i = -3*vT/2000;
+iT = vT/25 + 20*i;
+fprintf('iT = %g A for vT = 1 V -> RTh = %g ohm\n', iT, vT/iT)
 
-%% The test-source method
-%ar: أطفئ 24 V (سلك) واترك المصدر التابع، وحقن 1 A في الطرف a. المجاهيل: ix و v و va. RTh = va/1.
-% ix = -v/4 (24 V off) ; KCL at v: ix - v/8 - 2ix + (va - v)/12 = 0 ; KCL at a: 1 = (va - v)/12
-M = [4    1           0
-     -1  -1/8 - 1/12   1/12
-     0   -1/12         1/12];
-x = M \ [0; 0; 1];
-fprintf('test source: RTh = %g ohm\n', x(3))
-
-%%! Project idea: why you must not switch off dependent sources
-%ar: مشروع للفهم: احسب RTh خطأً بإطفاء المصدر التابع (R3 + R1 ∥ R2) وقارن. الفرق كبير، ولهذا تحذر المحاضرة منه.
-wrong = 12 + 4*8/(4 + 8);
-fprintf('wrong RTh (dependent source removed) = %.3f ohm vs correct %g ohm\n', wrong, RTh)
+%%! Project idea: linear in the test source
+%ar: مشروع: الدائرة خطية، فـ iT يتناسب مع vT مهما كانت القيمة. نرسم iT مقابل vT: الميل 1/RTh = 0.01.
+vTs = linspace(-10, 10, 21);
+iTs = vTs/25 + 20*(-3*vTs/2000);
+plot(vTs, iTs, '-o'); grid on; xlabel('v_T (V)'); ylabel('i_T (A)'); title('Test source: slope = 1/R_{Th} = 0.01 S')
+p = polyfit(vTs, iTs, 1); fprintf('slope = %g S\n', p(1))

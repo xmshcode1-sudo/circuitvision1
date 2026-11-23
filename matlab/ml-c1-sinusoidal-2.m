@@ -1,31 +1,26 @@
 % Circuits 1 — The Phasor
-%title: Adding Sinusoids with Phasors
-%ar-title: جمع الجيبيات بالفازورات
+%title: Adding Sinusoids with Phasors (Example 9.5)
+%ar-title: جمع الدوال الجيبية بالفيزورات (مثال 9.5)
 %lesson: c1-sinusoidal-2
 %course: circuits-1
 
-%% Phasors are complex numbers
-%ar: 20∠30° = 20 e^(j30°). نكتب دالة صغيرة pol للتحويل، ثم نجمع كعددين مركبين.
-pol = @(m, d) m*exp(1j*d*pi/180);
-V1 = pol(20, 30); V2 = pol(40, -60);
-V = V1 + V2;
-fprintf('V1 = %.2f%+.2fj, V2 = %.2f%+.2fj\n', real(V1), imag(V1), real(V2), imag(V2))
-fprintf('V  = %.2f%+.2fj = %.2f at %.2f deg\n', real(V), imag(V), abs(V), angle(V)*180/pi)
-%check: abs(abs(V) - 44.72) < 0.005 && abs(angle(V)*180/pi + 33.43) < 0.01
+%% Example 9.5
+%ar: Y = 20∠−30° + 40∠60°. في MATLAB نكتب الفيزور r·exp(jθ)، ثم abs و angle.
+Y1 = 20*exp(1j*(-30)*pi/180); Y2 = 40*exp(1j*60*pi/180);
+Y = Y1 + Y2;
+fprintf('Y1 = %.2f %+.2fj, Y2 = %.2f %+.2fj\n', real(Y1), imag(Y1), real(Y2), imag(Y2))
+fprintf('Y = %.2f %+.2fj = %.2f at %.2f deg -> y = %.2f cos(wt %+.2f deg)\n', real(Y), imag(Y), abs(Y), angle(Y)*180/pi, abs(Y), angle(Y)*180/pi)
+%check: abs(abs(Y) - 44.72) < 0.01 && abs(angle(Y)*180/pi - 33.43) < 0.01
 
 %% Check in the time domain
-%ar: نجمع الجيبيين الأصليين نقطة نقطة ونقارن بالجيبي الناتج من الفازور: متطابقان. لاحظ أن القمة 44.72 وليست 60.
-w = 2*pi*60; t = linspace(0, 1/30, 1000);
-vsum = 20*cos(w*t + pi/6) + 40*cos(w*t - pi/3);
-vph = abs(V)*cos(w*t + angle(V));
-plot(t*1e3, 20*cos(w*t + pi/6), ':', t*1e3, 40*cos(w*t - pi/3), ':', t*1e3, vsum, t*1e3, vph, '--'); grid on
-xlabel('t (ms)'); ylabel('v (V)'); legend('v_1', 'v_2', 'v_1 + v_2', 'from the phasor'); title('Phasor addition')
-fprintf('largest difference = %g V\n', max(abs(vsum - vph)))
-%check: max(abs(vsum - vph)) < 1e-9
+%ar: نتحقق أن y1(t) + y2(t) يساوي 44.72 cos(ωt + 33.43°) في كل لحظة.
+w = 1; t = linspace(0, 4*pi, 400);
+y = 20*cos(w*t - pi/6) + 40*cos(w*t + pi/3);
+yp = abs(Y)*cos(w*t + angle(Y));
+fprintf('max difference = %.2e\n', max(abs(y - yp)))
+%check: max(abs(y - yp)) < 1e-9
 
-%%! Project idea: phasor diagram plotter
-%ar: مشروع: ارسم الفازورات أسهمًا من الأصل (مخطط فازوري) بـ plot لخطوط من 0 إلى كل فازور. مفيد في كل تقارير AC.
-figure; hold on
-P = [V1 V2 V]; c = 'brk';
-for k = 1:3, plot([0 real(P(k))], [0 imag(P(k))], c(k), 'LineWidth', 2); end
-hold off; axis equal; grid on; xlabel('Re'); ylabel('Im'); legend('V_1', 'V_2', 'V'); title('Phasor diagram')
+%%! Project idea: the phasor sum as arrows
+%ar: مشروع: نرسم الفيزورين ومجموعهما كأسهم في المستوى المركب: Y هو قطر متوازي الأضلاع.
+plot([0 real(Y1)], [0 imag(Y1)], '-o', [0 real(Y2)], [0 imag(Y2)], '-o', [0 real(Y)], [0 imag(Y)], '-o', 'linewidth', 2); grid on; axis equal
+xlabel('Re'); ylabel('Im'); legend('Y_1 = 20\angle-30^\circ', 'Y_2 = 40\angle60^\circ', 'Y = 44.72\angle33.43^\circ'); title('Example 9.5 in the complex plane')

@@ -1,30 +1,30 @@
 % Circuits 1 — The rms Value and Power Calculations
-%title: rms Values and the Power Triangle
-%ar-title: القيمة الفعالة ومثلث القدرة
+%title: rms Values and Average Power (Example 10.3)
+%ar-title: القيم الفعالة والقدرة المتوسطة (مثال 10.3)
 %lesson: c1-power-3
 %course: circuits-1
 
-%% The example: a motor
-%ar: |S| = Vrms Irms، و P = |S| × pf، و Q = |S| × sin θ. pf = 0.8 متأخر يعني θ موجبة.
-V = 220; I = 5; pf = 0.8;
-S = V*I; P = S*pf; Q = S*sqrt(1 - pf^2);
-fprintf('|S| = %g VA, P = %g W, Q = %g VAR\n', S, P, Q)
-%check: S == 1100 && P == 880 && abs(Q - 660) < 1e-9
+%% Example 10.3, two ways
+%ar: جهد عظمى 625 V على 50 Ω: (a) P = Vrms²/R، (b) Im = 625/50 ثم P = Irms²R. الطريقتان 3906.25 W.
+Vm = 625; R = 50;
+Pa = (Vm/sqrt(2))^2 / R;
+Im = Vm/R; Pb = (Im/sqrt(2))^2 * R;
+fprintf('Vrms = %.2f V, P = %.2f W; Irms = %.2f A, P = %.2f W\n', Vm/sqrt(2), Pa, Im/sqrt(2), Pb)
+%check: abs(Pa - 3906.25) < 1e-9 && abs(Pb - 3906.25) < 1e-9
 
-%% rms of any waveform, numerically
-%ar: rms لأي إشارة = جذر متوسط مربعها. نجرب الجيبية (القمة/√2) والمربعة (= القمة) والمثلثية (القمة/√3).
-t = linspace(0, 1, 100001); t(end) = [];
-x1 = sin(2*pi*t); x2 = sign(sin(2*pi*t)); x3 = 2*abs(2*(t - floor(t + 0.5))) - 1;
-fprintf('rms: sine %.4f, square %.4f, triangle %.4f\n', sqrt(mean(x1.^2)), sqrt(mean(x2.^2)), sqrt(mean(x3.^2)))
-%check: abs(sqrt(mean(x1.^2)) - 1/sqrt(2)) < 1e-4 && abs(sqrt(mean(x3.^2)) - 1/sqrt(3)) < 1e-4
+%% The rms value gives the same heat as DC
+%ar: نحسب الطاقة في دورة للجهد الجيبي ولجهد DC يساوي Vrms: متساويتان.
+w = 377; T = 2*pi/w; t = linspace(0, T, 20001);
+E_ac = trapz(t, (Vm*cos(w*t)).^2 / R);
+E_dc = (Vm/sqrt(2))^2 / R * T;
+fprintf('energy per period: AC = %.4f J, DC at Vrms = %.4f J\n', E_ac, E_dc)
+%check: abs(E_ac - E_dc) < 1e-6
 
-%% The power triangle
-%ar: نرسم المثلث: P أفقي، و Q رأسي، و |S| الوتر.
-plot([0 P P 0], [0 0 Q 0], 'LineWidth', 2); grid on; axis equal
-text(P/2, -40, 'P = 880 W'); text(P + 15, Q/2, 'Q = 660 VAR'); text(P/2 - 120, Q/2 + 40, '|S| = 1100 VA')
-xlabel('W'); ylabel('VAR'); title('Power triangle'); axis([-50 1000 -100 750])
-
-%%! Project idea: monthly cost of a motor
-%ar: مشروع: المحرك يعمل 8 ساعات يوميًا. الطاقة الشهرية من P (وليس |S|): الفاتورة على القدرة الحقيقية. السعر مثال فقط.
-kWh = P/1000*8*30;
-fprintf('energy %.1f kWh per month -> %.2f at 0.18 per kWh\n', kWh, kWh*0.18)
+%%! Project idea: rms of other waveforms
+%ar: مشروع: القيمة الفعالة تعتمد على شكل الموجة. نقارن الجيبية (Vm/√2) بالمربعة (Vm) والمثلثية (Vm/√3).
+x = linspace(0, 1, 30001);
+sine = sin(2*pi*x); square = sign(sin(2*pi*x)); tri = 2*abs(2*(x - floor(x + 0.5))) - 1;
+r = [sqrt(mean(sine.^2)), sqrt(mean(square.^2)), sqrt(mean(tri.^2))];
+fprintf('rms: sine %.4f, square %.4f, triangle %.4f (amplitude 1)\n', r)
+bar(r); grid on; set(gca, 'xticklabel', {'sine', 'square', 'triangle'}); ylabel('rms (amplitude 1)'); title('rms depends on the waveform')
+%check: abs(r(1) - 1/sqrt(2)) < 1e-3 && abs(r(3) - 1/sqrt(3)) < 1e-3

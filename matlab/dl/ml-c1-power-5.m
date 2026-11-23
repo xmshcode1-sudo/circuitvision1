@@ -1,27 +1,21 @@
 % Circuits 1 — Power Calculations
-%title: Two Loads in Parallel
-%ar-title: حملان على التوازي
+%title: Load, Line and Source Power (Example 10.5)
+%ar-title: قدرة الحمل والخط والمصدر (مثال 10.5)
 %lesson: c1-power-5
 %course: circuits-1
 
-%% The example
-%ar: الحمل الأول 4 kW بمعامل 0.8 متأخر ⇐ Q1 = P tan(acos 0.8). الثاني 2 kW بمعامل 1. نجمع S ثم نحسب التيار ومعامل القدرة.
-V = 200;
-P = [4000 2000]; pf = [0.8 1];
-Q = P .* tan(acos(pf));
-S = sum(P + 1j*Q);
-I = abs(S)/V;
-fprintf('Q = %g, %g VAR\n', Q)
-fprintf('S = %g%+gj VA, |S| = %.1f VA, I = %.2f A, pf = %.4f\n', real(S), imag(S), abs(S), I, cos(angle(S)))
+%% Example 10.5
+%ar: حمل 39 + j26 وخط 1 + j4 ومصدر 250∠0° rms. IL = 250/(40 + j30)، و VL = ZL IL، و SL = VL IL*.
+Zl = 39 + 26j; Zline = 1 + 4j; Vs = 250;
+IL = Vs/(Zl + Zline); VL = Zl*IL; SL = VL*conj(IL);
+fprintf('IL = %g %+gj A (%.0f at %.2f deg), VL = %g %+gj V, SL = %g %+gj VA\n', real(IL), imag(IL), abs(IL), angle(IL)*180/pi, real(VL), imag(VL), real(SL), imag(SL))
 
-%% A bar chart of P and Q
-%ar: bar مع مصفوفة يرسم أعمدة متجاورة: P و Q لكل حمل وللمجموع.
-bar([P real(S); Q imag(S)]'); grid on; set(gca, 'XTickLabel', {'load 1', 'load 2', 'total'})
-legend('P (W)', 'Q (VAR)'); title('Real and reactive power')
+%% Line and source: complex power is conserved
+%ar: Sline = |IL|² Zline، و Ss = −Vs IL*. مجموع القدرات المركبة = صفر.
+Sline = abs(IL)^2 * Zline; Ss = -Vs*conj(IL);
+fprintf('Sline = %g %+gj VA, Ss = %g %+gj VA, sum = %g\n', real(Sline), imag(Sline), real(Ss), imag(Ss), abs(SL + Sline + Ss))
 
-%%! Project idea: a factory load table
-%ar: مشروع: جدول أحمال مصنع من ملف (هنا مكتوب داخل الكود)، ويطبع التيار الكلي ومعامل القدرة، ويحذر إذا تجاوز التيار سعة القاطع.
-P = [4000 2000 7500 1200]; pf = [0.8 1 0.85 0.7]; breaker = 80;
-S = sum(P + 1j*P.*tan(acos(pf))); I = abs(S)/V;
-fprintf('total %.0f W, %.0f VAR, I = %.1f A, pf = %.3f\n', real(S), imag(S), I, cos(angle(S)))
-if I > breaker, fprintf('WARNING: exceeds the %g A breaker\n', breaker), end
+%%! Project idea: why transmit at high voltage?
+%ar: مشروع: نفس قدرة الحمل (975 W) بجهود مصدر أعلى: التيار يقل وخسارة الخط |I|²R تقل مع مربعه.
+k = 1:10; loss = (abs(IL)./k).^2 * real(Zline);
+semilogy(k, loss, '-o'); grid on; xlabel('voltage scale factor'); ylabel('line loss (W)'); title('Higher voltage, smaller current, much smaller line loss')

@@ -1,23 +1,23 @@
 % Circuits 1 — Kirchhoff's Laws in the Frequency Domain
-%title: KVL with Phasors
-%ar-title: قانون كيرشوف للجهد بالفازورات
+%title: KVL with Phasors (Example 9.6)
+%ar-title: KVL بالفيزورات (مثال 9.6)
 %lesson: c1-sinusoidal-4
 %course: circuits-1
 
-%% Add the phasors, not the magnitudes
-%ar: VR = 60∠0° و VL = 80∠90°. جهد المصدر = مجموعهما كأعداد مركبة: 100∠53.13°، وليس 140.
-VR = 60; VL = 80j;
-V = VR + VL;
-fprintf('V = %g at %.2f deg (sum of magnitudes would be %g)\n', abs(V), angle(V)*180/pi, abs(VR) + abs(VL))
+%% Example 9.6
+%ar: 90 Ω و 32 mH و 5 µF على التوالي مع 750∠30° عند ω = 5000. المعاوقات تُجمع، ثم I = V/Z.
+w = 5000; Vs = 750*exp(1j*30*pi/180);
+Z = 90 + 1j*w*32e-3 + 1/(1j*w*5e-6);
+I = Vs/Z;
+fprintf('Z = %g %+gj = %g at %.2f deg ohm\nI = %g at %.2f deg A -> i = %g cos(5000t %+.2f deg) A\n', real(Z), imag(Z), abs(Z), angle(Z)*180/pi, abs(I), angle(I)*180/pi, abs(I), angle(I)*180/pi)
 
-%% The same in the time domain
-%ar: KVL صحيح عند كل لحظة: vR(t) + vL(t) = v(t). نرسم الثلاثة ونتحقق.
-w = 2*pi*50; t = linspace(0, 0.04, 800);
-vR = 60*cos(w*t); vL = 80*cos(w*t + pi/2); v = abs(V)*cos(w*t + angle(V));
-plot(t*1e3, vR, t*1e3, vL, t*1e3, vR + vL, t*1e3, v, '--'); grid on
-xlabel('t (ms)'); ylabel('V'); legend('v_R', 'v_L', 'v_R + v_L', 'v'); title('KVL at every instant')
-fprintf('largest error = %g V\n', max(abs(vR + vL - v)))
+%% KVL closes with phasors, not with magnitudes
+%ar: مجموع أطوار الجهود = Vs، أما مجموع مقاديرها فأكبر من 750 V.
+VR = 90*I; VL = 1j*w*32e-3*I; VC = I/(1j*w*5e-6);
+fprintf('|VR| + |VL| + |VC| = %.1f V, |VR + VL + VC| = %.1f V\n', abs(VR)+abs(VL)+abs(VC), abs(VR+VL+VC))
 
-%%! Project idea: what a voltmeter shows
-%ar: الفولتميتر يقرأ القيمة الفعالة لكل جهد على حدة، فمجموع القراءات لا يساوي قراءة المصدر. اطبع ما ستقرأه في المعمل لتتوقع النتيجة قبل القياس.
-fprintf('meter readings (rms): VR = %.2f, VL = %.2f, V = %.2f V\n', 60/sqrt(2), 80/sqrt(2), 100/sqrt(2))
+%%! Project idea: KVL in the time domain
+%ar: مشروع: نرسم الجهود الثلاثة ومجموعها مع الزمن: المجموع يطابق جهد المصدر في كل لحظة.
+t = linspace(0, 2*2*pi/w, 600); tf = @(P) abs(P)*cos(w*t + angle(P));
+plot(t*1000, tf(VR), t*1000, tf(VL), t*1000, tf(VC), t*1000, tf(VR)+tf(VL)+tf(VC), 'k--'); grid on
+xlabel('t (ms)'); ylabel('v (V)'); legend('v_R', 'v_L', 'v_C', 'sum = v_s'); title('Example 9.6: KVL in the time domain')

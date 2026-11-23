@@ -1,41 +1,26 @@
 % Circuits 1 — The Sinusoidal Source
-%title: The Sinusoidal Source: rms, Frequency, Phase
-%ar-title: المصدر الجيبي: القيمة الفعالة والتردد والطور
+%title: The Sinusoidal Source (Example 9.1)
+%ar-title: المصدر الجيبي (مثال 9.1)
 %lesson: c1-sinusoidal-1
 %course: circuits-1
 
-%% The example: 220 V rms, 60 Hz
-%ar: القمة Vm = √2 × Vrms، و ω = 2πf. نطبع القانون كاملًا كما نكتبه في الحل.
-Vrms = 220; f = 60;
-Vm = sqrt(2)*Vrms; w = 2*pi*f; T = 1/f;
-fprintf('v(t) = %.0f cos(%.0f t) V,  T = %.3f ms\n', Vm, w, T*1e3)
-%check: abs(Vm - 311.13) < 0.01 && abs(w - 376.99) < 0.01
+%% Example 9.1
+%ar: تيار عظمى 20 A ودورته 1 ms وقيمته 10 A عند t = 0. f = 1/T، و ω = 2πf، و cos φ = 10/20 ← φ = 60°، و Irms = 20/√2.
+Im = 20; T = 1e-3; i0 = 10;
+f = 1/T; w = 2*pi*f; phi = acosd(i0/Im); Irms = Im/sqrt(2);
+fprintf('f = %g Hz, w = %g rad/s (2000*pi), phi = %g deg, Irms = %.2f A\n', f, w, phi, Irms)
+%check: abs(f - 1000) < 1e-9 && abs(phi - 60) < 1e-9 && abs(Irms - 14.142) < 1e-3
 
-%% Plot two periods and check the rms numerically
-%ar: rms = جذر متوسط المربع. نحسبه عدديًا من العينات: sqrt(mean(v.^2)) على دورة كاملة، ويجب أن يعطي 220.
-t = linspace(0, 2*T, 2001);
-v = Vm*cos(w*t);
-plot(t*1e3, v); grid on; xlabel('t (ms)'); ylabel('v (V)'); title('220 V rms, 60 Hz')
-hold on; plot(t*1e3, Vrms*ones(size(t)), 'r--'); hold off; legend('v(t)', 'V_{rms}')
-vr = sqrt(mean(v(1:1000).^2));
-fprintf('numerical rms over one period = %.2f V\n', vr)
-%check: abs(vr - 220) < 0.1
+%% rms from its definition
+%ar: القيمة الفعالة هي جذر متوسط المربع خلال دورة. نحسبها بالتكامل العددي ونقارنها بـ Im/√2.
+t = linspace(0, T, 20001);
+i = Im*cos(w*t + phi*pi/180);
+Irms_num = sqrt(trapz(t, i.^2) / T);
+fprintf('rms by integration = %.5f A\n', Irms_num)
+%check: abs(Irms_num - Im/sqrt(2)) < 1e-6
 
-%% Phase: leading and lagging
-%ar: cos(ωt + 60°) يتقدم على cos(ωt): يصل قمته قبله بزمن Δt = θ/ω. نحسب Δt بالمللي ثانية.
-theta = 60;
-dt = (theta*pi/180)/w;
-fprintf('a 60 deg lead = %.3f ms earlier\n', dt*1e3)
-
-%%! Project idea: a waveform analyser
-%ar: مشروع: دالة تأخذ عينات إشارة (من راسم أو ملف) وترجع القمة والقيمة الفعالة والتردد. هنا نختبرها على إشارة نعرف جوابها.
-[pk, rm, fr] = analyse(t, Vm*cos(w*t + 0.3) + 0*t);
-fprintf('peak %.1f V, rms %.1f V, f %.1f Hz\n', pk, rm, fr)
-%check: abs(fr - 60) < 0.5
-
-function [pk, rm, fr] = analyse(t, x)
-    pk = max(abs(x));
-    rm = sqrt(mean(x.^2));
-    s = sign(x); up = find(s(1:end-1) <= 0 & s(2:end) > 0);   % rising zero crossings
-    fr = (numel(up) - 1) / (t(up(end)) - t(up(1)));
-end
+%%! Project idea: plot i(t)
+%ar: مشروع: نرسم i(t) = 20 cos(2000πt + 60°) لدورتين، ونضع خط القيمة الفعالة.
+t2 = linspace(0, 2*T, 800);
+plot(t2*1000, Im*cos(w*t2 + pi/3), t2*1000, Irms*ones(size(t2)), '--'); grid on
+xlabel('t (ms)'); ylabel('i (A)'); legend('i(t)', 'I_{rms}'); title('Example 9.1: i(t) = 20 cos(2000\pi t + 60^\circ) A')

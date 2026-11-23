@@ -4,30 +4,27 @@
 %lesson: c1-elements-3
 %course: circuits-1
 
-%% The three equations of the example
-%ar: المجاهيل i1 و i2 و i3. نكتب كل معادلة صفًا: معاملات المجاهيل في A، والطرف الأيمن في b.
-%ar: KCL: i1 − i2 − i3 = 0. KVL يسار: 4 i1 + 12 i2 = 24. KVL يمين: −12 i2 + 6 i3 = 0.
-A = [ 1  -1  -1
-      4  12   0
-      0 -12   6 ];
-b = [0; 24; 0];
-x = A \ b;
-fprintf('i1 = %g A, i2 = %g A, i3 = %g A\n', x)
-%check: all(abs(x - [3; 1; 2]) < 1e-12)
-
-%% Check every law
-%ar: نعوّض الحل في كل معادلة: الباقي A*x − b يجب أن يكون صفرًا (أو قريبًا جدًا منه بسبب التقريب العشري).
-fprintf('residual = %g\n', norm(A*x - b))
-fprintf('KCL: %g = %g + %g\n', x(1), x(2), x(3))
+%% Example 2.8
+%ar: مثال 2.8: المجهولان i0 و i1. KCL عند b: i1 − i0 = 6، و KVL يسار: 10 i0 + 50 i1 = 120. نكتبهما مصفوفة ونحل بـ A\b.
+A = [-1  1
+     10 50];
+b = [6; 120];
+x = A \ b; i0 = x(1); i1 = x(2);
+fprintf('i0 = %g A, i1 = %g A\n', i0, i1)
+%check: abs(i0 + 3) < 1e-12 && abs(i1 - 3) < 1e-12
 
 %% Power balance
-%ar: قدرة المصدر −24 × i1، وقدرات المقاومات i²R. المجموع صفر.
-p = [-24*x(1), 4*x(1)^2, 12*x(2)^2, 2*x(3)^2, 4*x(3)^2];
-fprintf('source %g W, resistors %g W, sum %g W\n', p(1), sum(p(2:end)), sum(p))
-%check: abs(sum(p)) < 1e-9
+%ar: القدرات: 50 Ω و 10 Ω ومصدر 120 V (−120 i0) ومصدر 6 A (−50 i1 × 6). مجموعها صفر.
+P = [i1^2*50, i0^2*10, -120*i0, -(50*i1)*6];
+fprintf('P50 = %g W, P10 = %g W, P120V = %g W, P6A = %g W, sum = %g\n', P, sum(P))
+%check: abs(sum(P)) < 1e-9 && abs(P(4) + 900) < 1e-9
 
-%%! Project idea: what if the source changes?
-%ar: لأن الدائرة خطية، التيارات تتناسب مع المصدر. نحلها لعدة قيم للمصدر بحلقة ونرسم التيارات: خطوط مستقيمة تمر بالأصل.
-Vs = 0:6:48; I = zeros(3, numel(Vs));
-for k = 1:numel(Vs), I(:,k) = A \ [0; Vs(k); 0]; end
-plot(Vs, I', '-o'); grid on; xlabel('V_s (V)'); ylabel('current (A)'); legend('i_1', 'i_2', 'i_3', 'Location', 'northwest'); title('Linearity: currents vs source')
+%%! Project idea: KCL on the lecture network
+%ar: مشروع: شبكة المحاضرة فيها أربع عقد A و B و C و D وستة فروع. نكتب KCL كمصفوفة اتصال، ونتحقق أن مجموع الصفوف صفر (معادلة D تتكرر).
+%      i1 i2 i3 i4 i5 i6
+Inc = [ 1 -1  0  0  0  0      % A: i1 = i2
+        0  1 -1 -1  0  0      % B: i2 = i3 + i4
+        0  0  0  1 -1 -1      % C: i4 = i5 + i6
+       -1  0  1  0  1  1];    % D: i1 = i3 + i5 + i6
+fprintf('rank of the KCL matrix = %d (nodes - 1)\n', rank(Inc))
+%check: rank(Inc) == 3 && all(sum(Inc) == 0)

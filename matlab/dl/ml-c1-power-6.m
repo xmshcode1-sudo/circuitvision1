@@ -1,28 +1,23 @@
-% Circuits 1 — Maximum Power Transfer (AC)
-%title: Maximum Power Transfer with Impedances
-%ar-title: أقصى نقل للقدرة بالمعاوقات
+% Circuits 1 — Maximum Power Transfer
+%title: Maximum Power Transfer with Impedances (Example 10.8)
+%ar-title: نقل القدرة القصوى بالمعاوقات (مثال 10.8)
 %lesson: c1-power-6
 %course: circuits-1
 
-%% The rule: ZL = conj(ZTh)
-%ar: VTh = 7.071∠−45°، و ZTh = 2 − j2. أقصى قدرة عندما ZL = ZTh* = 2 + j2، وقيمتها |VTh|²/(8 RTh) (قيم قمة).
-VTh = 7.071*exp(-1j*pi/4); ZTh = 2 - 2j;
-ZL = conj(ZTh);
-I = VTh/(ZTh + ZL);
-Pmax = 0.5*abs(I)^2*real(ZL);
-fprintf('ZL = %g%+gj ohm, Pmax = %.4f W (formula %.4f W)\n', real(ZL), imag(ZL), Pmax, abs(VTh)^2/(8*real(ZTh)))
+%% Example 10.8
+%ar: بعد تحويلي المصادر: 16∠0° مع 4 + j3، و −j6 بين a و b. VTh = 16(−j6)/(4 − j3) و ZTh = (4 + j3) ∥ (−j6). ثم ZL = ZTh* و Pmax = |VTh|²/(8 RL).
+VTh = 16*(-6j)/(4 + 3j - 6j);
+ZTh = (4 + 3j)*(-6j)/(4 + 3j - 6j);
+ZL = conj(ZTh); Pmax = abs(VTh)^2/(8*real(ZL));
+fprintf('VTh = %.2f at %.2f deg V, ZTh = %.2f %+.2fj, ZL = %.2f %+.2fj, Pmax = %g W\n', abs(VTh), angle(VTh)*180/pi, real(ZTh), imag(ZTh), real(ZL), imag(ZL), Pmax)
 
-%% Search over all loads
-%ar: نتحقق بالبحث على شبكة من القيم: RL من 0.1 إلى 6 و XL من −6 إلى 6. meshgrid يصنع كل الأزواج، و contour يرسم خطوط تساوي القدرة.
-[RL, XL] = meshgrid(linspace(0.1, 6, 120), linspace(-6, 6, 121));
-P = 0.5*abs(VTh).^2 .* RL ./ ((real(ZTh) + RL).^2 + (imag(ZTh) + XL).^2);
-[pm, k] = max(P(:));
-fprintf('grid search: max %.4f W at RL = %.2f, XL = %.2f\n', pm, RL(k), XL(k))
-contour(RL, XL, P, 20); colorbar; hold on; plot(2, 2, 'r*', 'MarkerSize', 12); hold off
-xlabel('R_L (\Omega)'); ylabel('X_L (\Omega)'); title('Load power (W): the peak is at Z_{Th}^*')
+%% Search all loads
+%ar: نبحث في شبكة من قيم RL و XL عن أكبر قدرة: القمة عند 5.76 + j1.68.
+[RL, XL] = meshgrid(linspace(0.5, 15, 291), linspace(-6, 8, 281));
+I = VTh ./ (ZTh + RL + 1j*XL); Pl = 0.5*abs(I).^2 .* RL;
+[pm, k] = max(Pl(:));
+fprintf('best load found: %.2f %+.2fj ohm, %.3f W\n', RL(k), XL(k), pm)
 
-%%! Project idea: when only R can change
-%ar: مشروع: إذا كان الحمل مقاومة فقط، فأفضل قيمة RL = |ZTh| (وليست 2). احسب القدرة وقارن بالحالة المثالية.
-RLb = abs(ZTh);
-Pb = 0.5*abs(VTh/(ZTh + RLb))^2*RLb;
-fprintf('resistive load only: RL = %.3f ohm gives %.4f W (%.0f%% of the maximum)\n', RLb, Pb, Pb/Pmax*100)
+%%! Project idea: contour of the load power
+%ar: مشروع: نرسم خطوط تساوي القدرة في مستوى (RL, XL): القمة نقطة واحدة هي مرافق ZTh.
+contour(RL, XL, Pl, 20); grid on; xlabel('R_L (\Omega)'); ylabel('X_L (\Omega)'); title('Load power: the peak is at Z_L = Z_{Th}^*')

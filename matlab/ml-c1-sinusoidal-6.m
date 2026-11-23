@@ -1,31 +1,30 @@
-% Circuits 1 — Source Transformations and Thevenin-Norton Equivalents
-%title: Source Transformation with Phasors
-%ar-title: تحويل المصادر بالفازورات
+% Circuits 1 — Source Transformations and Thevenin-Norton Equivalent Circuits
+%title: Source Transformation (Example 9.9) and Thevenin (Example 9.10)
+%ar-title: تحويل المصادر (مثال 9.9) ومكافئ ثيفنن (مثال 9.10)
 %lesson: c1-sinusoidal-6
 %course: circuits-1
 
-%% The example
-%ar: 20∠0° V على التوالي مع 4 + j4 Ω ⇐ مصدر تيار Is = V/Z على التوازي مع نفس المعاوقة.
-V = 20; Z = 4 + 4j;
-Is = V/Z;
-fprintf('|Z| = %.3f at %g deg\n', abs(Z), angle(Z)*180/pi)
-fprintf('Is = %.3f at %.0f deg A\n', abs(Is), angle(Is)*180/pi)
-%check: abs(abs(Is) - 3.5355) < 1e-4 && abs(angle(Is)*180/pi + 45) < 1e-9
+%% Example 9.9
+%ar: 40∠0° مع 1 + j3 ← I = 40/(1 + j3)، ثم (1 + j3) ∥ (9 − j3)، ثم نعيده مصدر جهد ونقسم الجهد على فرع الخرج 10 − j19.
+I = 40/(1 + 3j); Zp = (1 + 3j)*(9 - 3j)/((1 + 3j) + (9 - 3j));
+Veq = I*Zp; Zs = Zp + 0.2 + 0.6j;
+Vo = Veq*(10 - 19j)/(Zs + 10 - 19j);
+fprintf('I = %g%+gj A, Zp = %g%+gj, Veq = %g%+gj V, Vo = %.2f%+.2fj V\n', real(I), imag(I), real(Zp), imag(Zp), real(Veq), imag(Veq), real(Vo), imag(Vo))
+%check: abs(I - (4 - 12j)) < 1e-9 && abs(Zp - (1.8 + 2.4j)) < 1e-9 && abs(Vo - (36.12 - 18.84j)) < 1e-9
 
-%% Check with a load
-%ar: أي حمل يرى نفس التيار من الصيغتين. نجرب حملًا مركبًا 2 − j3.
-ZL = 2 - 3j;
-i1 = V/(Z + ZL);
-i2 = Is*Z/(Z + ZL);
-fprintf('load current: %.4f at %.2f deg  vs  %.4f at %.2f deg\n', abs(i1), angle(i1)*180/pi, abs(i2), angle(i2)*180/pi)
-%check: abs(i1 - i2) < 1e-12
+%% Example 9.10: VTh
+%ar: بعد تحويل المصدر: 100 = (130 − j40) I + 10 Vx مع Vx = 100 − 10 I ← I = −900/(30 − j40)، و VTh = 10 Vx + 120 I.
+I = -900/(30 - 40j); Vx = 100 - 10*I; VTh = 10*Vx + 120*I;
+fprintf('I = %.2f at %.2f deg A, VTh = %g%+gj = %.2f at %.2f deg V\n', abs(I), angle(I)*180/pi, real(VTh), imag(VTh), abs(VTh), angle(VTh)*180/pi)
+%check: abs(VTh - (784 - 288j)) < 1e-9
 
-%%! Project idea: Thevenin of an AC network from two loads
-%ar: مثل درس DC: قِس (أو احسب) جهد الطرفين لحملين، وحل معادلتين مركبتين لـ VTh و ZTh. نفس الكود يصلح للقياسات.
-VTh0 = 20; ZTh0 = Z;                          % the "unknown" network
-ZLa = 10; ZLb = 5j;
-va = VTh0*ZLa/(ZTh0 + ZLa); vb = VTh0*ZLb/(ZTh0 + ZLb);
-% v = VTh - ZTh*i  ->  [1 -i] [VTh; ZTh] = v
-x = [1, -va/ZLa; 1, -vb/ZLb] \ [va; vb];
-fprintf('recovered VTh = %.3f%+.3fj, ZTh = %.3f%+.3fj\n', real(x(1)), imag(x(1)), real(x(2)), imag(x(2)))
-%check: abs(x(1) - 20) < 1e-9 && abs(x(2) - Z) < 1e-9
+%%! Project idea: ZTh with a test source
+%ar: مشروع: نعطل 120 V ونضع VT = 1 بين a و b. KCL عند a ومع القيد Vx نحسب IT، ثم ZTh = VT/IT = 91.2 − j38.4.
+VT = 1;
+Ia = VT/(10 - 40j);      % from a through -j40 and the 10 ohm equivalent to ground
+Vx = 10*Ia;
+Ib = (VT - 10*Vx)/120;   % from a through 120 ohm to the dependent source
+IT = Ia + Ib;
+ZTh = VT/IT;
+fprintf('ZTh = %.1f %+.1fj ohm\n', real(ZTh), imag(ZTh))
+%check: abs(ZTh - (91.2 - 38.4j)) < 1e-9

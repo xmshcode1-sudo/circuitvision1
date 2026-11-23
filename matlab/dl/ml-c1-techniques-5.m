@@ -1,26 +1,29 @@
 % Circuits 1 — The Mesh-Current Method and Dependent Sources
-%title: Mesh Analysis with a Dependent Source
-%ar-title: تيارات الحلقات مع مصدر تابع
+%title: Mesh Analysis with a Dependent Source (Example 4.5)
+%ar-title: تيارات الحلقات مع مصدر تابع (مثال 4.5)
 %lesson: c1-techniques-5
 %course: circuits-1
 
-%% Substitute ix = i1 - i2
-%ar: الحلقة 1: 28 i1 − 20 i2 = 40. الحلقة 2: 20(i2 − i1) + 10 i2 + 5 ix = 0، ومع ix = i1 − i2 تصير −15 i1 + 25 i2 = 0.
-A = [28 -20
-    -15  25];
-b = [40; 0];
-i = A \ b;
-ix = i(1) - i(2);
-fprintf('i1 = %g A, i2 = %g A, ix = %g A\n', i, ix)
+%% Example 4.5 after substituting the constraint
+%ar: من المحاضرة بعد التعويض بـ iφ = i1 − i3: 25 i1 − 5 i2 − 20 i3 = 50، و −5 i1 + 10 i2 − 4 i3 = 0، و −5 i1 − 4 i2 + 9 i3 = 0.
+A = [25 -5 -20
+     -5 10  -4
+     -5 -4   9];
+I = A \ [50; 0; 0];
+p4 = (I(3) - I(2))^2 * 4;
+fprintf('i1 = %g A, i2 = %g A, i3 = %g A, p(4 ohm) = %g W\n', I, p4)
 
-%% Keep ix as an unknown
-%ar: أو نترك ix مجهولًا ثالثًا مع معادلة القيد ix − i1 + i2 = 0.
-A3 = [28 -20 0; -20 30 5; -1 1 1];
-x = A3 \ [40; 0; 0];
-fprintf('i1 = %g, i2 = %g, ix = %g\n', x)
+%% The controlling current
+%ar: iφ = i1 − i3 هو تيار المقاومة 20 Ω، والمصدر التابع قيمته 15 iφ.
+iphi = I(1) - I(3);
+fprintf('iphi = %g A, dependent source = %g V\n', iphi, 15*iphi)
 
-%%! Project idea: power of the dependent source
-%ar: المصدر التابع قد يولّد أو يمتص. قدرته 5 ix × i2 (ندخله من +). اطبعها مع قدرة كل عنصر وتحقق من التوازن: مشروع «مدقق حلول الواجبات».
-%ar: إذا ظهر المجموع رقمًا مثل 3.55e-14 بدل 0 فهذا خطأ التقريب في حساب الأعداد العشرية داخل الحاسب، وهو صفر عمليًا. لذلك نقارن دائمًا بـ abs(x) < 1e-9 لا بـ x == 0.
-p = [-40*x(1), 8*x(1)^2, 20*x(3)^2, 10*x(2)^2, 5*x(3)*x(2)];
-fprintf('source %g, R''s %g %g %g, dependent %g, sum %g W\n', p, sum(p))
+%%! Project idea: four unknowns, no hand substitution
+%ar: مشروع: نترك iφ مجهولًا رابعًا ونضيف معادلة القيد صفًا رابعًا. هكذا لا نحتاج أي تعويض باليد.
+% unknowns i1 i2 i3 iphi; meshes: left (50 V,5,20), top (5,1,4), right (20,4, source 15 iphi)
+M = [25 -5 -20  0
+     -5 10  -4  0
+    -20 -4  24 15
+      1  0  -1 -1];
+x = M \ [50; 0; 0; 0];
+fprintf('i1 = %g, i2 = %g, i3 = %g, iphi = %g\n', x)

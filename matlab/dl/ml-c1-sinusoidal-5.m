@@ -1,26 +1,26 @@
 % Circuits 1 — Series, Parallel, and Delta-to-Wye Simplifications
-%title: Combining Impedances
-%ar-title: جمع المعاوقات على التوالي والتوازي
+%title: Admittances in Parallel (Example 9.7) and Delta-to-Wye (Example 9.8)
+%ar-title: المسامحات على التوازي (مثال 9.7) ودلتا إلى واي (مثال 9.8)
 %lesson: c1-sinusoidal-5
 %course: circuits-1
 
-%% The example
-%ar: نفس قوانين المقاومات، لكن بأعداد مركبة: 4 Ω على التوالي مع (j6 ∥ −j3).
-par = @(a, b) a.*b ./ (a + b);
-Z = 4 + par(6j, -3j);
-fprintf('j6 || -j3 = %+gj ohm\n', imag(par(6j, -3j)))
-fprintf('Z = %g%+gj = %.2f at %.2f deg ohm\n', real(Z), imag(Z), abs(Z), angle(Z)*180/pi)
+%% Example 9.7
+%ar: ثلاثة فروع على التوازي مع 8∠0° A: 10 Ω، و 6 + j8، و −j5. نجمع المسامحات ثم V = I/Y.
+Zb = [10, 6 + 8j, -5j];
+Y = sum(1 ./ Zb); V = 8/Y; Ib = V ./ Zb;
+fprintf('Y = %g %+gj S, V = %g at %.2f deg V\n', real(Y), imag(Y), abs(V), angle(V)*180/pi)
+for k = 1:3, fprintf('I%d = %g at %.2f deg A\n', k, abs(Ib(k)), angle(Ib(k))*180/pi); end
 
-%% The surprise: a parallel LC can be larger than both
-%ar: |j6 ∥ −j3| = 6، أكبر من 3! عكس المقاومات. نرسم مقدار ملف ∥ مكثف مع التردد: يصير لا نهائيًا عند الرنين.
-w = linspace(100, 3000, 2000); L = 10e-3; C = 100e-6;
-Zp = par(1j*w*L, 1./(1j*w*C));
-semilogy(w, abs(Zp)); grid on; xlabel('\omega (rad/s)'); ylabel('|Z| (\Omega)'); title('|Z_L || Z_C| vs frequency')
-fprintf('resonance at %g rad/s\n', 1/sqrt(L*C))
+%% Example 9.8
+%ar: الدلتا 10 و 20 + j60 و −j20 (مجموعها 30 + j40) إلى Y، ثم Z = 12 ∥ 60 + 8 − j24 و Io = 120/Z.
+Zbc = 10; Zbd = 20 + 60j; Zcd = -20j; Sd = Zbc + Zbd + Zcd;
+Z1 = Zbd*Zbc/Sd; Z2 = Zbc*Zcd/Sd; Z3 = Zbd*Zcd/Sd;
+Zabn = -4j + Z1; Zacn = 63.2 + 2.4j + Z2;
+Z = Zabn*Zacn/(Zabn + Zacn) + Z3; Io = 120/Z;
+fprintf('Z1 = %g%+gj, Z2 = %g%+gj, Z3 = %g%+gj\nZ = %g%+gj, Io = %g%+gj A\n', real(Z1), imag(Z1), real(Z2), imag(Z2), real(Z3), imag(Z3), real(Z), imag(Z), real(Io), imag(Io))
 
-%%! Project idea: an impedance calculator
-%ar: مشروع: دوال صغيرة zR و zL و zC و ser و par تبني أي شبكة بسطر واحد. جرب: (R + L) ∥ C عند 1 kHz.
-zR = @(R, w) R + 0*w; zL = @(L, w) 1j*w*L; zC = @(C, w) 1./(1j*w*C); ser = @(a, b) a + b;
-w = 2*pi*1e3;
-Z = par(ser(zR(50, w), zL(10e-3, w)), zC(1e-6, w));
-fprintf('Z = %.2f%+.2fj ohm\n', real(Z), imag(Z))
+%%! Project idea: currents in the time domain
+%ar: مشروع: نرسم تيارات مثال 9.7 الثلاثة ومجموعها: المجموع يساوي تيار المصدر 8 cos(200000t).
+w = 2e5; t = linspace(0, 2*2*pi/w, 600); tf = @(P) abs(P)*cos(w*t + angle(P));
+plot(t*1e6, tf(Ib(1)), t*1e6, tf(Ib(2)), t*1e6, tf(Ib(3)), t*1e6, tf(Ib(1))+tf(Ib(2))+tf(Ib(3)), 'k--'); grid on
+xlabel('t (\mus)'); ylabel('i (A)'); legend('i_1', 'i_2', 'i_3', 'sum = i_s'); title('Example 9.7: KCL in the time domain')

@@ -4,26 +4,22 @@
 %lesson: c1-power-1
 %course: circuits-1
 
-%% The formula
-%ar: p(t) = (VmIm/2) cos(θv − θi) + (VmIm/2) cos(2ωt + θv + θi). المثال: v = 100 cos(377t)، i = 10 cos(377t − 60°).
-Vm = 100; Im = 10; w = 377; tv = 0; ti = -60;
-A = Vm*Im/2; P = A*cosd(tv - ti);
-fprintf('p(t) = %g + %g cos(%g t %+g deg) W\n', P, A, 2*w, tv + ti)
-fprintf('max %g W, min %g W\n', P + A, P - A)
-%check: abs(P - 250) < 1e-9 && abs(P + A - 750) < 1e-9
+%% The lesson's example
+%ar: v = 100 cos(ωt + 15°) و i = 4 cos(ωt − 105°). P = (VmIm/2) cos(θv − θi) و Q = (VmIm/2) sin(θv − θi).
+Vm = 100; thv = 15; Im = 4; thi = -105;
+P = Vm*Im/2*cosd(thv - thi); Q = Vm*Im/2*sind(thv - thi);
+fprintf('P = %.2f W, Q = %.2f VAR\n', P, Q)
+%check: abs(P + 100) < 1e-9 && abs(Q - 173.205) < 1e-3
 
-%% Multiply the waveforms point by point
-%ar: نتحقق بضرب v(t) و i(t) عدديًا: القيمة المتوسطة 250 W، والقدرة سالبة جزءًا من الدورة (الحمل يعيد طاقة للمصدر).
-t = linspace(0, 2*2*pi/w, 2000);
-v = Vm*cos(w*t + tv*pi/180); i = Im*cos(w*t + ti*pi/180); p = v.*i;
-plot(t*1e3, p, t*1e3, P*ones(size(t)), '--'); grid on; xlabel('t (ms)'); ylabel('p (W)'); title('p(t) = v(t) i(t)')
-legend('p(t)', 'average'); 
-fprintf('numerical average over one period = %.2f W\n', mean(p(1:1000)))
-%check: abs(mean(p(1:1000)) - 250) < 0.5
+%% p(t) = P + P cos 2wt - Q sin 2wt
+%ar: نتحقق رقميًا أن v·i يساوي P + P cos 2ωt − Q sin 2ωt في كل لحظة (بعد إزاحة الزمن بـ θi كما في المحاضرة).
+w = 377; t = linspace(0, 2*2*pi/w, 1000);
+v = Vm*cos(w*t + (thv - thi)*pi/180); i = Im*cos(w*t);
+p = v.*i; pf = P + P*cos(2*w*t) - Q*sin(2*w*t);
+fprintf('max difference = %.2e W, average of p = %.3f W\n', max(abs(p - pf)), mean(p(1:end-1)))
+%check: max(abs(p - pf)) < 1e-9
 
-%%! Project idea: energy delivered in one period
-%ar: مشروع: الطاقة المنقولة في دورة واحدة = تكامل p(t)، و = P × T. احسبها بـ trapz وقارن. ثم غيّر زاوية التيار من 0 إلى 90° وارسم P: تنزل إلى الصفر.
-T = 2*pi/w; tt = linspace(0, T, 2001);
-E = trapz(tt, Vm*cos(w*tt).*Im.*cos(w*tt - pi/3));
-fprintf('energy per period = %.4f J, P*T = %.4f J\n', E, P*T)
-%check: abs(E - P*T) < 1e-6
+%%! Project idea: plot v, i and p
+%ar: مشروع: نرسم v و i و p: القدرة تتذبذب بضعف التردد حول متوسطها P.
+plot(t*1000, v, t*1000, 25*i, t*1000, p/4, t*1000, P/4*ones(size(t)), '--'); grid on
+xlabel('t (ms)'); legend('v (V)', '25 i (A)', 'p/4 (W)', 'P/4'); title('Instantaneous power has twice the frequency')

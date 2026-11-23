@@ -1,27 +1,27 @@
 % Circuits 1 — Maximum Power Transfer
-%title: Maximum Power Transfer
-%ar-title: أقصى نقل للقدرة
+%title: Maximum Power Transfer (Example 4.12)
+%ar-title: نقل القدرة القصوى (مثال 4.12)
 %lesson: c1-techniques-11
 %course: circuits-1
 
-%% Power in the load for many loads
-%ar: p = VTh² RL / (RTh + RL)². نحسبها لكل قيم الحمل بعمليات النقطة، ثم نبحث عن القمة بـ max.
-VTh = 40; RTh = 8;
-RL = linspace(0.1, 40, 4000);
-p = VTh^2 * RL ./ (RTh + RL).^2;
-[pmax, k] = max(p);
-fprintf('numerical: max %.3f W at RL = %.2f ohm\n', pmax, RL(k))
-fprintf('formula:   max %g W at RL = %g ohm\n', VTh^2/(4*RTh), RTh)
-%check: abs(VTh^2/(4*RTh) - 50) < 1e-12 && abs(RL(k) - 8) < 0.02
+%% Example 4.12
+%ar: VTh = (150/180) × 360 = 300 V و RTh = 150 ∥ 30 = 25 Ω. أكبر قدرة عند RL = 25 Ω: pmax = (300/50)² × 25 = 900 W.
+VTh = 150/180*360; RTh = 150*30/180;
+pmax = (VTh/(2*RTh))^2 * RTh;
+fprintf('VTh = %g V, RTh = %g ohm, pmax = %g W\n', VTh, RTh, pmax)
+%check: abs(VTh - 300) < 1e-12 && abs(RTh - 25) < 1e-12 && abs(pmax - 900) < 1e-9
 
-%% The curve and the efficiency
-%ar: عند أقصى قدرة الكفاءة 50% فقط: نصف القدرة يضيع في RTh. الكفاءة η = RL/(RL + RTh).
-eta = RL ./ (RL + RTh) * 100;
-subplot(2,1,1); plot(RL, p); grid on; ylabel('p_L (W)'); title('Load power'); hold on; plot(RTh, pmax, 'ro'); hold off
-subplot(2,1,2); plot(RL, eta); grid on; ylabel('\eta (%)'); xlabel('R_L (\Omega)'); title('Efficiency')
+%% How much of the source power arrives?
+%ar: vab = 150 V و is = (360 − 150)/30 = 7 A، فالمصدر يعطي 2520 W ونسبة ما يصل للحمل 35.71 %.
+vab = VTh/2; is = (360 - vab)/30; ps = 360*is;
+fprintf('vab = %g V, is = %g A, source power = %g W, delivered = %.2f %%\n', vab, is, ps, 100*pmax/ps)
+%check: abs(is - 7) < 1e-12 && abs(100*pmax/ps - 35.714) < 1e-3
 
-%%! Project idea: audio amplifier and speaker
-%ar: مشروع: مكبر مقاومة خرجه 8 Ω. ما القدرة في سماعة 4 Ω أو 8 Ω أو 16 Ω؟ اطبع جدولًا. لماذا تُصنع السماعات بـ 8 Ω؟
-for Rs = [4 8 16]
-    fprintf('speaker %2g ohm: %.2f W, efficiency %.0f%%\n', Rs, VTh^2*Rs/(RTh + Rs)^2, Rs/(Rs + RTh)*100)
-end
+%%! Project idea: the power curve
+%ar: مشروع: نرسم قدرة الحمل مقابل RL ونتأكد أن القمة عند RL = RTh.
+RL = linspace(1, 150, 1500);
+p = (VTh ./ (RTh + RL)).^2 .* RL;
+[pm, k] = max(p);
+plot(RL, p); grid on; xlabel('R_L (\Omega)'); ylabel('p (W)'); title('Load power: peak at R_L = R_{Th} = 25 \Omega')
+fprintf('peak %.1f W at RL = %.1f ohm\n', pm, RL(k))
+%check: abs(RL(k) - 25) < 0.2

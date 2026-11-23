@@ -4,27 +4,28 @@
 %lesson: c1-elements-4
 %course: circuits-1
 
-%% Two unknowns, two equations
-%ar: المجهولان: ix وجهد العقدة v. معادلة القيد: ix = (20 − v)/4 أي 4 ix + v = 20. و KCL: ix = v/8 + 0.5 ix أي 0.5 ix − v/8 = 0.
-%ar: المصدر التابع يصير مجرد معامل في المصفوفة: لا يحتاج معاملة خاصة.
-A = [4    1
-     0.5 -1/8];
-b = [20; 0];
-x = A \ b;
-ix = x(1); v = x(2);
-fprintf('ix = %g A, v = %g V, dependent source = %g A\n', ix, v, 0.5*ix)
+%% The Fig. 2.22 example
+%ar: المجهولان iΔ و i0. KVL يسار: 5 iΔ + 20 i0 = 500، و KCL عند b: i0 = iΔ + 5 iΔ أي 6 iΔ − i0 = 0. المصدر التابع يصير معاملًا في المصفوفة.
+A = [5 20
+     6 -1];
+b = [500; 0];
+x = A \ b; iD = x(1); i0 = x(2);
+v0 = 20 * i0;
+fprintf('iDelta = %g A, i0 = %g A, v0 = %g V\n', iD, i0, v0)
 
-%% Gain sweep: what does the dependent source do?
-%ar: نغيّر معامل المصدر التابع (0.5 في المثال) ونرى v. محدد المصفوفة det = g − 1.5، فعند g = 1.5 لا يوجد حل وحيد، وكلما اقتربنا منه تكبر القيم.
-g = 0:0.1:1.4; vv = zeros(size(g));
+%% Example 2.10 and its power balance
+%ar: مثال 2.10: 10 = 6 is، و 3 is = (2 + 3) i0. ثم نتحقق أن قدرة المصدرين = قدرة المقاومات = 21.7 W.
+is = 10 / 6; i0 = 3*is / 5; vo = 3 * i0;
+Psrc = -(10*is) - (3*is)*i0;
+Pres = is^2*6 + i0^2*2 + i0^2*3;
+fprintf('is = %.3f A, i0 = %g A, vo = %g V\n', is, i0, vo)
+fprintf('sources deliver %.2f W, resistors absorb %.2f W\n', -Psrc, Pres)
+
+%%! Project idea: sweep the gain of the dependent source
+%ar: مشروع: نغيّر معامل المصدر التابع في مثال الشكل 2.22 (5 في المثال) ونرسم v0: كلما زاد الكسب زاد تيار 20 Ω.
+g = 0:0.5:10; vv = zeros(size(g));
 for k = 1:numel(g)
-    s = [4 1; 1-g(k) -1/8] \ [20; 0]; vv(k) = s(2);
+    s = [5 20; 1+g(k) -1] \ [500; 0]; vv(k) = 20*s(2);
 end
-plot(g, vv, '-o'); grid on; xlabel('gain of the dependent source'); ylabel('v (V)'); title('Node voltage vs dependent-source gain')
-fprintf('g = %.1f -> v = %.3f V\n', [g; vv])
-
-%%! Project idea: detect impossible designs
-%ar: مشروع: قبل الحل افحص det(A). إذا كانت صفرًا (أو cond كبيرة جدًا) اطبع تحذيرًا بدل نتيجة خاطئة. جرّبه عند g = 1.5.
-gbad = 1.5; Abad = [4 1; 1-gbad -1/8];
-fprintf('det = %g, rank = %d\n', det(Abad), rank(Abad))
-if rank(Abad) < 2, fprintf('no unique solution: the design must change\n'), end
+plot(g, vv, '-o'); grid on; xlabel('gain of the dependent source'); ylabel('v_0 (V)'); title('v_0 vs the dependent-source gain (lecture: 5)')
+fprintf('gain 5 -> v0 = %g V\n', vv(g == 5))

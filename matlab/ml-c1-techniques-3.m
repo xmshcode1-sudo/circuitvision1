@@ -1,30 +1,32 @@
 % Circuits 1 — The Node-Voltage Method: Some Special Cases
 %title: Supernode in MATLAB
-%ar-title: العقدة العظمى في MATLAB
+%ar-title: العقدة الفائقة في MATLAB
 %lesson: c1-techniques-3
 %course: circuits-1
 
-%% Known node and the supernode
-%ar: v1 = 50 V معروفة مباشرة. المصدر 10 V بين v2 و v3 يعطي القيد v3 = v2 + 10، و KCL للعقدة العظمى: (v2 − 50)/5 + v2/15 + v3/20 = 0.
-%ar: نكتب معادلتين في مجهولين (v2، v3) ونحل.
-A = [1/5 + 1/15, 1/20
-     -1,         1   ];
-b = [50/5; 10];
-v = A \ b;
-fprintf('v2 = %g V, v3 = %g V\n', v)
-%check: all(abs(v - [30; 40]) < 1e-9)
+%% The lecture's supernode
+%ar: v1 = 50 V مباشرة. ومن المحاضرة: 22 v2 + v3 = 1400، و v2 + 2(v2 − 50) − v3 = 0 أي 3 v2 − v3 = 100.
+A = [22  1
+      3 -1];
+b = [1400; 100];
+v = A \ b; v2 = v(1); v3 = v(2);
+iphi = (v2 - 50) / 5;
+fprintf('v2 = %g V, v3 = %g V, iphi = %g A\n', v2, v3, iphi)
+%check: abs(v2 - 60) < 1e-12 && abs(v3 - 80) < 1e-12 && abs(iphi - 2) < 1e-12
 
-%% Check KCL for the supernode
-%ar: التيارات الخارجة من العقدة العظمى: −4 و 2 و 2 أمبير. مجموعها صفر.
-i = [(v(1) - 50)/5, v(1)/15, v(2)/20];
-fprintf('%g + %g + %g = %g\n', i, sum(i))
-%check: abs(sum(i)) < 1e-12
+%% Check the supernode KCL
+%ar: KCL على العقدة الفائقة كاملة: (v2 − v1)/5 + v2/50 + v3/100 − 4 = 0.
+r = (v2 - 50)/5 + v2/50 + v3/100 - 4;
+fprintf('KCL residual = %.2e\n', r)
+%check: abs(r) < 1e-12
 
-%%! Project idea: the source as an extra unknown (MNA)
-%ar: البرامج الحقيقية لا تبحث عن العقد العظمى: تضيف تيار كل مصدر جهد مجهولًا جديدًا (طريقة MNA). هنا: المجاهيل v2 و v3 وتيار المصدر 10 V.
-M = [1/5 + 1/15, 0,    1
-     0,          1/20, -1
-     -1,         1,     0];
-x = M \ [50/5; 0; 10];
-fprintf('MNA: v2 = %g, v3 = %g, current of the 10 V source = %g A\n', x)
-%check: abs(x(1) - 30) < 1e-9 && abs(x(2) - 40) < 1e-9
+%%! Project idea: modified nodal analysis
+%ar: مشروع: بدل العقدة الفائقة نضيف تيار المصدر التابع مجهولًا (طريقة MNA التي يستخدمها SPICE). المجاهيل: v2 و v3 وتيار المصدر.
+% unknowns: v2, v3, ix (current from node 2 to node 3 through the dependent source)
+M = [1/5 + 1/50, 0,        1
+     0,          1/100,   -1
+     -1 - 10/5,  1,        0];
+rhs = [50/5; 4; -10*50/5];
+x = M \ rhs;
+fprintf('v2 = %g, v3 = %g, source current = %g A\n', x)
+%check: abs(x(1) - 60) < 1e-12 && abs(x(2) - 80) < 1e-12

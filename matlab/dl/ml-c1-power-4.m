@@ -1,26 +1,23 @@
 % Circuits 1 — Complex Power
-%title: Complex Power S = V I* / 2
-%ar-title: القدرة المركبة
+%title: Complex Power and the Power Triangle (Example 10.4)
+%ar-title: القدرة المركّبة ومثلث القدرة (مثال 10.4)
 %lesson: c1-power-4
 %course: circuits-1
 
-%% The example
-%ar: S = ½ V I* بقيم القمة (أو Vrms Irms* بالقيم الفعالة). conj يعطي المرافق. الجزء الحقيقي P والتخيلي Q.
-V = 100*exp(1j*36.87*pi/180); I = 4;
-S = 0.5*V*conj(I);
-fprintf('S = %.2f%+.2fj VA = %.1f at %.2f deg\n', real(S), imag(S), abs(S), angle(S)*180/pi)
-fprintf('pf = %.3f (lagging because Q > 0)\n', cos(angle(S)))
+%% Example 10.4
+%ar: 8 kW بمعامل 0.8 متأخر على 240 V rms: |S| = P/pf، و Q = |S| sin θ (موجبة لأنه حثي)، و Ieff = P/(V pf)، و Z = (V/Ieff)∠θ.
+P = 8000; pf = 0.8; V = 240;
+th = acos(pf); S = P/pf; Q = S*sin(th);
+Ieff = P/(V*pf); Z = V/Ieff * exp(1j*th);
+fprintf('S = %g + j%g VA, |S| = %g VA, Ieff = %.2f A, Z = %.3f %+.3fj ohm\n', P, Q, S, Ieff, real(Z), imag(Z))
 
-%% The same from the impedance
-%ar: Z = V/I، ثم S = ½|I|² Z: نفس النتيجة. هذه الصيغة أسهل إذا عرفت التيار والحمل.
-Z = V/I;
-S2 = 0.5*abs(I)^2*Z;
-fprintf('Z = %.2f%+.2fj ohm, S = %.2f%+.2fj VA\n', real(Z), imag(Z), real(S2), imag(S2))
+%% S from the voltage and current phasors
+%ar: مثال المحاضرة: V = 100∠15° و I = 4∠−105° (عظمى): S = ½ V I* = −100 + j173.21 VA.
+Vp = 100*exp(1j*15*pi/180); Ip = 4*exp(-1j*105*pi/180);
+Sp = 0.5*Vp*conj(Ip);
+fprintf('S = %.2f %+.2fj VA\n', real(Sp), imag(Sp))
 
-%%! Project idea: total power of several loads
-%ar: مشروع: S الكلية = مجموع S لكل حمل (P و Q يجمعان جبريًا). ثلاثة أحمال على نفس الجهد، واطبع معامل القدرة الكلي.
-Vrms = 220; Zs = [10 + 5j, 20, 15 - 8j];
-Sk = Vrms^2 ./ conj(Zs);
-St = sum(Sk);
-fprintf('load %d: %.1f%+.1fj VA\n', [1:3; real(Sk); imag(Sk)])
-fprintf('total: %.1f%+.1fj VA, pf = %.3f\n', real(St), imag(St), cos(angle(St)))
+%%! Project idea: draw the power triangle
+%ar: مشروع: نرسم مثلث القدرة لمثال 10.4: P أفقي و Q رأسي و |S| الوتر.
+plot([0 P 0; P P P]/1000, [0 0 0; 0 Q Q]/1000, 'linewidth', 2); grid on; axis equal
+xlabel('P (kW)'); ylabel('Q (kVAR)'); title('Power triangle: 8 kW, 6 kVAR, |S| = 10 kVA')

@@ -1,33 +1,34 @@
-% Circuits 1 — The Ideal Basic Circuit Element: passive sign convention
+% Circuits 1 — The Ideal Basic Circuit Element
 %title: The Passive Sign Convention
-%ar-title: اصطلاح الإشارة السلبي وحساب القدرة
+%ar-title: اصطلاح الإشارة الخاملة
 %lesson: c1-variables-3
 %course: circuits-1
 
-%% The example
-%ar: العنصر: v = 10 V والتيار 2 A يخرج من الطرف +. القاعدة: إذا دخل التيار من + نستخدم p = vi، وإذا خرج منه نستخدم p = −vi.
-v = 10; i = 2;
-entersPlus = false;              % the arrow leaves the + terminal
-if entersPlus, p = v*i; else, p = -v*i; end
-fprintf('p = %g W\n', p)
-
-%% Absorbing or delivering?
-%ar: إشارة p تخبرنا: موجبة ⇐ يمتص، سالبة ⇐ يولّد. نجعلها دالة محلية لنستخدمها لأي عنصر.
-describe(p)
-
-%% Changing the reference does not change the physics
-%ar: لو عكسنا سهم التيار يصير i = −2 A ويدخل من + ، فنستخدم p = vi = 10 × (−2) = −20 W: نفس النتيجة.
-p2 = v*(-2);
-fprintf('reversed arrow: p = %g W\n', p2)
-
-%%! Project idea: a power checker for any element list
-%ar: مشروع: أدخل جدول عناصر (الجهد، التيار، هل يدخل التيار من +) واحصل على قدرة كل عنصر وحالته. سنكمله في الدرس التالي بتوازن القدرة.
-V = [10 5 7]; I = [2 2 2]; into = [false true true];
-P = V.*I; P(~into) = -P(~into);
-for k = 1:3, fprintf('element %d: ', k); describe(P(k)); end
-
-function describe(p)
-    if p > 0, fprintf('p = %g W -> absorbs\n', p);
-    elseif p < 0, fprintf('p = %g W -> delivers %g W\n', p, -p);
-    else, fprintf('p = 0\n'); end
+%% Example 1: the four cases
+%ar: مثال 1 من المحاضرة: هبوط 4 V وتيار 3 A. في (a) و (b) يدخل التيار من الطرف الموجب فـ i = +3، وفي (c) و (d) يخرج منه فـ i = −3. ثم p = vi.
+v = [4 4 4 4];
+i = [3 3 -3 -3];
+p = v .* i;
+lbl = 'abcd';
+for k = 1:4
+    if p(k) > 0, s = 'absorbing'; else, s = 'delivering'; end
+    fprintf('(%c) v = %+g V, i = %+g A, p = %+g W -> %s\n', lbl(k), v(k), i(k), p(k), s)
 end
+
+%% Same element, two references
+%ar: نفس العنصر بمرجعين: إذا عكسنا سهم التيار نكتب p = −vi، والنتيجة الفيزيائية لا تتغير.
+p1 = v(1) * i(1);          % current enters at +
+p2 = -v(1) * (-i(1));      % arrow reversed: enters at -, use p = -vi
+fprintf('p with the first reference = %g W, with the reversed reference = %g W\n', p1, p2)
+
+%%! Project idea: a sign-convention helper
+%ar: مشروع: دالة تأخذ v و i واتجاه دخول التيار (من + أو من −) وتطبع القدرة وهل العنصر يمتص أم يعطي.
+cases = [4 3 1; 4 3 0; -5 2 1; 6 -2 0];   % v, i, enters at + (1) or - (0)
+pw = zeros(1, size(cases, 1));
+for k = 1:size(cases, 1)
+    sgn = 2*cases(k,3) - 1;   % +1 if the current enters at +, -1 otherwise
+    pw(k) = sgn * cases(k,1) * cases(k,2);
+    if cases(k,3), at = '+'; else, at = '-'; end
+    fprintf('v = %+g, i = %+g, enters at %s -> p = %+g W\n', cases(k,1), cases(k,2), at, pw(k))
+end
+bar(pw); grid on; xlabel('case'); ylabel('p (W)'); title('Positive = absorbing, negative = delivering')

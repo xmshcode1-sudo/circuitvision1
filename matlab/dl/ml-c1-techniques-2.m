@@ -1,36 +1,30 @@
 % Circuits 1 — The Node-Voltage Method and Dependent Sources
-%title: Nodal Analysis with a Dependent Source
-%ar-title: جهود العقد مع مصدر تابع
+%title: Nodal Analysis with a Dependent Source (Example 4.3)
+%ar-title: جهود العقد مع مصدر تابع (مثال 4.3)
 %lesson: c1-techniques-2
 %course: circuits-1
 
-%% Substitute the constraint into the equations
-%ar: القيد ix = (24 − v1)/6. نعوّضه في معادلة v2: (v2 − v1)/10 − 4(24 − v1)/6 = 0. هكذا يبقى مجهولان فقط.
-%ar: العقدة v1: v1(1/6 + 1/2 + 1/10) − v2/10 = 24/6. العقدة v2: v1(−1/10 + 4/6) + v2/10 = 4·24/6.
-A = [1/6 + 1/2 + 1/10, -1/10
-     -1/10 + 4/6,       1/10];
-b = [24/6; 4*24/6];
+%% The two node equations and the constraint
+%ar: من المحاضرة: 15 v1 − 4 v2 = 200، و 8 v2 − 2 v1 − 40 iφ = 0 مع iφ = (v1 − v2)/5، فتصبح 16 v2 − 10 v1 = 0.
+A = [15 -4
+    -10 16];
+b = [200; 0];
 v = A \ b;
-ix = (24 - v(1))/6;
-fprintf('v1 = %g V, v2 = %g V, ix = %g A\n', v, ix)
+iphi = (v(1) - v(2)) / 5; p5 = 5 * iphi^2;
+fprintf('v1 = %g V, v2 = %g V, iphi = %g A, p(5 ohm) = %g W\n', v(1), v(2), iphi, p5)
 
-%% The matrix is no longer symmetric
-%ar: المصدر التابع يكسر تماثل المصفوفة. لهذا لا نكتبها «بالنظر» كما في الدرس السابق، بل من المعادلات.
-fprintf('symmetric? %d\n', isequal(A, A'))
+%% Three unknowns without substituting
+%ar: بدل التعويض باليد نضع iφ مجهولًا ثالثًا ونضيف معادلة القيد كصف في المصفوفة. النتيجة نفسها.
+A3 = [ 1/2 + 1/20 + 1/5, -1/5,              0
+      -1/5,              1/5 + 1/10 + 1/2, -8/2
+       1/5,             -1/5,              -1];
+x = A3 \ [20/2; 0; 0];
+fprintf('v1 = %g, v2 = %g, iphi = %g\n', x)
 
-%% Keep ix as a third unknown instead
-%ar: طريقة أسهل للبرمجة: نترك ix مجهولًا ثالثًا ونضيف معادلة القيد صفًا. النتيجة نفسها.
-A3 = [1/6 + 1/2 + 1/10, -1/10, 0
-      -1/10,              1/10, -4
-      1/6,                0,     1];
-b3 = [24/6; 0; 24/6];
-x = A3 \ b3;
-fprintf('v1 = %g, v2 = %g, ix = %g\n', x)
-
-%%! Project idea: an amplifier model
-%ar: المصدر التابع هو نموذج الترانزستور والمكبر. غيّر الكسب (4 في المثال) وارسم v2: الخرج يكبر خطيًا مع الكسب. هذه بداية مشروع «تصميم مكبر بسيط».
-k = 0:1:8; v2 = zeros(size(k));
-for n = 1:numel(k)
-    A3(2,3) = -k(n); s = A3 \ b3; v2(n) = s(2);
-end
-plot(k, v2, '-o'); grid on; xlabel('gain of the dependent source'); ylabel('v_2 (V)'); title('Output vs gain')
+%%! Project idea: power balance
+%ar: مشروع: نحسب قدرة كل عنصر ونتحقق أن المجموع صفر (المصدر 20 V والمصدر التابع 8 iφ والمقاومات).
+v1 = x(1); v2 = x(2); ip = x(3);
+i20 = (20 - v1)/2; idep = (v2 - 8*ip)/2;
+P = [-20*i20, (20-v1)^2/2, v1^2/20, (v1-v2)^2/5, v2^2/10, (v2-8*ip)^2/2, 8*ip*idep];
+fprintf('sum of powers = %.2e W\n', sum(P))
+bar(P); grid on; ylabel('p (W)'); title('Example 4.3: every element''s power (sum = 0)')

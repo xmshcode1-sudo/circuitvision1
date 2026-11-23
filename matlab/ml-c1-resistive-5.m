@@ -1,43 +1,30 @@
 % Circuits 1 — Delta-to-Wye (Pi-to-Tee) Equivalent Circuits
-%title: Delta-to-Wye and the Bridge
-%ar-title: تحويل دلتا إلى واي وحل الجسر
+%title: Delta-to-Wye in Example 3.7
+%ar-title: تحويل دلتا إلى واي في مثال 3.7
 %lesson: c1-resistive-5
 %course: circuits-1
 
-%% Delta to wye
-%ar: كل مقاومة Y = حاصل ضرب الضلعين المجاورين ÷ مجموع الثلاثة. المثلث هنا R1 = 20 و R2 = 30 و R5 = 50.
-R1 = 20; R2 = 30; R5 = 50; R3 = 14; R4 = 9;
-S = R1 + R2 + R5;
-Ra = R1*R2/S; Rb = R1*R5/S; Rc = R2*R5/S;
-fprintf('Y resistors: %g, %g, %g ohm\n', Ra, Rb, Rc)
-%check: Ra == 6 && Rb == 10 && Rc == 15
+%% The transformation formulas
+%ar: الدلتا العلوية 100 و 125 و 25 Ω (مجموعها 250). كل مقاومة Y = حاصل ضرب الضلعين المجاورين ÷ المجموع.
+Ra = 125; Rb = 100; Rc = 25;     % sides of the delta as in the lecture
+S = Ra + Rb + Rc;
+R1 = Rb*Ra/S; R2 = Ra*Rc/S; R3 = Rb*Rc/S;
+fprintf('R1 = %g, R2 = %g, R3 = %g ohm\n', R1, R2, R3)
+%check: R1 == 50 && R2 == 12.5 && R3 == 10
 
-%% Finish the bridge
-%ar: بعد التحويل: (Rb + R3) ∥ (Rc + R4) ثم على التوالي مع Ra.
-par = @(a, b) a*b/(a + b);
-Rab = Ra + par(Rb + R3, Rc + R4);
-fprintf('Rab = %g ohm\n', Rab)
-%check: abs(Rab - 18) < 1e-12
+%% The source current and power
+%ar: بعد التحويل: (10 + 40) ∥ (12.5 + 37.5) = 25 Ω، ومع 5 Ω و 50 Ω: Req = 80 Ω و i = 0.5 A و p = −20 W.
+Req = 5 + R1 + (R3 + 40)*(R2 + 37.5)/((R3 + 40) + (R2 + 37.5));
+i = 40 / Req; p = -i * 40;
+fprintf('Req = %g ohm, i = %g A, p = %g W\n', Req, i, p)
+%check: Req == 80 && i == 0.5 && p == -20
 
-%% Check with nodal analysis
-%ar: تحقق مستقل: نحقن 1 A في a ونخرجه من b، ونحل جهود العقد بالمصفوفة. Rab = va − vb. يجب أن يعطي نفس الرقم.
-% nodes: 1 = a, 2 = between R1-R3-R5, 3 = between R2-R4-R5, b = reference
-G = [1/R1+1/R2, -1/R1,          -1/R2
-     -1/R1,      1/R1+1/R3+1/R5, -1/R5
-     -1/R2,     -1/R5,           1/R2+1/R4+1/R5];
-v = G \ [1; 0; 0];
-fprintf('nodal: Rab = %g ohm\n', v(1))
-%check: abs(v(1) - 18) < 1e-9
-
-%%! Project idea: a reusable converter in both directions
-%ar: مشروع: دالتان d2y و y2d. التحقق: التحويل ذهابًا وإيابًا يرجع نفس القيم.
-[a, b, c] = d2y(R1, R2, R5); [x, y, z] = y2d(a, b, c);
-fprintf('back to delta: %g %g %g\n', x, y, z)
-%check: abs(x - 20) < 1e-9
-
-function [Ra, Rb, Rc] = d2y(R1, R2, R3)
-    S = R1 + R2 + R3; Ra = R1*R2/S; Rb = R1*R3/S; Rc = R2*R3/S;
-end
-function [R1, R2, R3] = y2d(Ra, Rb, Rc)
-    N = Ra*Rb + Rb*Rc + Rc*Ra; R1 = N/Rc; R2 = N/Rb; R3 = N/Ra;
-end
+%%! Project idea: check with node voltages (no transformation)
+%ar: مشروع: نحل نفس الدائرة بالعقد بدون تحويل (عقد: أعلى الجسر a، اليسار x، اليمين y) ونتأكد أن تيار المصدر 0.5 A.
+G = [1/5 + 1/100 + 1/125, -1/100,              -1/125
+     -1/100,              1/100 + 1/25 + 1/40, -1/25
+     -1/125,              -1/25,               1/125 + 1/25 + 1/37.5];
+V = G \ [40/5; 0; 0];
+isrc = (40 - V(1)) / 5;
+fprintf('source current from nodes = %g A\n', isrc)
+%check: abs(isrc - 0.5) < 1e-12

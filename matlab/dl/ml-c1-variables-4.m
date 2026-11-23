@@ -4,39 +4,24 @@
 %lesson: c1-variables-4
 %course: circuits-1
 
-%% Power of each element
-%ar: جدول الدرس: ثلاثة عناصر. نضع الجهود والتيارات في متجهات، ومتجهًا منطقيًا يقول هل يدخل التيار من +.
-v = [12 5 7]; i = [2 2 2];
-entersPlus = [false true true];
-s = ones(1,3); s(~entersPlus) = -1;     % +1 for p = vi, -1 for p = -vi
-p = s .* v .* i;
-fprintf('p_%c = %+g W\n', [double('abc'); p])
+%% P = dw/dt = VI
+%ar: مثال الدرس: عنصر عليه 4 V ويدخله 3 A من طرفه الموجب. p = vi، والطاقة في دقيقتين w = p·t.
+v = 4; i = 3; t = 120;
+p = v * i;
+w = p * t;
+fprintf('p = %g W, energy in 2 min = %g J\n', p, w)
 
-%% The power balance
-%ar: في أي دائرة صحيحة مجموع القدرات صفر: ما يولده عنصر يمتصه غيره. هذا أسرع اختبار لحلّك.
-fprintf('sum of powers = %g W\n', sum(p))
-fprintf('delivered = %g W, absorbed = %g W\n', -sum(p(p<0)), sum(p(p>0)))
+%% Energy is the integral of power
+%ar: إذا تغيرت القدرة مع الزمن فالطاقة تكامل القدرة. نتحقق بـ trapz أن تكامل قدرة ثابتة 12 W خلال 120 s يعطي 1440 J.
+tt = linspace(0, 120, 1201);
+pp = 12 * ones(size(tt));
+W = trapz(tt, pp);
+fprintf('integral of p dt = %.4f J\n', W)
 
-%% Energy: heater 1500 W for 2 hours
-%ar: الطاقة = القدرة × الزمن. بالـ kWh (وحدة فاتورة الكهرباء) وبالجول.
-P = 1500; T = 2;
-E_kWh = P/1000 * T;
-E_J = P * T*3600;
-fprintf('E = %g kWh = %g J = %g MJ\n', E_kWh, E_J, E_J/1e6)
-
-%% Energy from a varying power
-%ar: إذا تغيرت القدرة مع الزمن: الطاقة هي المساحة تحت منحنى p(t)، ونحسبها بـ trapz. مثال: p = 1500 W في أول ساعة ثم 750 W.
-t = linspace(0, 2*3600, 7201);
-pt = 1500*(t < 3600) + 750*(t >= 3600);
-E = trapz(t, pt);
-fprintf('E = %.3f kWh\n', E/3.6e6)
-plot(t/3600, pt); grid on; xlabel('t (h)'); ylabel('p (W)'); title('Power of the heater'); ylim([0 1700])
-
-%%! Project idea: electricity bill estimator
-%ar: مشروع: قائمة أجهزة البيت (القدرة وساعات التشغيل اليومية) ⇐ استهلاك شهري وفاتورة. السعر هنا مثال فقط: غيّره لتعرفة بلدك.
-names = {'AC', 'fridge', 'lights', 'heater'};
-Pw = [1800 150 200 1500]; hours = [10 24 6 1];
-kWh = Pw/1000 .* hours * 30;
-price = 0.18;                                % example price per kWh
-for k = 1:numel(names), fprintf('%-7s %7.1f kWh\n', names{k}, kWh(k)); end
-fprintf('total %.1f kWh -> %.2f per month at %.2f per kWh\n', sum(kWh), sum(kWh)*price, price)
+%%! Project idea: power balance in a circuit
+%ar: مشروع: في مثال 2.8 (الفصل الثاني) القدرات هي 450 و 90 و 360 و −900 W. مجموعها يجب أن يكون صفرًا.
+names = {'50 ohm', '10 ohm', '120 V source', '6 A source'};
+P = [450 90 360 -900];
+for k = 1:4, fprintf('%-13s %+6g W\n', names{k}, P(k)); end
+fprintf('sum = %g W\n', sum(P))
+bar(P); grid on; set(gca, 'xticklabel', names); ylabel('p (W)'); title('Power balance: the bars add up to zero')

@@ -1,29 +1,27 @@
 % Circuits 1 — The Voltage-Divider and Current-Divider Circuits
-%title: The Loaded Voltage Divider
-%ar-title: مقسّم الجهد مع الحمل
+%title: Dividers and the Loaded Divider (Problem 3.13)
+%ar-title: المقسّمات والمقسّم المحمَّل (مسألة 3.13)
 %lesson: c1-resistive-3
 %course: circuits-1
 
-%% Without and with the load
-%ar: المثال: 12 V، R1 = 6 kΩ، R2 = 3 kΩ. بدون حمل: vo = Vs R2/(R1+R2). مع حمل 3 kΩ: R2 يصير R2 ∥ RL.
-Vs = 12; R1 = 6e3; R2 = 3e3; RL = 3e3;
-par = @(a, b) a.*b./(a + b);
-vo0 = Vs*R2/(R1 + R2);
-voL = Vs*par(R2, RL)/(R1 + par(R2, RL));
-fprintf('no load: %g V, with 3 k load: %g V\n', vo0, voL)
-%check: vo0 == 4 && abs(voL - 2.4) < 1e-12
+%% Example 3.2 and Example 3.3
+%ar: مثال 3.2: vo = 100 × 100k/(100k + 25k) = 80 V. مثال 3.3: 4 ∥ 6 + 1.6 = 4 Ω، ثم io = 16/(16+4) × 10 = 8 A، ثم i6 = 4/(6+4) × 8 = 3.2 A و p = 61.44 W.
+vo = 100 * 100e3 / (100e3 + 25e3);
+Rb = 4*6/(4+6) + 1.6;
+io = 16/(16 + Rb) * 10; i6 = 4/(6+4) * io; p6 = i6^2 * 6;
+fprintf('Ex 3.2: vo = %g V\nEx 3.3: io = %g A, i6 = %g A, p6 = %g W\n', vo, io, i6, p6)
+%check: vo == 80 && abs(io - 8) < 1e-12 && abs(i6 - 3.2) < 1e-12 && abs(p6 - 61.44) < 1e-9
 
-%% The output versus the load
-%ar: نغيّر الحمل من 100 Ω إلى 1 MΩ ونرسم الخرج بمحور لوغاريتمي: الخرج يقترب من 4 V فقط إذا كان الحمل أكبر بكثير من R2.
-RL = logspace(2, 6, 200);
-vo = Vs*par(R2, RL)./(R1 + par(R2, RL));
-semilogx(RL, vo); grid on; hold on; semilogx(RL, vo0*ones(size(RL)), 'r--'); hold off
-xlabel('R_L (\Omega)'); ylabel('v_o (V)'); title('Loaded voltage divider'); legend('with load', 'no load', 'Location', 'southeast')
+%% Problem 3.13 (tutorial)
+%ar: بدون حمل vo = 4 V ← R2 = 10 Ω. مع الحمل vo = 3 V ← Req = 120/17 Ω، ثم RL من 1/RL = 1/Req − 1/R2.
+R2 = 4*40 / (20 - 4);
+Req = 3*40 / (20 - 3);
+RL = 1 / (1/Req - 1/R2);
+fprintf('R2 = %g ohm, Req = %.4f ohm, RL = %g ohm\n', R2, Req, RL)
+%check: abs(R2 - 10) < 1e-12 && abs(RL - 24) < 1e-9
 
-%%! Project idea: design a divider that tolerates the load
-%ar: مشروع تصميم: نريد خرجًا لا ينزل أكثر من 5% مع حمل 10 kΩ. نجرب مقاسات مختلفة لـ R1 و R2 (بنفس النسبة 2:1) ونختار الأكبر الذي يحقق الشرط (أقل استهلاك).
-scale = [10 100 1e3 1e4]; RL = 10e3;
-for s = scale
-    a = 2*s; b = s; v = Vs*par(b, RL)/(a + par(b, RL)); drop = (4 - v)/4*100;
-    fprintf('R1 = %6g, R2 = %6g: vo = %.3f V, drop %.1f%%, current %.2f mA\n', a, b, v, drop, Vs/(a + par(b, RL))*1e3)
-end
+%%! Project idea: how the load pulls the output down
+%ar: مشروع: نرسم vo مقابل RL لمقسّم المسألة 3.13. عندما RL كبيرة جدًا نرجع إلى 4 V بدون حمل.
+RLs = logspace(0, 4, 200);
+vos = 20 * (R2*RLs./(R2 + RLs)) ./ (40 + R2*RLs./(R2 + RLs));
+semilogx(RLs, vos); grid on; xlabel('R_L (\Omega)'); ylabel('v_o (V)'); title('Loaded divider of Problem 3.13 (no-load value 4 V)')
