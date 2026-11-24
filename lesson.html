@@ -306,7 +306,7 @@
     order.forEach(function (k) { var s = byId[k]; if (!s || k === "when" || k === "realworld") return; body += sec(s.id, s.title, s.en, short(s, SUM) + (k === "laws" && CV.lessonVisualHtml ? CV.lessonVisualHtml(L.id) : "")); toc.push([s.id, s.title]); });
 
     if (!L.video && /^c1-/.test(L.id) && CV.videoDur && CV.videoDur[L.id]) { L.video = L.id + ".mp4"; L.videoDur = CV.videoDur[L.id]; }
-    if (L.video) body += sec("video", "شرح الدرس بالفيديو", "Video", '<div class="ss-vid"><video controls playsinline preload="none" poster="' + L.video.replace(/\.mp4$/, ".jpg") + '" src="' + L.video + '">' + ((CV.videoAr || []).indexOf(L.id) > -1 ? '<track kind="subtitles" srclang="ar" label="العربية" src="' + L.video.replace(/\.mp4$/, ".ar.vtt") + '">' : '') + '</video>' + (L.videoDur ? '<span class="muted small">المدة ' + L.videoDur + '</span>' : '') + '</div>');
+    if (L.video) body += sec("video", "شرح الدرس بالفيديو", "Video", '<div class="ss-vid"><video controls playsinline preload="none" poster="' + L.video.replace(/\.mp4$/, ".jpg") + '" src="' + L.video + '">' + ((CV.videoAr || []).indexOf(L.id) > -1 ? '<track kind="subtitles" srclang="ar" label="العربية" src="' + L.video.replace(/\.mp4$/, ".ar.vtt") + '" default>' : '') + '</video>' + (L.videoDur ? '<span class="muted small">المدة ' + L.videoDur + '</span>' : '') + '</div>');
     else body += sec("video", "الفيديو التعليمي", "Micro-Lesson",
       '<div class="vids">' +
       '<div class="pending"><span class="ic">' + icoVideo + '</span><p><b>الشرح النظري · قيد التسجيل</b>فيديو قصير (3 إلى 7 دقائق) بالعربية يشرح فكرة الدرس. سيظهر هنا عند رفعه.</p></div>' +

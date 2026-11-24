@@ -48,7 +48,7 @@
     c.edges.forEach(function (e) { [e.a, e.b].forEach(function (p) { var k = p.join(","); deg[k] = (deg[k] || 0) + 1; }); });
 
     var SH = !!c.shape, CEN = SH ? (c.center ? pt(c.center) : [W / 2, H / 2]) : null;
-    c.edges.forEach(function (e) {
+    function one(e) {
       var A = pt(e.a), B = pt(e.b), h = e.a[0] === e.b[0];
       var ux = h ? 1 : 0, uy = h ? 0 : 1, nx = h ? 0 : 1, ny = h ? -1 : 0; // n points up (h) or right (v)
       if (SH) { var dl0 = Math.hypot(B[0] - A[0], B[1] - A[1]); ux = (B[0] - A[0]) / dl0; uy = (B[1] - A[1]) / dl0; nx = uy; ny = -ux; h = Math.abs(uy) < 1e-6; }
@@ -186,6 +186,11 @@
       var anchor = h ? "middle" : leftCol ? "end" : "start";
       labels.push('<text class="sc-name' + cls + '" x="' + f(lx) + '" y="' + f(ly) + '" text-anchor="' + anchor + '">' + (e.type === "CCCS" || e.type === "CCVS" || e.type === "VCVS" || e.type === "VCCS" ? "" : e.name) + '</text>');
       labels.push('<text class="sc-val" x="' + f(lx) + '" y="' + f(ly + (h ? 16 : 17)) + '" text-anchor="' + anchor + '">' + valueLabel(e) + '</text>');
+    }
+    // opts.tag wraps each element's drawing and labels in a group named after it, so a video can light one part.
+    c.edges.forEach(function (e, ei) {
+      var o0 = out.length, l0 = labels.length; one(e);
+      if (opts.tag) { var k = ' data-e="' + (e.name || e.type + ei) + '"'; out.splice(o0, 0, '<g class="sc-e"' + k + '>'); out.push('</g>'); labels.splice(l0, 0, '<g class="sc-el"' + k + '>'); labels.push('</g>'); }
     });
     // Ground symbol under the reference node
     if (c.showGround) {
