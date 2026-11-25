@@ -58,6 +58,13 @@
   .ad-page { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 14px; }
   .ad-page > div { display: grid; gap: 2px; min-width: 0; } .ad-page .muted { font-size: 12.5px; justify-self: start; }
   @media (max-width: 520px) { .ad-page { grid-template-columns: minmax(0, 1fr) auto; } .ad-page .btn { grid-column: 1 / -1; } }
+  .ad-chart { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; align-items: end; height: 150px; padding-top: 8px; }
+  .ad-chart div { display: grid; gap: 4px; align-items: end; justify-items: center; height: 100%; grid-template-rows: 1fr auto auto; }
+  .ad-chart i { display: block; width: 100%; max-width: 38px; border-radius: 6px 6px 2px 2px; background: var(--blue); min-height: 2px; }
+  .ad-chart b { font-size: 12.5px; direction: ltr; } .ad-chart span { font-size: 11.5px; color: var(--fg-3); white-space: nowrap; }
+  .ad-fil { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ad-fil button { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--fg-2); font: inherit; font-size: 13px; cursor: pointer; }
+  .ad-fil button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
 </style>
 </head>
 <body>
@@ -96,7 +103,7 @@
   "use strict";
   CV.shell.init({ active: "" });
   var C = CV.cloud, root = document.getElementById("ad-root"), db = null;
-  var tab = "stats", users = [], courses = [], qText = "";
+  var tab = "stats", users = [], courses = [], qText = "", fil = "all";
   try { tab = sessionStorage.getItem("cv.admin.tab") || "stats"; } catch (e) {}
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function date(s, time) { if (!s) return "—"; try { return new Date(s).toLocaleString("ar-SA-u-ca-gregory-nu-latn", time ? { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } : { year: "numeric", month: "short", day: "numeric" }); } catch (e) { return String(s).slice(0, 10); } }
@@ -127,6 +134,13 @@
   function fail(e) { body('<p class="ad-msg bad">' + esc(rpcErr(e)) + '</p>'); }
 
   /* ---------- overview ---------- */
+  function weekly(w) {
+    if (!w || !w.length) return "";
+    var mx = Math.max.apply(null, w.map(function (x) { return x.n; }).concat([1]));
+    return '<section class="card ad-sec"><h2>التسجيلات الجديدة: آخر 8 أسابيع</h2><div class="ad-chart" role="img" aria-label="عدد التسجيلات لكل أسبوع">' + w.map(function (x) {
+      var d = new Date(x.wk); return '<div><i style="height:' + Math.round(100 * x.n / mx) + '%"></i><b>' + x.n + '</b><span>' + d.getDate() + '/' + (d.getMonth() + 1) + '</span></div>';
+    }).join("") + '</div><p class="muted" style="font-size:12.5px">كل عمود أسبوع يبدأ من التاريخ المكتوب تحته.</p></section>';
+  }
   function stats() {
     call("admin_stats").then(function (s) {
       var by = Object.keys(s.by_course || {}).map(function (k) { return '<div class="card ad-stat"><b>' + s.by_course[k] + '</b><span>مشترك نشط في ' + esc(cname(k)) + '</span></div>'; }).join("");
@@ -135,30 +149,40 @@
         '<div class="card ad-stat"><b>' + s.users + '</b><span>حساب مسجّل</span></div>' +
         '<div class="card ad-stat"><b>' + s.approved + '</b><span>حساب مقبول</span></div>' +
         '<div class="card ad-stat"><b>' + s.new_7d + '</b><span>تسجيل جديد آخر 7 أيام</span></div>' +
+        '<div class="card ad-stat"><b>' + (s.active_7d || 0) + '</b><span>دخل المنصة آخر 7 أيام</span></div>' +
+        '<div class="card ad-stat"><b>' + (s.active_30d || 0) + '</b><span>دخل المنصة آخر 30 يومًا</span></div>' +
+        (s.unconfirmed ? '<div class="card ad-stat"><b>' + s.unconfirmed + '</b><span>بريد غير مؤكد</span></div>' : '') +
         (C.subscriptionsOn() ? '<div class="card ad-stat"><b>' + s.active_subs + '</b><span>اشتراك نشط</span></div>' + by +
         '<div class="card ad-stat"><b>' + sar(s.revenue_30d_halalas) + '</b><span>إيراد آخر 30 يومًا (ريال)</span></div>' +
         '<div class="card ad-stat"><b>' + sar(s.revenue_halalas) + '</b><span>إجمالي الإيراد الحقيقي (ريال)</span></div>' +
         (s.test_revenue_halalas ? '<div class="card ad-stat"><b>' + sar(s.test_revenue_halalas) + '</b><span>مدفوعات تجريبية (مفتاح sk_test)</span></div>' : '') : '') +
-        '<div class="card ad-stat"><b>' + s.blocked + '</b><span>حساب موقوف</span></div></div>' +
+        '<div class="card ad-stat"><b>' + s.blocked + '</b><span>حساب موقوف</span></div></div>' + weekly(s.signups_weekly) +
         '<p class="muted" style="font-size:13px">كل حساب جديد ينتظر موافقتك قبل أن يفتح المنصة. ' + (C.subscriptionsOn() ? 'الإيراد هنا هو ما سجّلته المنصة من عمليات ميسّر المؤكدة، قبل رسوم ميسّر. المرجع المالي النهائي هو لوحة ميسّر.' : 'الاشتراكات متوقفة حاليًا: كل حساب مقبول يفتح المنصة كاملة.') + '</p>');
       var g = document.querySelector("[data-goto]"); if (g) g.onclick = function () { tab = "users"; try { sessionStorage.setItem("cv.admin.tab", tab); } catch (e) {} show(); };
-      var tb = document.querySelector('[data-tab="users"]'); if (tb && s.pending) tb.textContent = "المستخدمون والاشتراكات (" + s.pending + " بانتظارك)";
+      var tb = document.querySelector('[data-tab="users"]'); if (tb && s.pending) tb.textContent = tb.textContent.replace(/ \(.*\)$/, "") + " (" + s.pending + " بانتظارك)";
     }, fail);
   }
 
   /* ---------- users ---------- */
   function usersTab() {
     call("admin_users", { p_q: qText }).then(function (rows) {
-      users = rows || [];
+      var all = rows || [], meId = C.user() && C.user().id;
+      var F = { all: function () { return true; }, pending: function (u) { return u.approval === "pending"; }, approved: function (u) { return u.approval === "approved" && !u.blocked; }, rejected: function (u) { return u.approval === "rejected"; }, blocked: function (u) { return u.blocked; }, unconf: function (u) { return !u.confirmed; } };
+      var FL = [["all", "الكل"], ["pending", "بانتظار الموافقة"], ["approved", "مقبول"], ["rejected", "مرفوض"], ["blocked", "موقوف"], ["unconf", "بريد غير مؤكد"]];
+      users = all.filter(F[fil] || F.all);
+      var pend = all.filter(function (u) { return u.approval === "pending" && u.id !== meId; });
       var paid = courses.filter(function (c) { return c.is_paid; });
       var opts = (paid.length ? paid : courses).map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name_ar) + '</option>'; }).join("");
       var me = C.user() && C.user().id;
       var html = '<section class="card ad-sec"><form class="ad-bar" id="ad-q"><input class="input" id="ad-qt" placeholder="ابحث بالاسم أو البريد" value="' + esc(qText) + '"><button class="btn btn-ghost btn-sm" type="submit">بحث</button><span class="muted" style="font-size:13px">' + users.length + ' حساب' + (users.length >= 300 ? ' (أول 300، استخدم البحث)' : '') + '</span></form>' +
+        '<div class="ad-bar"><div class="ad-fil">' + FL.map(function (f) { var n = all.filter(F[f[0]]).length; return '<button type="button" data-fil="' + f[0] + '" aria-pressed="' + (fil === f[0]) + '">' + f[1] + ' (' + n + ')</button>'; }).join("") + '</div>' +
+        (pend.length ? '<button type="button" class="btn btn-primary btn-sm" id="ad-apall">قبول كل المنتظرين (' + pend.length + ')</button>' : '') +
+        '<button type="button" class="btn btn-ghost btn-sm" id="ad-csv">تصدير CSV</button></div>' +
         '<p class="ad-msg" id="ad-um" hidden></p>' +
         '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>الطالب</th><th>التسجيل</th><th>آخر دخول</th><th>الاشتراكات النشطة</th><th>إجراءات</th></tr></thead><tbody>' +
         users.map(function (u) {
           var subs = (u.subs || []).map(function (s) { return '<span class="sub-chip">' + esc(cname(s.course_id)) + ' حتى ' + date(s.ends_at) + (s.source === "manual" ? ' · يدوي' : '') + '<button type="button" title="إلغاء الاشتراك" aria-label="إلغاء اشتراك ' + esc(cname(s.course_id)) + '" data-rev="' + esc(u.id) + '" data-c="' + esc(s.course_id) + '">×</button></span>'; }).join("");
-          return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
+          return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.confirmed ? '' : ' <span class="tag">بريد غير مؤكد</span>') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
             '<td class="nw">' + date(u.created_at) + '</td><td class="nw">' + date(u.last_sign_in_at, true) + '</td><td>' + (subs || '<span class="muted">لا يوجد</span>') + '</td>' +
             '<td><div class="acts">' + (u.id === me ? '' : u.approval === "pending" ? '<button type="button" class="btn btn-primary btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button><button type="button" class="btn btn-danger btn-sm" data-ap="' + esc(u.id) + '" data-v="rejected">رفض</button>' : u.approval === "rejected" ? '<button type="button" class="btn btn-ghost btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button>' : '') +
             (C.subscriptionsOn() ? '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' : '') + (u.id === me ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
@@ -166,6 +190,22 @@
         }).join("") + '</tbody></table></div></section>';
       var b = body(html);
       function msg(t, ok) { var m = document.getElementById("ad-um"); m.hidden = false; m.className = "ad-msg " + (ok ? "ok" : "bad"); m.textContent = t; }
+      b.querySelectorAll("[data-fil]").forEach(function (x) { x.onclick = function () { fil = x.dataset.fil; usersTab(); }; });
+      var apAll = document.getElementById("ad-apall");
+      if (apAll) apAll.onclick = function () { confirmBtn(apAll, "تأكيد قبول " + pend.length + " حساب", function () {
+        apAll.disabled = true;
+        Promise.all(pend.map(function (u) { return call("admin_set_approval", { p_user: u.id, p_approval: "approved" }).then(function () { return 1; }, function () { return 0; }); }))
+          .then(function (r) { var ok = r.reduce(function (a, x) { return a + x; }, 0); usersTab(); setTimeout(function () { msg("✓ قُبل " + ok + " من " + pend.length + " حساب.", ok === pend.length); }, 300); });
+      }); };
+      document.getElementById("ad-csv").onclick = function () {
+        var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+        var st = function (u) { return u.blocked ? "موقوف" : u.approval === "approved" ? "مقبول" : u.approval === "rejected" ? "مرفوض" : "بانتظار الموافقة"; };
+        var lines = [["الاسم", "البريد", "الحالة", "البريد مؤكد", "التسجيل", "آخر دخول", "الاشتراكات النشطة"].join(",")].concat(users.map(function (u) {
+          return [u.display_name, u.email, st(u), u.confirmed ? "نعم" : "لا", u.created_at, u.last_sign_in_at, (u.subs || []).map(function (x) { return cname(x.course_id) + " حتى " + String(x.ends_at).slice(0, 10); }).join(" | ")].map(q).join(",");
+        }));
+        var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
+        a.download = "circuitvision-users-" + new Date().toISOString().slice(0, 10) + ".csv"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      };
       document.getElementById("ad-q").onsubmit = function (e) { e.preventDefault(); qText = document.getElementById("ad-qt").value.trim(); usersTab(); };
       b.querySelectorAll("[data-gr]").forEach(function (x) { x.onclick = function () { var g = document.getElementById("gr-" + x.dataset.gr); g.hidden = !g.hidden; }; });
       b.querySelectorAll("[data-go]").forEach(function (x) { x.onclick = function () {
