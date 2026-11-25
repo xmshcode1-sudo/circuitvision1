@@ -75,7 +75,7 @@
       '<ul class="wb-warn" aria-live="polite"></ul><p class="wb-rot">للمساحة الأكبر اقلب الجهاز بالعرض</p></div>';
     var wrap0 = host.querySelector(".wb"); try { if (localStorage.getItem(KEY + ".thin")) { wrap0.classList.add("wb-thin"); var tb = wrap0.querySelector('[data-a="thin"]'); tb.setAttribute("aria-pressed", "true"); tb.classList.add("on"); } } catch (e) {}
     var wrap = host.querySelector(".wb"), svg = host.querySelector(".wb-svg"), stage = host.querySelector(".wb-stage"), pop = host.querySelector(".wb-pop"), tool = host.querySelector(".wb-tool"), toastEl = host.querySelector(".wb-toast"), hint = host.querySelector(".wb-hint");
-    hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها" + (opts.edit ? " أو تغيير قيمتها" : "");
+    hint.textContent = MAINS ? "اسحب من مقبس إلى مقبس لتوصيل سلك · اضغط أي مفتاح أو مقبض لضبطه" : "اسحب القطعة من الدرج إلى اللوحة · اسحب من فتحة إلى فتحة لتوصيل سلك · اضغط القطعة لتدويرها أو حذفها" + (opts.edit ? " أو تغيير قيمتها (✎ غيّر القيمة)" : "");
 
     /* ---------- drawing helpers ---------- */
     var out = [];
@@ -143,7 +143,8 @@
       [0, 1].forEach(function (n) { for (k = 0; k < 17; k++) hole("rail:" + n + ":" + k, BX + 36 + k * (BW - 72) / 16, BY + BH - 92 + n * 44); });
       text("RASTERSTECKPLATTE 297×300 · PLUG-IN BOARD", BX + BW - 22, BY + BH - 14, "wb-tiny", "end");
       o('<g transform="translate(' + (BX + 30) + ' ' + (BY + BH - 22) + ')"><circle r="9" fill="none" stroke="#4b4f55" stroke-width="1.6"/><text class="wb-tiny" y="3.4" text-anchor="middle" style="font-weight:700;font-size:9px">LD</text></g>');
-      Object.keys(state.parts).forEach(function (id) { var g = slotGeom(id); if (g) o(partSvg(state.parts[id], g, sel && sel.k === "part" && sel.id === id ? "sel" : "", id)); });
+      Object.keys(state.parts).forEach(function (id) { var g = slotGeom(id); if (g) { o(partSvg(state.parts[id], g, sel && sel.k === "part" && sel.id === id ? "sel" : "", id));
+        if (opts.edit && /^[RLC]$/.test(state.parts[id].t)) o('<g class="wb-editb" pointer-events="none" transform="translate(' + (g.x + (g.h ? 30 : 17)) + ' ' + (g.y - (g.h ? 17 : 30)) + ')"><circle r="10"/><text y="4.5" text-anchor="middle">✎</text></g>'); } });
     }
     function hole(id, x, y) { P[id] = [x, y]; o('<g class="wb-pt wb-hole" data-p="' + id + '"><circle class="wb-so" cx="' + x + '" cy="' + y + '" r="4.8"/><circle class="wb-so-in" cx="' + x + '" cy="' + y + '" r="2.6"/><circle class="wb-hit" cx="' + x + '" cy="' + y + '" r="10.5"/></g>'); }
 
@@ -620,7 +621,7 @@
             var taken = {}; Object.keys(state.parts).forEach(function (s) { if (s !== d.slot && state.parts[s].id) taken[state.parts[s].id] = 1; });
             var base = String(np.id).split("~")[0], k = 2; np.id = base; while (taken[np.id]) np.id = base + "~" + k++;
           }
-          state.parts[d.slot] = np; sel = null; commit();
+          state.parts[d.slot] = np; sel = opts.edit && /^[RLC]$/.test(np.t) ? { k: "part", id: d.slot } : null; commit();
         }
         else if (!d.moved) { toast("اسحب القطعة إلى مكانها على اللوحة"); }
         else render();
@@ -775,7 +776,7 @@
       if (!sel || sel.k === "pt") { tool.hidden = true; markSel(); return; }
       var q, html;
       if (sel.k === "part") { var g = slotGeom(sel.id); if (!g || !state.parts[sel.id]) { sel = null; tool.hidden = true; return; } q = [g.x, g.y - 30]; var sp = state.parts[sel.id];
-        html = (sp.t === "S" ? '<button type="button" data-t="sw">' + (sp.on ? "افتح المفتاح" : "سكّر المفتاح") + '</button>' : opts.edit && /^[RLC]$/.test(sp.t) ? '<button type="button" data-t="val">✎ القيمة</button>' : "") +
+        html = (sp.t === "S" ? '<button type="button" data-t="sw">' + (sp.on ? "افتح المفتاح" : "سكّر المفتاح") + '</button>' : opts.edit && /^[RLC]$/.test(sp.t) ? '<button type="button" data-t="val" class="pri">✎ غيّر القيمة · ' + esc(si(sp.v, sp.t === "R" ? "Ω" : sp.t === "L" ? "H" : "F")) + '</button>' : "") +
           '<button type="button" data-t="rot">↻ تدوير</button><button type="button" data-t="del" class="bad">حذف</button>'; }
       else { var l = state.leads[sel.i]; if (!l) { sel = null; tool.hidden = true; return; } var a = P[l[0]], b = P[l[1]]; q = sel.e === undefined ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 10] : [P[l[sel.e]][0], P[l[sel.e]][1] - 26];
         html = '<button type="button" data-t="del" class="bad">افصل السلك</button><button type="button" data-t="col">اللون</button>' + (sel.e !== undefined ? '<button type="button" data-t="more">سلك ثاني من هنا</button>' : ""); }

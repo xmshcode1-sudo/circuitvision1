@@ -85,7 +85,8 @@
       (e.inst.indexOf("mn") < 0 ? '<button type="button" class="btn btn-primary btn-sm" id="cl-check">تحقق من توصيلي</button>' : "") + '<button type="button" class="btn btn-ghost btn-sm" id="cl-sol">اعرض الحل على الطاولة</button><button type="button" class="btn btn-ghost btn-sm" id="cl-ref-open">📐 الرسمة</button></div>' +
       '<div class="lg-out" id="cl-out" aria-live="polite"></div><div id="cl-bench"></div></section>' +
       '<div class="lg-pn">' + (i > 0 ? '<a class="btn btn-ghost" href="#' + EXP[i - 1].id + '">→ التجربة ' + EXP[i - 1].n + '</a>' : "<span></span>") + (i < EXP.length - 1 ? '<a class="btn btn-ghost" href="#' + EXP[i + 1].id + '">التجربة ' + EXP[i + 1].n + ' ←</a>' : "") + '</div>';
-    bench = CV.clabBench.mount($("#cl-bench"), { key: e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") });
+    bench = CV.clabBench.mount($("#cl-bench"), Object.assign({ key: e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") }, CV.clabFree ? CV.clabFree.benchOpts(e) : {}));
+    if (CV.clabFree) CV.clabFree.meterBar($("#cl-bench"), bench);
     wire(e);
     if (CV.clabModes) { CV.clabModes.keepAnswers(e, root); $("#cl-report-btn").addEventListener("click", function () { CV.clabModes.report(e, root); }); }
   }

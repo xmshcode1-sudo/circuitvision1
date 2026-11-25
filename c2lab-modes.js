@@ -50,7 +50,8 @@
   function mountBench(host, key, e, state, fullEl) {
     try { if (state === "fresh") localStorage.removeItem("cv-clab2-" + key); else if (state) localStorage.setItem("cv-clab2-" + key, JSON.stringify(state)); } catch (x) {}
     if (bench) bench.destroy();
-    bench = CV.clabBench.mount(host, { key: key, inst: e.inst, kit: e.kit, fullEl: fullEl });
+    bench = CV.clabBench.mount(host, Object.assign({ key: key, inst: e.inst, kit: e.kit, fullEl: fullEl }, CV.clabFree ? CV.clabFree.benchOpts(e) : {}));
+    if (CV.clabFree) CV.clabFree.meterBar(host, bench);
     if (state === "fresh" && e.inst.indexOf("rb") > -1 && bench.state().inst.rb.d.length !== 5) bench.set({ rb: { d: [0, 0, 0, 0, 0] } });
     return bench;
   }

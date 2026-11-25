@@ -75,5 +75,29 @@
       var u = inst.slice(); e.inst.forEach(function (k) { if (u.indexOf(k) < 0) u.push(k); }); return Object.assign({}, e, { inst: u });
     });
   }
-  CV.clabFree = { show: show, kitFrom: kitFrom, forFree: forFree };
+  /* the guided experiments use the same drawer: typed values, extra multimeters. An experiment whose parts are read by their
+     colour bands (the resistor colour code) keeps its own parts, because reading the bands is the exercise. */
+  function benchOpts(e) {
+    var banded = (e.kit || []).some(function (p) { return p.bands; });
+    return banded ? { kit: e.kit, extraMeters: true } : { kit: kitFrom(), edit: true, extraMeters: true };
+  }
+  /* the «add a multimeter» bar for a bench mounted with extraMeters (guided experiments); it lives inside the bench host */
+  function meterBar(host, bench) {
+    var bar = document.createElement("div"); bar.className = "lg-bench-bar fr-meters";
+    bar.innerHTML = '<span class="muted small">أجهزة القياس:</span><button type="button" class="btn btn-ghost btn-sm" data-m="f">＋ ملتيميتر Fluke</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" data-m="p">＋ ملتيميتر PeakTech</button><button type="button" class="btn btn-ghost btn-sm" data-m="x">− إزالة آخر ملتيميتر إضافي</button><span class="muted small" data-m="n"></span>';
+    host.insertBefore(bar, host.firstChild);
+    function upd() {
+      var m = bench.meters(), nf = m.filter(function (d) { return d === "d3" || d === "d5"; }).length;
+      bar.querySelector('[data-m="f"]').disabled = nf >= 2; bar.querySelector('[data-m="p"]').disabled = m.length - nf >= 2;
+      bar.querySelector('[data-m="x"]').disabled = !m.length; bar.querySelector('span[data-m="n"]').textContent = m.length ? "(" + m.length + " إضافي)" : "";
+    }
+    bar.addEventListener("click", function (ev) {
+      var b = ev.target.closest("button[data-m]"); if (!b) return;
+      if (b.dataset.m === "x") bench.removeMeter(); else bench.addMeter(b.dataset.m); upd();
+    });
+    host.addEventListener("click", function () { setTimeout(upd, 0); });
+    upd(); return upd;
+  }
+  CV.clabFree = { show: show, kitFrom: kitFrom, forFree: forFree, benchOpts: benchOpts, meterBar: meterBar };
 })();

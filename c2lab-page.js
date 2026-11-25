@@ -200,7 +200,8 @@
   }
   function wireBench(e) {
     var host = $("#cl-bench"); if (!host || !CV.clabBench) return;
-    bench = CV.clabBench.mount(host, { key: "c2-" + e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") });
+    bench = CV.clabBench.mount(host, Object.assign({ key: "c2-" + e.id, inst: e.inst, kit: e.kit, fullEl: $("#bench") }, CV.clabFree ? CV.clabFree.benchOpts(e) : {}));
+    if (CV.clabFree) CV.clabFree.meterBar(host, bench);
     if (e.inst.indexOf("rb") > -1 && bench.state().inst.rb.d.length !== 5) bench.set({ rb: { d: [0, 0, 0, 0, 0] } });
     var K = CV.clabCheck, out = $("#cl-out");
     $("#cl-check").onclick = function () {
