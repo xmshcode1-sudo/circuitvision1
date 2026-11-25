@@ -174,10 +174,12 @@
   }
   function openEnds(list) { var deg = {}, out = []; list.forEach(function (x) { deg[x.a] = (deg[x.a] || 0) + 1; deg[x.b] = (deg[x.b] || 0) + 1; }); list.forEach(function (x) { if (["PS", "FG", "MN", "VA", "TP"].indexOf(x.k) < 0 && (deg[x.a] === 1 || deg[x.b] === 1)) out.push(partName(x)); }); return out; }
 
-  var JACK = { d1: { A: "A" }, d2: { mA: "mA", "10A": "10A" } }, DNAME = { d1: "الملتيميتر الأصفر (Fluke)", d2: "الملتيميتر الأزرق (PeakTech)" };
+  var JACK = { d1: { A: "A" }, d2: { mA: "mA", "10A": "10A" }, d3: { A: "A" }, d4: { mA: "mA", "10A": "10A" }, d5: { A: "A" }, d6: { mA: "mA", "10A": "10A" } },
+    DNAME = { d1: "الملتيميتر الأصفر (Fluke)", d2: "الملتيميتر الأزرق (PeakTech)", d3: "الملتيميتر الإضافي Fluke (1)", d4: "الملتيميتر الإضافي PeakTech (1)", d5: "الملتيميتر الإضافي Fluke (2)", d6: "الملتيميتر الإضافي PeakTech (2)" };
   function meters(state) {   // how each multimeter is wired: as an ammeter (A), a voltmeter (V), an ohmmeter (Ω), half wired, or not used
     var out = {};
-    ["d1", "d2"].forEach(function (d) {
+    S.DIDS.forEach(function (d) {
+      if (!state.inst[d]) return;
       var t = {}; (state.leads || []).forEach(function (l) { l.forEach(function (p) { if (p.indexOf(d + ".") === 0) t[p.slice(3)] = 1; }); });
       var cur = Object.keys(JACK[d]).filter(function (j) { return t[j]; })[0], n = Object.keys(t).length, mode = state.inst[d].mode;
       if (!n) return;
@@ -199,24 +201,25 @@
     return names.slice(0, 3);
   }
   function wiringReport(e, L, state) {
+    var einst = e.inst.concat((state.xm || []).filter(function (x) { return e.inst.indexOf(x) < 0; }));   // extra meters of the free bench count as part of the student's wiring
     var msgs = [], bad = false, si = S.si;
     function say(lvl, t) { msgs.push({ lvl: lvl, t: t }); if (lvl === "bad") bad = true; }
     // 2) the meters: are they wired the right way, and do they measure what the manual asks?
     var sol = stateFor(L, {}, false), mw = meters(sol), mg = meters(state), ROLE = { A: "أميتر", V: "فولتميتر", "Ω": "أوميتر" };
     if (e.inst.indexOf("mn") > -1) mg = {};
-    var want = core(stateFor(L, {}, false), e.inst), gotCore = core(state, e.inst), exact = iso(want, gotCore), whole = exact || equiv(want, gotCore);
+    var want = core(stateFor(L, {}, false), e.inst), gotCore = core(state, einst), exact = iso(want, gotCore), whole = exact || equiv(want, gotCore);
     Object.keys(mg).forEach(function (d) {
       var m = mg[d];
       if (m.role === "half") say("bad", DNAME[d] + " موصول بسلك واحد بس: الجهاز يحتاج سلكين (COM ومدخل القياس).");
       if (m.role === "odd") say("bad", DNAME[d] + " موصول بين مدخلين غلط: لازم واحد من السلكين في COM.");
       if (m.role === "A") {
         var o = {}; o[d + "." + m.jack + ".sh"] = 1;
-        if (!whole && equiv(want, core(state, e.inst, { open: o }))) say("bad", DNAME[d] + " مستخدم أميتر لكنه موصول <b>توازي</b>: الأميتر مقاومته شبه صفر، فيقصر اللي بين طرفيه. افتح الدائرة في مكان القياس وحطّه <b>توالي</b>.");
+        if (!whole && equiv(want, core(state, einst, { open: o }))) say("bad", DNAME[d] + " مستخدم أميتر لكنه موصول <b>توازي</b>: الأميتر مقاومته شبه صفر، فيقصر اللي بين طرفيه. افتح الدائرة في مكان القياس وحطّه <b>توالي</b>.");
         if (!/^(a|ma)/.test(m.mode)) say("bad", "سلك " + DNAME[d] + " في مدخل التيار (" + m.jack + ") والمفتاح على غير التيار: حوّل المفتاح على A.");
       }
       if (m.role === "V") {
         var wv = {}; wv[d + ".vin"] = 1;
-        if (!whole && equiv(want, core(state, e.inst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
+        if (!whole && equiv(want, core(state, einst, { wire: wv }))) say("bad", DNAME[d] + " مستخدم فولتميتر لكنه موصول <b>توالي</b>: مقاومته كبيرة جدًا فيوقف التيار. الفولتميتر يركب <b>توازي</b> على القطعة اللي تبي جهدها.");
       }
     });
     // the three-phase transformer has two stars: which one is used?
@@ -225,7 +228,7 @@
     if (tw.length && tg.length && tg.some(function (v) { return tw.indexOf(v) < 0; })) say("bad", "وصلت النجمة " + (tg[0] === 6 ? "6 V / 10 V" : "23 V / 40 V") + " في المحول، والمطلوب النجمة " + (tw[0] === 6 ? "6 V / 10 V" : "23 V / 40 V") + ". انقل الأسلاك لأطراف L1 L2 L3 N في النجمة الثانية.");
     if (bad) return { ok: false, msgs: msgs };
     // 1) the circuit itself (meters left out)
-    var got = core(state, e.inst);
+    var got = core(state, einst);
     if (!whole) {
       var tally = function (list) { var t = {}; list.forEach(function (x) { var k = partName(x); t[k] = (t[k] || 0) + 1; }); return t; };
       var a = tally(want), b = tally(got);
@@ -257,7 +260,7 @@
       used[sd] = 1; test.inst[d].mode = ref.state.inst[sd].mode; test.inst[d].blown = {};
       m.vs = sd;
     });
-    var rr = S.read(test, { only: e.inst }), rs = S.read(JSON.parse(JSON.stringify(ref.state)), { only: e.inst }), ts = S.solve(ref.state, { only: e.inst });
+    var rr = S.read(test, { only: einst }), rs = S.read(JSON.parse(JSON.stringify(ref.state)), { only: e.inst }), ts = S.solve(ref.state, { only: e.inst });
     Object.keys(mg).forEach(function (d) {
       var m = mg[d]; if (!m.vs || m.role === "Ω") return;
       var g = rr[d].val, w = rs[m.vs].val; if (!isFinite(g) || !isFinite(w)) return;

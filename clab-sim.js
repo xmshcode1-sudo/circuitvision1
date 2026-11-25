@@ -81,12 +81,17 @@
     d1: { name: "Fluke 115", jacks: { A: { shunt: 0.03, fuse: 11 } }, modes: ["off", "vac", "vdc", "mv", "ohm", "aac", "adc"] },
     d2: { name: "PeakTech 2000", jacks: { "10A": { shunt: 0.01, fuse: 10 }, mA: { shunt: 1.0, fuse: 0.2 } }, modes: ["off", "vdc", "vac", "ohm", "madc", "maac", "adc", "aac"] }
   };
+  /* extra multimeters of the free lab: d3 and d5 are Fluke-type, d4 and d6 PeakTech-type (dtype(d) tells which) */
+  var DIDS = ["d1", "d2", "d3", "d4", "d5", "d6"];
+  function dtype(d) { return d === "d1" || d === "d3" || d === "d5" ? "f" : "p"; }
+  ["d3", "d5"].forEach(function (d) { DMM[d] = JSON.parse(JSON.stringify(DMM.d1)); });
+  ["d4", "d6"].forEach(function (d) { DMM[d] = JSON.parse(JSON.stringify(DMM.d2)); });
   function ps0() { return { on: false, mode: "normal", m: { v: 0, i: 0.5 }, s: { v: 0, i: 0.5 } }; }
   function defaults() {
     return {
       ps: ps0(), fg: { on: false, f: 1000, vpp: 0, w: "sin" },
       va: { on: false, v: 0 }, tp: { on: false }, wm: { tot: false }, pm: { pg: 0 }, r1: { x: 1000 }, r2: { x: 1000 }, r3: { x: 1000 },
-      d1: { mode: "off" }, d2: { mode: "off", fuse: true },
+      d1: { mode: "off" }, d2: { mode: "off", fuse: true }, d3: { mode: "off" }, d4: { mode: "off", fuse: true }, d5: { mode: "off" }, d6: { mode: "off", fuse: true },
       sc: { on: true, c1: { vd: 2, cp: "DC", on: true }, c2: { vd: 2, cp: "DC", on: true }, td: 0.0002, x1: 3, x2: 5, cur: false, math: false, meas: true },
       rb: { d: [0, 1, 0, 0] }, lb: { d: [1, 7, 5] }, cb: { d: [0, 0] }, mn: { on: false }
     };
@@ -181,8 +186,8 @@
     if (on("wm")) { els.push({ k: "R", a: "wm.I", b: "wm.I'", r: 0.005, id: "wm.sh" }); els.push({ k: "R", a: "wm.V", b: "wm.V'", r: 10e6, id: "wm.vin" }); }
     if (on("sc")) { els.push({ k: "R", a: "sc.1", b: "earth", r: 1e6, id: "sc.1r" }); els.push({ k: "R", a: "sc.2", b: "earth", r: 1e6, id: "sc.2r" });
       els.push({ k: "R", a: "sc.1g", b: "earth", r: 0.01, id: "sc.1gr" }); els.push({ k: "R", a: "sc.2g", b: "earth", r: 0.01, id: "sc.2gr" }); }
-    ["d1", "d2"].forEach(function (d) {
-      if (!on(d)) return;
+    DIDS.forEach(function (d) {
+      if (!on(d) || !inst[d]) return;
       els.push({ k: "R", a: d + ".V", b: d + ".COM", r: 10e6, id: d + ".vin" });
       Object.keys(DMM[d].jacks).forEach(function (j) {
         var J = DMM[d].jacks[j], blown = inst[d].blown && inst[d].blown[j];
@@ -293,7 +298,8 @@
 
   /* ---------- meter readings and warnings ---------- */
   function dmmReading(sol, d) {
-    var st = sol.state.inst[d], mode = st.mode, J = DMM[d].jacks;
+    var st = sol.state.inst[d]; if (!st) return { text: "", mode: "off" };
+    var mode = st.mode, J = DMM[d].jacks;
     if (mode === "off" || !elById(sol, d + ".vin")) return { text: "", mode: mode };
     function jackCurrent(j) { var e = elById(sol, d + "." + j + ".sh"); return e ? iElem(sol, e) : { dc: 0, ac: Z0 }; }
     if (mode === "vdc" || mode === "mv") { var v = vBetween(sol, d + ".V", d + ".COM").dc; return { val: v, unit: mode === "mv" ? "mV" : "V", text: fmtV(mode === "mv" ? v * 1000 : v, mode === "mv" ? "mV" : "V", d), ac: false, mode: mode }; }
@@ -319,13 +325,13 @@
   function fmtV(v, unit, d) {
     var a = Math.abs(v);
     if (unit === "mV") return a >= 600 ? "OL" : fix(v, 1);
-    if (d === "d2") return a < 2 ? fix(v, 3) : a < 20 ? fix(v, 2) : a < 200 ? fix(v, 1) : fix(v, 0);
+    if (dtype(d) === "p") return a < 2 ? fix(v, 3) : a < 20 ? fix(v, 2) : a < 200 ? fix(v, 1) : fix(v, 0);
     return a < 6 ? fix(v, 3) : a < 60 ? fix(v, 2) : a < 600 ? fix(v, 1) : fix(v, 0);
   }
   function fmtA(i) { var a = Math.abs(i); return a >= 10 ? "OL" : fix(i, 3); }
   function fmtMA(m) { var a = Math.abs(m); return a >= 200 ? "OL" : a < 20 ? fix(m, 2) : fix(m, 1); }
   function fmtR(r, d) {
-    if (d === "d2") { if (r < 200) return fix(r, 1); if (r < 2000) return fix(r, 0); if (r < 20000) return fix(r / 1000, 2) + "k"; if (r < 200000) return fix(r / 1000, 1) + "k"; if (r < 2e6) return fix(r / 1000, 0) + "k"; return "OL"; }
+    if (dtype(d) === "p") { if (r < 200) return fix(r, 1); if (r < 2000) return fix(r, 0); if (r < 20000) return fix(r / 1000, 2) + "k"; if (r < 200000) return fix(r / 1000, 1) + "k"; if (r < 2e6) return fix(r / 1000, 0) + "k"; return "OL"; }
     if (r < 600) return fix(r, 1); if (r < 6000) return fix(r / 1000, 3) + "k"; if (r < 60000) return fix(r / 1000, 2) + "k"; if (r < 600000) return fix(r / 1000, 1) + "k"; if (r < 6e6) return fix(r / 1e6, 3) + "M"; if (r < 40e6) return fix(r / 1e6, 2) + "M"; return "OL";
   }
 
@@ -334,7 +340,8 @@
     var s = solve(state, opt), warn = [], out = { sol: s, warn: warn };
     // fuses: a shunt carrying more than its fuse blows it, then solve again
     var again = false;
-    ["d1", "d2"].forEach(function (d) {
+    DIDS.forEach(function (d) {
+      if (!state.inst[d]) return;
       Object.keys(DMM[d].jacks).forEach(function (j) {
         var e = elById(s, d + "." + j + ".sh"); if (!e) return;
         var i = iElem(s, e), peak = Math.max(Math.abs(i.dc), mag(i.ac));
@@ -344,9 +351,10 @@
     if (again) { s = solve(state, opt); out.sol = s; }
     out.ps = { m: supplyOut(s, "m"), s: supplyOut(s, "s") };
     ["m", "s"].forEach(function (ch) { var o = out.ps[ch]; if (o.cc && Math.abs(o.v) < 0.3) warn.push({ k: "short", ch: ch }); else if (o.cc) warn.push({ k: "cc", ch: ch }); });
-    out.d1 = dmmReading(s, "d1"); out.d2 = dmmReading(s, "d2");
-    ["d1", "d2"].forEach(function (d) {
-      var st = state.inst[d], used = (state.leads || []).filter(function (l) { return l.some(function (p) { return Object.keys(DMM[d].jacks).some(function (j) { return p === d + "." + j; }); }); }).length;
+    DIDS.forEach(function (d) { out[d] = dmmReading(s, d); });
+    DIDS.forEach(function (d) {
+      var st = state.inst[d]; if (!st) return;
+      var used = (state.leads || []).filter(function (l) { return l.some(function (p) { return Object.keys(DMM[d].jacks).some(function (j) { return p === d + "." + j; }); }); }).length;
       if (used && !/(^a|^ma)/.test(st.mode)) warn.push({ k: "leadAlert", d: d });
       if (out[d].warn === "live") warn.push({ k: "ohmLive", d: d });
       if (/(^a|^ma)/.test(st.mode) && !used && st.mode !== "off") warn.push({ k: "noJack", d: d });
@@ -413,7 +421,7 @@
     var n = v / p[0]; return (Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1).replace(/\.0$/, "") : n.toFixed(2).replace(/\.?0+$/, "")) + " " + p[1] + u;
   }
   CV.clabSim = {
-    si: si,
+    si: si, DIDS: DIDS, dtype: dtype,
     cx: cx, add: add, sub: sub, mul: mul, div: div, mag: mag, ang: ang,
     solveMNA: solveMNA, build: build, solve: solve, read: read, vNode: vNode, vBetween: vBetween, iElem: iElem, elById: elById,
     ohms: ohms, actual: actual, defaults: defaults, rbValue: rbValue, lbValue: lbValue, cbValue: cbValue, DMM: DMM, LAMP: LAMP, COILS: COILS, TP: TP, RH: RH, acRms: acRms, at: at, NH: NH,

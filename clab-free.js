@@ -21,17 +21,30 @@
     }).join("");
     root.innerHTML = '<p style="margin:0 0 10px"><a class="btn btn-ghost btn-sm" href="#">→ كل التجارب</a></p>' +
       '<div class="lg-head"><span class="code">' + esc(cfg.code) + '</span><h1>المعمل الحر</h1>' +
-      '<p>طاولة كاملة فيها كل أجهزة المعمل: ' + cfg.inst.map(function (k) { return NAMES[k]; }).filter(Boolean).join("، ") + '. خذ من القطع العدد اللي تحتاجه، وركّب أي دائرة تبيها واقرأ من الأجهزة. القطع اللي عليها ✎ تكتب قيمتها بنفسك، وتقدر تغيّر قيمة أي مقاومة أو مكثف أو ملف على اللوحة: اضغطها ثم «القيمة».</p></div>' +
+      '<p>طاولة كاملة فيها كل أجهزة المعمل: ' + cfg.inst.map(function (k) { return NAMES[k]; }).filter(Boolean).join("، ") + '. الدرج فيه مقاومة ومكثف وملف، خذ منها العدد اللي تحتاجه، وكل قطعة تكتب قيمتها بنفسك: اضغطها على اللوحة ثم «القيمة» (مثل 3.3k أو 47n أو 2.5m). تحتاج أكثر من فولتميتر أو أميتر؟ زر «ملتيميتر إضافي» تحت يضيف لين 4 أجهزة.</p></div>' +
       '<section class="card lg-sec lg-bench" id="bench"><h2>الطاولة</h2>' +
       '<p class="muted small">تبي تتأكد من دائرة من التجارب؟ اخترها وتحقق. ما يلزم تركّبها مثل رسمة الكتيب: أي توصيل مكافئ كهربائيًا ينقبل (مثل مقاومتين على التوالي بدل وحدة بقيمتهما، أو ترتيب ثاني على اللوحة).</p>' +
       '<div class="lg-bench-bar"><label>قارن بدائرة: <select id="fr-lay" class="select">' + opts + '</select></label>' +
       '<button type="button" class="btn btn-primary btn-sm" id="fr-check">تحقق من توصيلي</button>' +
       '<button type="button" class="btn btn-ghost btn-sm" id="fr-sol">ركّبها على الطاولة</button>' +
       '<button type="button" class="btn btn-ghost btn-sm" id="fr-clear">امسح الطاولة</button></div>' +
+      '<div class="lg-bench-bar"><span class="muted small">أجهزة القياس:</span>' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="fr-addf">＋ ملتيميتر Fluke</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="fr-addp">＋ ملتيميتر PeakTech</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="fr-delm">− إزالة آخر ملتيميتر إضافي</button><span class="muted small" id="fr-mcount"></span></div>' +
       '<div class="lg-out" id="fr-out" aria-live="polite"></div><div id="fr-bench"></div></section>';
-    var bench = CV.clabBench.mount($("#fr-bench"), { key: cfg.key, inst: cfg.inst, kit: cfg.kit, fullEl: $("#bench"), edit: true });
+    var bench = CV.clabBench.mount($("#fr-bench"), { key: cfg.key, inst: cfg.inst, kit: cfg.kit, fullEl: $("#bench"), edit: true, extraMeters: true });
     if (cfg.rbDigits && bench.state().inst.rb && bench.state().inst.rb.d.length !== cfg.rbDigits) bench.set({ rb: { d: new Array(cfg.rbDigits).fill(0) } });
     var out = $("#fr-out");
+    function mbtn() {
+      var m = bench.meters(), nf = m.filter(function (d) { return d === "d3" || d === "d5"; }).length, np = m.length - nf;
+      $("#fr-addf").disabled = nf >= 2; $("#fr-addp").disabled = np >= 2; $("#fr-delm").disabled = !m.length;
+      $("#fr-mcount").textContent = m.length ? "(" + m.length + " إضافي)" : "";
+    }
+    $("#fr-addf").onclick = function () { bench.addMeter("f"); mbtn(); };
+    $("#fr-addp").onclick = function () { bench.addMeter("p"); mbtn(); };
+    $("#fr-delm").onclick = function () { bench.removeMeter(); mbtn(); };
+    mbtn();
     function pick() {
       var v = $("#fr-lay").value.split("/"), e = exps.filter(function (x) { return x.id === v[0]; })[0];
       var p = e.procs.filter(function (x) { return x.id === v[1]; })[0], L = p.layouts.filter(function (x) { return x.id === v[2]; })[0];
@@ -45,22 +58,17 @@
     $("#fr-sol").onclick = function () {
       var x = pick(), set = JSON.parse(JSON.stringify(x.L.set || {})), term = set.fgTerm; delete set.fgTerm;
       if (term) { var s = K.solveL(x.e, x.L, {}, false); set.fg = set.fg || {}; set.fg.vpp = Math.round(s.state.inst.fg.vpp * 1000) / 1000; }
-      bench.load({ parts: x.L.parts, leads: x.L.leads, set: set });
+      bench.load({ parts: x.L.parts, leads: x.L.leads, set: set }); mbtn();
       out.className = "lg-out"; out.textContent = "هذي دائرة «" + x.p.title + "» من الكتيب على الطاولة. عدّل عليها أو ركّبها بطريقتك وتحقق.";
     };
-    $("#fr-clear").onclick = function () { bench.reset(); if (cfg.rbDigits) bench.set({ rb: { d: new Array(cfg.rbDigits).fill(0) } }); out.className = "lg-out"; out.textContent = ""; };
+    $("#fr-clear").onclick = function () { bench.reset(); mbtn(); if (cfg.rbDigits) bench.set({ rb: { d: new Array(cfg.rbDigits).fill(0) } }); out.className = "lg-out"; out.textContent = ""; };
     return bench;
   }
-  /* parts for the free drawer: an R, C and L whose value the student types, a switch, then every block of the course
-     (plus capacitors and inductors when the course has none) */
-  var ADJ = [{ id: "Radj", t: "R", v: 1000, tol: 0, adj: true, tl: "مقاومة ✎" }, { id: "Cadj", t: "C", v: 1e-6, adj: true, tl: "مكثف ✎" },
-    { id: "Ladj", t: "L", v: 10e-3, adj: true, tl: "ملف ✎" }, { id: "SW", t: "S", on: false, tl: "مفتاح" }];
-  function kitFrom(pieces, extra) {
-    var out = [];
-    Object.keys(pieces).forEach(function (id) { var p = JSON.parse(JSON.stringify(pieces[id])); p.id = id; out.push(p); });
-    (extra || []).forEach(function (p) { out.push(p); });
-    var order = { R: 0, C: 1, L: 2 };
-    return JSON.parse(JSON.stringify(ADJ)).concat(out.sort(function (a, b) { return (order[a.t] - order[b.t]) || (a.v - b.v); }));
+  /* parts for the free drawer: one R, one power R, one C and one L whose value the student types, and a switch */
+  var ADJ = [{ id: "Radj", t: "R", v: 1000, tol: 0, adj: true, tl: "مقاومة ✎" }, { id: "Rpow", t: "R", v: 100, tol: 0, adj: true, pmax: 400, tl: "مقاومة قدرة ✎" },
+    { id: "Cadj", t: "C", v: 1e-6, adj: true, tl: "مكثف ✎" }, { id: "Ladj", t: "L", v: 10e-3, adj: true, tl: "ملف ✎" }, { id: "SW", t: "S", on: false, tl: "مفتاح" }];
+  function kitFrom() {   // one part of each kind: the student types its value (the lab's fixed blocks are no longer in the drawer)
+    return JSON.parse(JSON.stringify(ADJ));
   }
   function forFree(exps, inst) {   // the experiments as the free bench checks them (also used by the tests)
     return exps.filter(function (e) { return e.inst.indexOf("mn") < 0; }).map(function (e) {

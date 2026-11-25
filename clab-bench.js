@@ -25,7 +25,8 @@
   };
   var DIAL_AR = { off: "إيقاف", vac: "جهد متردد (RMS)", vdc: "جهد مستمر", mv: "جهد مستمر صغير (mV)", ohm: "مقاومة", aac: "تيار متردد (A)", adc: "تيار مستمر (A)", madc: "تيار مستمر (mA)", maac: "تيار متردد (mA)" };
   var UNIT = { vac: "V~", vdc: "V⎓", mv: "mV⎓", ohm: "Ω", aac: "A~", adc: "A⎓", madc: "mA⎓", maac: "mA~" };
-  var DNAME = { d1: "Fluke 115", d2: "PeakTech" };
+  var DNAME = { d1: "Fluke 115", d2: "PeakTech", d3: "Fluke 115 · إضافي 1", d4: "PeakTech · إضافي 1", d5: "Fluke 115 · إضافي 2", d6: "PeakTech · إضافي 2" };
+  DIAL.d3 = DIAL.d5 = DIAL.d1; DIAL.d4 = DIAL.d6 = DIAL.d2;   // the extra meters of the free lab are copies of the two on the desk
 
   /* seven-segment digits: the supply, the generator and the meters all use them */
   var SEG = { "0": "abcdef", "1": "bc", "2": "abdeg", "3": "abcdg", "4": "bcfg", "5": "acdfg", "6": "acdefg", "7": "abc", "8": "abcdefg", "9": "abcdfg", "-": "g", "L": "def", "O": "abcdef", " ": "" };
@@ -55,12 +56,15 @@
       H = Math.max(H, 282 + rightN * 214 + rhN * 164 + 10, 654 + TRAY_H + 16);
     }
     var W = MAINS || ["rb", "lb", "cb", "sc", "va", "cc", "tp", "wm", "pm", "r1"].some(function (k) { return inst.indexOf(k) > -1; }) ? 1600 : 1206;
+    var xmOK = !!opts.extraMeters;   // the free lab can put more multimeters on the desk (state.xm lists them)
+    if (xmOK) H = Math.max(H, 956 + 356 + 16);
     var marks = [], state = load() || fresh(), sel = null, undo = [], P = {}, SLOT = {}, R = null, drag = null, hold = {};
     var vb = { x: 0, y: 0, w: W, h: H };
-    function fresh() { return { parts: {}, leads: [], inst: S.defaults() }; }
-    function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.inst) { var d = S.defaults(); Object.keys(d).forEach(function (k) { if (!s.inst[k]) s.inst[k] = d[k]; }); return s; } } catch (e) {} return null; }
+    function fresh() { return { parts: {}, leads: [], inst: S.defaults(), xm: [] }; }
+    function load() { try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.inst) { s.xm = xmOK && Array.isArray(s.xm) ? s.xm.filter(function (x) { return ["d3", "d4", "d5", "d6"].indexOf(x) > -1; }) : []; var d = S.defaults(); Object.keys(d).forEach(function (k) { if (!s.inst[k]) s.inst[k] = d[k]; }); return s; } } catch (e) {} return null; }
     function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
-    function has(k) { return inst.indexOf(k) > -1; }
+    function allInst() { return inst.concat(state.xm || []); }
+    function has(k) { return allInst().indexOf(k) > -1; }
     var I = state.inst;
 
     host.innerHTML = '<div class="wb"><div class="wb-bar"><span class="wb-hint"></span><span class="wb-acts">' +
@@ -282,7 +286,7 @@
       return rd.text === undefined ? "" : rd.text;
     }
     function drawDMM(d, x, y) {
-      var w = 190, h = 356, fl = d === "d1", st = I[d], rd = R[d], mode = st.mode, cx = x + w / 2, dy = fl ? y + 204 : y + 208, dial = DIAL[d];
+      var w = 190, h = 356, fl = S.dtype(d) === "f", st = I[d], rd = R[d], mode = st.mode, cx = x + w / 2, dy = fl ? y + 204 : y + 208, dial = DIAL[d];
       rect(x + 3, y + 5, w, h, "wb-sh", 22); rect(x, y, w, h, fl ? "wb-fluke" : "wb-peak", 22); rect(x + 11, y + 11, w - 22, h - 22, fl ? "wb-fluke-in" : "wb-peak-in", 14);
       if (fl) { rect(x + 24, y + 20, 46, 13, "wb-fl-logo", 2); text("FLUKE", x + 47, y + 30, "wb-fl-logo-t"); text("115  TRUE RMS MULTIMETER", x + 74, y + 30, "wb-tiny-l", "start"); }
       else { text("PeakTech®", x + 26, y + 31, "wb-pk-logo", "start"); text("DMM", x + w - 26, y + 31, "wb-tiny", "end"); }
@@ -307,8 +311,9 @@
       var ar = a0 + (a1 - a0) * idx / (n - 1);
       o('<g class="wb-ctl" data-c="' + d + '.dial" data-drag="1"><circle class="wb-dial' + (fl ? "" : " pk") + '" cx="' + cx + '" cy="' + dy + '" r="42"/><g transform="rotate(' + r2(ar) + ' ' + cx + ' ' + dy + ')"><rect class="wb-dial-g' + (fl ? "" : " pk") + '" x="' + (cx - 11) + '" y="' + (dy - 42) + '" width="22" height="84" rx="10"/><line class="wb-dial-m" x1="' + cx + '" y1="' + (dy - 38) + '" x2="' + cx + '" y2="' + (dy - 22) + '"/></g></g>');
       var jy = y + h - 40;
-      if (fl) { jack("d1.A", x + 44, jy, "red", "A", 25); jack("d1.COM", cx, jy, "black", "COM", 25); jack("d1.V", x + w - 44, jy, "red", "VΩ", 25); text("10 A FUSED", x + 44, jy - 20, "wb-tiny-l"); }
-      else { jack("d2.10A", x + 32, jy, "red", "10A", 25); jack("d2.mA", x + 74, jy, "red", "mA", 25); jack("d2.COM", x + 116, jy, "black", "COM", 25); jack("d2.V", x + 158, jy, "red", "VΩ", 25); text("200 mA FUSED", x + 74, jy - 20, "wb-tiny"); }
+      if (fl) { jack(d + ".A", x + 44, jy, "red", "A", 25); jack(d + ".COM", cx, jy, "black", "COM", 25); jack(d + ".V", x + w - 44, jy, "red", "VΩ", 25); text("10 A FUSED", x + 44, jy - 20, "wb-tiny-l"); }
+      else { jack(d + ".10A", x + 32, jy, "red", "10A", 25); jack(d + ".mA", x + 74, jy, "red", "mA", 25); jack(d + ".COM", x + 116, jy, "black", "COM", 25); jack(d + ".V", x + 158, jy, "red", "VΩ", 25); text("200 mA FUSED", x + 74, jy - 20, "wb-tiny"); }
+      if (d > "d2") text(DNAME[d], cx, y + h - 6, "wb-tiny");
     }
 
     /* ---------- decade boxes ---------- */
@@ -488,7 +493,7 @@
     /* ---------- render ---------- */
     function render() {
       I = state.inst; P = {}; out = [];
-      if (!I.sc.stop || !R) R = S.read(state, { only: inst }); else { var keep = R.sc; R = S.read(state, { only: inst }); R.sc = keep; }
+      if (!I.sc.stop || !R) R = S.read(state, { only: allInst() }); else { var keep = R.sc; R = S.read(state, { only: allInst() }); R.sc = keep; }
       o('<defs><radialGradient id="wb-glow"><stop offset="0" stop-color="#fffbe0" stop-opacity=".85"/><stop offset="1" stop-color="#fffbe0" stop-opacity="0"/></radialGradient>' +
         '<linearGradient id="wb-desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eceef1"/><stop offset="1" stop-color="#dfe2e7"/></linearGradient></defs>');
       rect(0, 0, W, H, "wb-desk", 0, ' data-bg="1"');
@@ -497,6 +502,7 @@
         rect(0, 268, W, 6, "wb-shelf", 0);
         if (has("fg")) drawFG(); if (has("ps")) drawPS(); if (has("sc")) drawScope();
         if (has("d1")) drawDMM("d1", 16, 282); if (has("d2")) drawDMM("d2", 214, 282);
+        (state.xm || []).forEach(function (d, i) { drawDMM(d, BX + i * 194, BY + BH + 24); });
         drawTray(); drawBoard();
         var by = 282;
         if (has("rb")) { drawDecade("rb", 1206, by, "RESISTANCE DECADE BOX", rbLabels(I.rb.d.length), "R = " + si(S.rbValue(I), "Ω")); by += 214; }
@@ -645,7 +651,7 @@
       if ((m = /^(rb|lb|cb)\.d:(\d)$/.exec(c))) { var DL = { rb: rbLabels(I.rb.d.length), lb: ["×10 mH", "×1 mH", "×0.1 mH"], cb: ["×1 µF", "×0.1 µF"] }[m[1]];
         return { get: function () { return I[m[1]].d[+m[2]]; }, set: function (v) { I[m[1]].d[+m[2]] = v; }, min: 0, max: 9, step: 1, px: 0.035, title: { rb: "صندوق المقاومات", lb: "صندوق المحاثة", cb: "صندوق المكثفات" }[m[1]], tag: DL[+m[2]],
           extra: function () { return m[1] === "rb" ? "R = " + si(S.rbValue(I), "Ω") : m[1] === "lb" ? "L = " + si(S.lbValue(I), "H") : "C = " + si(S.cbValue(I), "F"); } }; }
-      if ((m = /^(d[12])\.dial$/.exec(c))) { var dl = DIAL[m[1]]; return { get: function () { return Math.max(0, dl.map(function (x) { return x[0]; }).indexOf(I[m[1]].mode)); }, set: function (v) { I[m[1]].mode = dl[v][0]; delete hold[m[1]]; }, min: 0, max: dl.length - 1, step: 1, px: 0.025, show: function (v) { return dl[v][1] + " · " + DIAL_AR[dl[v][0]]; }, title: DNAME[m[1]] }; }
+      if ((m = /^(d[1-6])\.dial$/.exec(c))) { var dl = DIAL[m[1]]; return { get: function () { return Math.max(0, dl.map(function (x) { return x[0]; }).indexOf(I[m[1]].mode)); }, set: function (v) { I[m[1]].mode = dl[v][0]; delete hold[m[1]]; }, min: 0, max: dl.length - 1, step: 1, px: 0.025, show: function (v) { return dl[v][1] + " · " + DIAL_AR[dl[v][0]]; }, title: DNAME[m[1]] }; }
       return null;
     }
     /* the value of a part on the board (free lab): the student types any R, L or C, like a decade box or a part from the shop */
@@ -684,8 +690,8 @@
       if (c === "wm.tot") { I.wm.tot = !I.wm.tot; return commit(); }
       if (c === "pm.up" || c === "pm.dn") { I.pm.pg = ((I.pm.pg || 0) + (c === "pm.up" ? 5 : 1)) % 6; return commit(); }
       if ((m = /\.soon:(.+)$/.exec(c))) return toast("زر " + m[1] + ": قيد الإعداد");
-      if ((m = /^(d[12])\.hold$/.exec(c))) { if (hold[m[1]]) delete hold[m[1]]; else hold[m[1]] = R[m[1]]; return render(); }
-      if ((m = /^(d[12])\.mode:(\w+)$/.exec(c))) { snap(); I[m[1]].mode = m[2]; delete hold[m[1]]; return commit(); }
+      if ((m = /^(d[1-6])\.hold$/.exec(c))) { if (hold[m[1]]) delete hold[m[1]]; else hold[m[1]] = R[m[1]]; return render(); }
+      if ((m = /^(d[1-6])\.mode:(\w+)$/.exec(c))) { snap(); I[m[1]].mode = m[2]; delete hold[m[1]]; return commit(); }
       if (c === "sc.meas" || c === "sc.math" || c === "sc.xy" || c === "sc.cur") { var k = c.slice(3); I.sc[k] = !I.sc[k]; if (k === "cur" && I.sc.cur) { commit(); return openCursor(evt); } return commit(); }
       if (c === "sc.run") { I.sc.stop = !I.sc.stop; return commit(); }
       if (c === "sc.auto") { autoset(); return commit(); }
@@ -801,7 +807,7 @@
       if (a === "undo" && undo.length) { state = JSON.parse(undo.pop()); sel = null; commit(); }
       if (a === "thin") { var th = wrap.classList.toggle("wb-thin"); b.setAttribute("aria-pressed", th ? "true" : "false"); b.classList.toggle("on", th); try { localStorage.setItem(KEY + ".thin", th ? "1" : ""); } catch (e) {} if (th) { if (sel && sel.k === "lead") sel = null; render(); toast("الأسلاك شفافة: حرّك القطع وحطها بدون ما تمسك سلك. اضغط الزر مرة ثانية لترجع الأسلاك."); } return; }
       if (a === "leads" && state.leads.length) { snap(); state.leads = []; sel = null; commit(); }
-      if (a === "clear") { snap(); var keep = state.inst; state = fresh(); state.inst = keep; sel = null; commit(); }
+      if (a === "clear") { snap(); var keep = state.inst, keepx = state.xm; state = fresh(); state.inst = keep; state.xm = keepx || []; sel = null; commit(); }
       if (a === "zi") zoomAt([vb.x + vb.w / 2, vb.y + vb.h / 2], 1 / 1.3);
       if (a === "zo") zoomAt([vb.x + vb.w / 2, vb.y + vb.h / 2], 1.3);
       if (a === "fit") fitFull();
@@ -822,6 +828,19 @@
         sel = null; commit();
       },
       set: function (s) { deepSet(state.inst, s); commit(); },
+      /* extra multimeters (free lab): type "f" = Fluke, "p" = PeakTech; at most two of each */
+      addMeter: function (type) {
+        if (!xmOK) return null;
+        var d = (type === "f" ? ["d3", "d5"] : ["d4", "d6"]).filter(function (x) { return state.xm.indexOf(x) < 0; })[0]; if (!d) return null;
+        snap(); state.xm.push(d); sel = null; commit(); return d;
+      },
+      removeMeter: function (d) {
+        d = d || state.xm[state.xm.length - 1]; if (!d || state.xm.indexOf(d) < 0) return null;
+        snap(); state.xm = state.xm.filter(function (x) { return x !== d; });
+        state.leads = state.leads.filter(function (l) { return !l.some(function (p) { return p.indexOf(d + ".") === 0; }); });
+        state.inst[d] = S.defaults()[d]; delete hold[d]; sel = null; commit(); return d;
+      },
+      meters: function () { return (state.xm || []).slice(); },
       setKit: function (k) { kit = k.slice(); render(); },
       reset: function () { state = fresh(); commit(); },
       refresh: render,
