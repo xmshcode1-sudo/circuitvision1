@@ -103,13 +103,13 @@
   "use strict";
   CV.shell.init({ active: "" });
   var C = CV.cloud, root = document.getElementById("ad-root"), db = null;
-  var tab = "stats", users = [], courses = [], qText = "", fil = "all";
+  var tab = "stats", users = [], courses = [], qText = "", fil = "all", isOwner = false, staffIds = [], ownerIds = [];
   try { tab = sessionStorage.getItem("cv.admin.tab") || "stats"; } catch (e) {}
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function date(s, time) { if (!s) return "—"; try { return new Date(s).toLocaleString("ar-SA-u-ca-gregory-nu-latn", time ? { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" } : { year: "numeric", month: "short", day: "numeric" }); } catch (e) { return String(s).slice(0, 10); } }
   function sar(h) { return (h / 100).toFixed(2); }
   function cname(id) { var c = courses.filter(function (x) { return x.id === id; })[0]; return c ? c.name_ar : id; }
-  function rpcErr(e) { var m = (e && e.message) || ""; if (/not admin/.test(m)) return "هذه العملية للمدير فقط."; if (/cannot (block|change) yourself/.test(m)) return "لا يمكنك تغيير حالة حسابك."; if (/days out of range/.test(m)) return "عدد الأيام من 1 إلى 3660."; return "تعذّر تنفيذ العملية. حاول مرة أخرى."; }
+  function rpcErr(e) { var m = (e && e.message) || ""; if (/not admin/.test(m)) return "هذه العملية للمدير فقط."; if (/cannot (block|change) yourself/.test(m)) return "لا يمكنك تغيير حالة حسابك."; if (/days out of range/.test(m)) return "عدد الأيام من 1 إلى 3660."; if (/owner only|owner account/.test(m)) return "هذه العملية للمالك فقط."; if (/staff account/.test(m)) return "لا يمكن تغيير حساب من الإدارة. أزله من المساعدين أولًا."; return "تعذّر تنفيذ العملية. حاول مرة أخرى."; }
   function call(fn, args) { return db.rpc(fn, args).then(function (r) { if (r.error) throw r.error; return r.data; }); }
   /* two-step button instead of a browser confirm() */
   function confirmBtn(b, label, run) {
@@ -165,12 +165,14 @@
 
   /* ---------- users ---------- */
   function usersTab() {
-    call("admin_users", { p_q: qText }).then(function (rows) {
+    Promise.all([call("admin_users", { p_q: qText }), call("staff_list").catch(function () { return null; })]).then(function (res) {
+      var rows = res[0], sl = res[1] || {}; staffIds = sl.staff || []; ownerIds = sl.owners || [];
+      var isSt = function (u) { return staffIds.indexOf(u.id) > -1; }, isOw = function (u) { return ownerIds.indexOf(u.id) > -1; };
       var all = rows || [], meId = C.user() && C.user().id;
-      var F = { all: function () { return true; }, pending: function (u) { return u.approval === "pending"; }, approved: function (u) { return u.approval === "approved" && !u.blocked; }, rejected: function (u) { return u.approval === "rejected"; }, blocked: function (u) { return u.blocked; }, unconf: function (u) { return !u.confirmed; } };
-      var FL = [["all", "الكل"], ["pending", "بانتظار الموافقة"], ["approved", "مقبول"], ["rejected", "مرفوض"], ["blocked", "موقوف"], ["unconf", "بريد غير مؤكد"]];
+      var F = { all: function () { return true; }, pending: function (u) { return u.approval === "pending"; }, approved: function (u) { return u.approval === "approved" && !u.blocked; }, rejected: function (u) { return u.approval === "rejected"; }, blocked: function (u) { return u.blocked; }, unconf: function (u) { return !u.confirmed; }, staff: function (u) { return isSt(u) || isOw(u); } };
+      var FL = [["all", "الكل"], ["pending", "بانتظار الموافقة"], ["approved", "مقبول"], ["rejected", "مرفوض"], ["blocked", "موقوف"], ["unconf", "بريد غير مؤكد"], ["staff", "الإدارة"]];
       users = all.filter(F[fil] || F.all);
-      var pend = all.filter(function (u) { return u.approval === "pending" && u.id !== meId; });
+      var pend = all.filter(function (u) { return u.approval === "pending" && u.id !== meId && !isSt(u) && !isOw(u); });
       var paid = courses.filter(function (c) { return c.is_paid; });
       var opts = (paid.length ? paid : courses).map(function (c) { return '<option value="' + esc(c.id) + '">' + esc(c.name_ar) + '</option>'; }).join("");
       var me = C.user() && C.user().id;
@@ -182,14 +184,18 @@
         '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>الطالب</th><th>التسجيل</th><th>آخر دخول</th><th>الاشتراكات النشطة</th><th>إجراءات</th></tr></thead><tbody>' +
         users.map(function (u) {
           var subs = (u.subs || []).map(function (s) { return '<span class="sub-chip">' + esc(cname(s.course_id)) + ' حتى ' + date(s.ends_at) + (s.source === "manual" ? ' · يدوي' : '') + '<button type="button" title="إلغاء الاشتراك" aria-label="إلغاء اشتراك ' + esc(cname(s.course_id)) + '" data-rev="' + esc(u.id) + '" data-c="' + esc(s.course_id) + '">×</button></span>'; }).join("");
-          return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.confirmed ? '' : ' <span class="tag">بريد غير مؤكد</span>') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
+          return '<tr class="' + (u.blocked ? "blk" : "") + '"><td><b>' + esc(u.display_name || "—") + '</b><br><span class="ltr muted">' + esc(u.email) + '</span> ' + (u.approval === "pending" ? '<span class="tag pend">بانتظار الموافقة</span>' : u.approval === "rejected" ? '<span class="tag warn">مرفوض</span>' : '') + (u.blocked ? ' <span class="tag warn">موقوف</span>' : '') + (u.confirmed ? '' : ' <span class="tag">بريد غير مؤكد</span>') + (isOw(u) ? ' <span class="tag pend">المالك</span>' : isSt(u) ? ' <span class="tag pend">مساعد</span>' : '') + (u.id === me ? ' <span class="tag">أنت</span>' : '') + '</td>' +
             '<td class="nw">' + date(u.created_at) + '</td><td class="nw">' + date(u.last_sign_in_at, true) + '</td><td>' + (subs || '<span class="muted">لا يوجد</span>') + '</td>' +
-            '<td><div class="acts">' + (u.id === me ? '' : u.approval === "pending" ? '<button type="button" class="btn btn-primary btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button><button type="button" class="btn btn-danger btn-sm" data-ap="' + esc(u.id) + '" data-v="rejected">رفض</button>' : u.approval === "rejected" ? '<button type="button" class="btn btn-ghost btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button>' : '') +
-            (C.subscriptionsOn() ? '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' : '') + (u.id === me ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
+            '<td><div class="acts">' + (isOwner && u.id !== me && !isOw(u) ? '<button type="button" class="btn btn-sm ' + (isSt(u) ? 'btn-danger' : 'btn-ghost') + '" data-stf="' + esc(u.id) + '" data-v="' + (!isSt(u)) + '">' + (isSt(u) ? 'إزالة من المساعدين' : 'اجعله مساعدًا') + '</button>' : '') + (u.id === me || isSt(u) || isOw(u) ? '' : u.approval === "pending" ? '<button type="button" class="btn btn-primary btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button><button type="button" class="btn btn-danger btn-sm" data-ap="' + esc(u.id) + '" data-v="rejected">رفض</button>' : u.approval === "rejected" ? '<button type="button" class="btn btn-ghost btn-sm" data-ap="' + esc(u.id) + '" data-v="approved">قبول</button>' : '') +
+            (C.subscriptionsOn() ? '<button type="button" class="btn btn-ghost btn-sm" data-gr="' + esc(u.id) + '">منح اشتراك</button>' : '') + (u.id === me || isSt(u) || isOw(u) ? '' : '<button type="button" class="btn btn-sm ' + (u.blocked ? 'btn-ghost' : 'btn-danger') + '" data-blk="' + esc(u.id) + '" data-v="' + (!u.blocked) + '">' + (u.blocked ? "إلغاء الإيقاف" : "إيقاف الحساب") + '</button>') + '</div>' +
             '<div class="grant" id="gr-' + esc(u.id) + '" hidden><select class="select" aria-label="المقرر">' + opts + '</select><input class="input" type="number" min="1" max="3660" value="30" aria-label="عدد الأيام"> <span class="muted">يوم</span><input class="input" style="width:10em" placeholder="ملاحظة (اختياري)" aria-label="ملاحظة"><button type="button" class="btn btn-primary btn-sm" data-go="' + esc(u.id) + '">منح</button></div></td></tr>';
         }).join("") + '</tbody></table></div></section>';
       var b = body(html);
       function msg(t, ok) { var m = document.getElementById("ad-um"); m.hidden = false; m.className = "ad-msg " + (ok ? "ok" : "bad"); m.textContent = t; }
+      b.querySelectorAll("[data-stf]").forEach(function (x) { x.onclick = function () {
+        var on = x.dataset.v === "true";
+        confirmBtn(x, on ? "تأكيد: يصير مساعدًا بصلاحياتك" : "تأكيد الإزالة", function () { x.disabled = true; call("owner_set_staff", { p_user: x.dataset.stf, p_on: on }).then(function () { usersTab(); setTimeout(function () { msg(on ? "✓ صار مساعدًا. يشوف لوحة الإدارة بعد ما يحدّث الصفحة." : "✓ أُزيل من المساعدين.", true); }, 300); }, function (e) { x.disabled = false; msg(rpcErr(e), false); }); });
+      }; });
       b.querySelectorAll("[data-fil]").forEach(function (x) { x.onclick = function () { fil = x.dataset.fil; usersTab(); }; });
       var apAll = document.getElementById("ad-apall");
       if (apAll) apAll.onclick = function () { confirmBtn(apAll, "تأكيد قبول " + pend.length + " حساب", function () {
@@ -307,7 +313,7 @@
     var a = C.access();
     if (!client || !a) return;
     if (!a.admin) { root.innerHTML = '<section class="card cv-lock"><h2>هذه الصفحة لمدير المنصة فقط</h2><p>إذا كنت المدير فادخل ببريد الإدارة بعد تأكيده.</p><div class="cv-lock-cta"><a class="btn btn-ghost" href="dashboard.html">لوحة الطالب</a></div></section>'; return; }
-    db = client; courses = a.courses || [];
+    db = client; courses = a.courses || []; isOwner = !!a.owner;
     show();
   });
 })();
