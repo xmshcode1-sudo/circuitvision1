@@ -114,7 +114,15 @@
         (p.table ? tableView(p.table.cols, p.table.rows) : "") +
         (p.demo ? '<div class="lg-demo"><b>خطوات التوصيل</b>' + wiringList(p.demo) + '<button type="button" class="btn btn-ghost btn-sm" data-demo="' + p.id + '">اعرض هذا التوصيل على الجهاز ↓</button></div>' : "") + '</section>';
     }).join("");
-    var tasks = e.tasks.map(function (t, k) { return taskView(e, t, k); }).join("");
+    var tasks = "", grp = [];
+    function flushPre() {
+      if (!grp.length) return;
+      var dn = grp.filter(function (g) { return done(e.id, g.t.id); }).length;
+      tasks += '<details class="card lg-pre"><summary><b>Pre-Lab</b> <span class="muted small">التحضير قبل المعمل</span> <span class="muted small ltr">' + dn + '/' + grp.length + '</span> <span class="muted small">اضغط للعرض أو الإخفاء</span></summary><div class="lg-pre-b">' + grp.map(function (g) { return taskView(e, g.t, g.k); }).join("") + '</div></details>';
+      grp = [];
+    }
+    e.tasks.forEach(function (t, k) { if (t.pre) grp.push({ t: t, k: k }); else { flushPre(); tasks += taskView(e, t, k); } });
+    flushPre();
     var builds = e.tasks.filter(function (t) { return t.type === "build" || t.type === "seq"; });
     var oldRef = document.getElementById("lg-ref"); if (oldRef) oldRef.remove();
     root.innerHTML = nav +
@@ -145,7 +153,7 @@
     var h = '<section class="card lg-task" id="t-' + t.id + '" data-t="' + t.id + '">' + head(e, t, k);
     if (t.type === "table") {
       var nin = t.nin;
-      h += '<div class="lg-tw"><table class="lg-t ltr lg-fill"><thead><tr>' + t.cols.map(function (c, j) { return '<th' + (j >= nin ? ' class="o"' : "") + '>' + esc(c) + '</th>'; }).join("") + '</tr></thead><tbody>' +
+      h += '<div class="lg-tw"><table class="lg-t ltr lg-fill"><thead>' + (t.groups ? '<tr class="g">' + t.groups.map(function (g) { return '<th colspan="' + g[1] + '">' + esc(g[0]) + '</th>'; }).join("") + '</tr>' : "") + '<tr>' + t.cols.map(function (c, j) { return '<th' + (j >= nin ? ' class="o"' : "") + '>' + esc(c) + '</th>'; }).join("") + '</tr></thead><tbody>' +
         t.rows.map(function (r, i) {
           return "<tr>" + r.map(function (v) { return "<td>" + esc(v) + "</td>"; }).join("") + t.cols.slice(nin).map(function (_, j) {
             var col = nin + j, opts = t.options && t.options[col];

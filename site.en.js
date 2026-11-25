@@ -965,6 +965,27 @@
   bi.pattern(/^المدة (\d+:\d+)$/, function (m, a) { return "Duration " + a; });
   bi.pattern(/^تمرين الدرس واختباره \((\d+) أسئلة\)$/, function (m, a) { return "Lesson exercise and quiz (" + a + " questions)"; });
   bi.pattern(/^مثال (\d+):$/, function (m, a) { return "Example " + a + ":"; });
+  bi.add({
+"الجدول 4: جدول حقيقة F العملي (بوابات NAND) — اقرأه من الجهاز.": "Table 4: the experimental truth table of F (NAND gates) — read it from the trainer.",
+"الجدول 2: جدول حقيقة F = x'y.t + x.y.t + y.z' + y'.z (أكمل الأعمدة الوسيطة ثم F).": "Table 2: truth table of F = x'y.t + x.y.t + y.z' + y'.z (fill the intermediate columns, then F).",
+"نفّذ F ببوابات NAND فقط (7400) على الجهاز.": "Implement F with NAND gates only (7400) on the trainer.",
+"نفّذ F ببوابات NOR فقط (7402) على الجهاز.": "Implement F with NOR gates only (7402) on the trainer.",
+"الجدول 5: جدول حقيقة F العملي (بوابات NOR) — اقرأه من الجهاز.": "Table 5: the experimental truth table of F (NOR gates) — read it from the trainer.",
+"الجامع النصفي — أكمل الجدول 1.": "Half adder — complete Table 1.",
+"اكتب S للجامع النصفي.": "Write S for the half adder.",
+"اكتب C للجامع النصفي.": "Write C for the half adder.",
+"الجدول 4: مفكك 4 إلى 16 (دائرتا 74138 مع المدخل E).": "Table 4: 4-to-16 decoder (two 74138s with the enable input E).",
+"الجدول 6: سجّل الجامع الكامل بالمفكك.": "Table 6: record the full adder built with the decoder.",
+"الجدول 7: سجّل F(x,y,z) من الدائرة.": "Table 7: record F(x,y,z) from the circuit.",
+"الجدول 4: مثال 2 — أكمل جدول حقيقة F(x,y,z,t) = Σ(0,3,4,7,12,14,15) بالمتغيرات الأربعة.": "Table 4: Example 2 — complete the truth table of F(x,y,z,t) = Σ(0,3,4,7,12,14,15) in the four variables.",
+"الجدول 4 (تكملة): اكتب قيمة كل مدخل بيانات D: 0 أو 1 أو t أو t'.": "Table 4 (continued): write the value of each data input D: 0, 1, t or t'.",
+"الجدول 8: سجّل تنفيذ F(x,y,z) = Σ(0,3,4,7) بالدائرة 74151.": "Table 8: record the implementation of F(x,y,z) = Σ(0,3,4,7) with the 74151.",
+"الجدول 9: سجّل تنفيذ F(x,y,z,t) = Σ(0,3,4,7,12,14,15) بالدائرة 74151 (مدخلات D لكل سطر حسب t).": "Table 9: record the implementation of F(x,y,z,t) = Σ(0,3,4,7,12,14,15) with the 74151 (the D inputs for each row, given t).",
+"الجدول 1: أرقام أرجل 74194.": "Table 1: the 74194's pin numbers.",
+"الجدول 2 (ونفسه الجدول 3): أكمل المخارج QA QB QC QD (مثل 1000) والعملية لكل سطر.": "Table 2 (and Table 3 is the same): complete the outputs QA QB QC QD (like 1000) and the function for each row.",
+"التحضير قبل المعمل": "Preparation before the lab",
+"اضغط للعرض أو الإخفاء": "Tap to show or hide"
+});
   bi.pattern(/^معمل الدوائر: التجربة (\d+)$/, function (m, a) { return "Circuits Lab: Experiment " + a; });
   bi.pattern(/^معمل الدوائر 2: التجربة (\d+)$/, function (m, a) { return "Circuits 2 Lab: Experiment " + a; });
   bi.pattern(/^افتح التجربة (\d+) في المعمل$/, function (m, a) { return "Open experiment " + a + " in the lab"; });

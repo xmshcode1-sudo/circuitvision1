@@ -55,6 +55,14 @@
   .lg-t th, .lg-t td { border: 1px solid var(--line); padding: 5px 10px; text-align: center; }
   .lg-t th { background: var(--surface-2); font-weight: 600; }
   .lg-t th.o { color: var(--blue); }
+  .lg-t tr.g th { background: var(--surface); color: var(--fg-2); font-size: 12.5px; letter-spacing: .02em; }
+  .lg-pre { padding: 0; }
+  .lg-pre > summary { cursor: pointer; padding: 14px 18px; list-style: none; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-height: 44px; }
+  .lg-pre > summary::-webkit-details-marker { display: none; }
+  .lg-pre > summary::before { content: "▸"; color: var(--blue); font-size: 15px; transition: transform .15s; }
+  .lg-pre[open] > summary::before { transform: rotate(90deg); }
+  .lg-pre-b { display: grid; gap: 12px; padding: 0 12px 14px; }
+  .lg-pre-b .lg-task { box-shadow: none; }
   .lg-fill td.o { padding: 2px; }
   .lg-fill .bit { width: 38px; height: 32px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-family: var(--font-mono); font-size: 15px; cursor: pointer; }
   .lg-fill input, .lg-fill select { width: 64px; height: 32px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-family: var(--font-mono); text-align: center; }
