@@ -219,6 +219,11 @@
     price: function (id) { var c = api.course(id); return c ? (c.price_halalas / 100).toFixed(2) : "9.99"; },
     freeNote: function (id) { return id === "logic-design" ? "تجربة Lab#1 مجانية كاملة." : "الدرس الأول من كل فصل مجاني لتجربة المنصة."; },
     lockHtml: function (courseId, what) {
+      if (!api.subscriptionsOn()) {   // payments are off: the only reason to lock is an account that is not approved yet (or is blocked), never a subscription
+        var en = window.CV && CV.bi && CV.bi.mode && CV.bi.mode() === "en", ic = '<span class="cv-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>';
+        return en ? '<section class="card cv-lock no-bi" role="region" aria-label="Approved accounts only" dir="ltr">' + ic + '<h2>This part is for approved accounts</h2><p>Your account is waiting for approval, or you are not signed in yet.</p><div class="cv-lock-cta"><a class="btn btn-primary" href="dashboard.html">Dashboard</a></div></section>'
+          : '<section class="card cv-lock" role="region" aria-label="للحسابات المعتمدة">' + ic + '<h2>' + (what || "هذا الجزء") + ' للحسابات المعتمدة</h2><p>حسابك بانتظار موافقة الإدارة، أو ما سجّلت دخولك بعد.</p><div class="cv-lock-cta"><a class="btn btn-primary" href="dashboard.html">لوحة الطالب</a></div></section>';
+      }
       var c = api.course(courseId), name = c ? c.name_ar : "المقرر";
       if (window.CV && CV.bi && CV.bi.mode && CV.bi.mode() === "en") {   // English-first: the card in English (Arabic names have no dictionary entry)
         var co = (CV.allCourses || []).filter(function (x) { return x.id === courseId; })[0], wEn = { "هذا الدرس": "This lesson", "هذه الأداة": "This tool", "هذه التجربة": "This experiment" }[what] || "This part";
