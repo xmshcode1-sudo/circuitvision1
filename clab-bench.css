@@ -85,6 +85,8 @@ html.wb-lock, html.wb-lock body { overflow: hidden; }
 /* oscilloscope */
 .wb-sccase { fill: #f1f1ee; stroke: #b9bcc0; } .wb-scbez { fill: #2b7fd9; } .wb-scscr { fill: #050608; }
 .wb-scpan { fill: #53a6e6; stroke: #2d7fc4; }
+/* the + at the centre of the scope screen (the origin) */
+.wb-origin { stroke: #e8fff0; stroke-width: 2; stroke-linecap: round; fill: none; opacity: .95; }
 .wb-grid { stroke: #5b6672; stroke-width: .5; stroke-dasharray: 1.5 3; } .wb-grid.mid { stroke: #8e9aa6; stroke-dasharray: 1 2; }
 .wb-wave { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
 .wb-cur { stroke: #c77dff; stroke-width: .9; stroke-dasharray: 3 2; }

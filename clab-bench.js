@@ -241,6 +241,7 @@
       var sc = I.sc, d = R.sc, s = "", NX = 12, NY = 8, dx = sw / NX, dy = sh / NY, i;
       for (i = 1; i < NX; i++) s += '<line class="wb-grid' + (i === NX / 2 ? " mid" : "") + '" x1="' + (sx + i * dx) + '" y1="' + sy + '" x2="' + (sx + i * dx) + '" y2="' + (sy + sh) + '"/>';
       for (i = 1; i < NY; i++) s += '<line class="wb-grid' + (i === NY / 2 ? " mid" : "") + '" x1="' + sx + '" y1="' + (sy + i * dy) + '" x2="' + (sx + sw) + '" y2="' + (sy + i * dy) + '"/>';
+      s += '<path class="wb-origin" d="M' + (sx + sw / 2 - 10) + ' ' + (sy + sh / 2) + 'h20M' + (sx + sw / 2) + ' ' + (sy + sh / 2 - 10) + 'v20"/>';   // the origin: the + at the centre of the screen
       if (!d) return s;
       var w = d.w, T = sc.td * NX, cols = { c1: "#ff453a", c2: "#ffd60a" }, cy = sy + sh / 2;
       /* trigger: CH1 (or CH2 when CH1 is flat) crosses its mean going up at the centre of the screen */
