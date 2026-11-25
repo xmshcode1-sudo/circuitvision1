@@ -269,11 +269,11 @@
 
   /* ---------- announcements ---------- */
   /* ---------- pages shown to students ---------- */
-  var PAGES = ["practice.html", "lab.html", "logic.html", "tutor.html", "bank.html", "realworld.html", "challenges.html", "academy.html", "club.html", "portfolio.html", "notebook.html"];
+  var PAGES = ["lesson.html", "practice.html", "matlab.html", "lab.html", "lab2.html", "logic.html", "tutor.html", "bank.html", "realworld.html", "challenges.html", "academy.html", "club.html", "portfolio.html", "notebook.html"];
   function pagesTab() {
     var hid = C.hiddenPages(), byHref = {};
     (CV.modules || []).forEach(function (m) { if (m.href) byHref[m.href] = m.id === "club" ? "نادي Beyond Theory" : m.ar; });
-    body('<p class="muted">الصفحة المخفية تختفي من القائمة ومن كل الروابط عند الطلاب، ومن يفتح رابطها مباشرة يرى «غير متاحة حاليًا». أنت تراها دائمًا وبجانبها «مخفية عن الطلاب». الرئيسية ولوحة الطالب والدروس لا تُخفى.</p>' +
+    body('<p class="muted">الصفحة المخفية تختفي من القائمة ومن كل الروابط عند الطلاب، ومن يفتح رابطها مباشرة يرى «غير متاحة حاليًا». أنت تراها دائمًا وبجانبها «مخفية عن الطلاب». الرئيسية ولوحة الطالب لا تُخفى.</p>' +
       '<div class="ad-pages">' + PAGES.map(function (p) {
         var h = hid.indexOf(p) > -1;
         return '<div class="card ad-page"><div><b>' + esc(byHref[p] || p) + '</b><span class="muted ltr">' + p + '</span></div><span class="chip ' + (h ? "" : "chip-ok") + '">' + (h ? "مخفية" : "ظاهرة") + '</span>' +
