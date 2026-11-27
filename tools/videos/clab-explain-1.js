@@ -1,0 +1,36 @@
+/* Circuits 1 · Lab 1 — Resistors, current and voltage measurements, Ohm's law. Acts follow tools/videos/clab-plan.js exp1 (p = scene index). */
+LX.add("clab-lab1", {
+  exp: "exp1", hdr: "Circuits 1 · Lab", title: "Experiment 1 — Ohm's law",
+  acts: [
+    { type: "title", chip: "Circuits 1 · Lab 1", h1: "Resistors, current<br>and Ohm's law", go: "In this lab you will",
+      goals: [["Read a resistor from its colour bands, then measure it"], ["Wire an ammeter and a voltmeter the right way"], ["Prove V = I·R from your own readings"]],
+      beats: [["Welcome to the first Circuits 1 lab. We work on the real bench, one wire at a time.", "أهلاً بك في أول معمل دوائر ١. نشتغل على الطاولة نفسها، سلك سلك."],
+              ["By the end you will have measured a resistor and proved Ohm's law yourself.", "في النهاية تقيس مقاومة وتثبت قانون أوم بنفسك."]] },
+    { type: "bench", p: 1, kick: "The bench", beats: [["This is your bench: a power supply, two digital multimeters and a decade resistance box.", "هذي طاولتك: مصدر جهد، ملتيميتران رقميان، وصندوق مقاومات."],
+              ["Every instrument here has the same face and buttons as the one in the lab.", "كل جهاز بنفس شكل وأزرار جهاز المعمل."]] },
+    { type: "bench", p: 3, kick: "Procedure 1 · Resistance", beats: [["Take the first coloured resistor and press it into the board, between two holes.", "خذ أول مقاومة ملونة وثبتها في اللوحة بين فتحتين."],
+              ["No power yet: we measure a resistor on its own.", "بدون مصدر: نقيس المقاومة لحالها."]] },
+    { type: "bench", p: 4, kick: "Measure R1", table: { from: 6, title: "Table 1.2", head: ["", "Ohmmeter (Ω)", "Colours (Ω)", "Error"], labels: ["R1", "R2", "R3"], top: 470 },
+      beats: [["Red lead to VΩ, black lead to COM, one on each end of the resistor. Switch to Ω.", "الأحمر في VΩ والأسود في COM، على طرفي المقاومة. حوّل على Ω."],
+              ["The meter says 468.4 Ω; the colours say 470 Ω. A 0.34% error: inside the 5% tolerance.", "الجهاز ٤٦٨٫٤ والألوان ٤٧٠. خطأ ٠٫٣٤٪ ضمن التفاوت ٥٪."]] },
+    { type: "bench", p: 5, kick: "Measure R2", table: { from: 6, title: "Table 1.2", head: ["", "Ohmmeter (Ω)", "Colours (Ω)", "Error"], labels: ["R1", "R2", "R3"], top: 470 },
+      beats: [["Same wiring, next resistor: 1456 Ω against 1.5 kΩ.", "نفس التوصيل، المقاومة الثانية: ١٤٥٦ مقابل ١٫٥ kΩ."]] },
+    { type: "bench", p: 6, kick: "Measure R3", table: { from: 6, title: "Table 1.2", head: ["", "Ohmmeter (Ω)", "Colours (Ω)", "Error"], labels: ["R1", "R2", "R3"], top: 470 },
+      beats: [["And the third. The ohmmeter is the more exact value; the bands only promise a range.", "والثالثة. الأوميتر أدق؛ الألوان تعطي مدى فقط."]] },
+    { type: "bench", p: 8, kick: "Procedure 2 · Ohm's law", beats: [["Now a live circuit. Put in the 100 Ω resistor and connect it to the supply.", "الآن دائرة شغالة. ركّب مقاومة ١٠٠ Ω ووصلها بالمصدر."],
+              ["Plus of the supply to the resistor, the other end back to minus.", "موجب المصدر للمقاومة، والطرف الثاني لسالب المصدر."]] },
+    { type: "bench", p: 9, kick: "Set the supply", beats: [["Set MASTER to 1 V and the current limit to 0.5 A, then press OUTPUT.", "اضبط MASTER على ١ فولت وحد التيار ٠٫٥ أمبير ثم OUTPUT."],
+              ["The limit protects your circuit if you wire something wrong.", "الحد يحمي دائرتك لو غلطت في التوصيل."]] },
+    { type: "sweep", steps: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], stepDur: 1.9, kick: "Table 1.3 · R = 100 Ω",
+      table: { from: 19, title: "Table 1.3 (R = 100 Ω)", head: ["", "I (mA)", "U (V)"], top: 372 },
+      beats: [["The ammeter goes in series with the resistor; the voltmeter goes across it, in parallel.", "الأميتر على التوالي مع المقاومة، والفولتميتر على التوازي."],
+              ["Raise the supply 1 V at a time and read I and U at every step.", "ارفع الجهد ١ فولت كل مرة واقرأ I و U."],
+              ["Do not change the meter range while you measure.", "لا تغيّر المدى أثناء القياس."]] },
+    { type: "plot", from: 19, kick: "Plot I against U", xl: "U (V)", yl: "I (mA)", slope: "slope = I/U = 10 mA/V",
+      pts: [[0.990, 9.940], [1.980, 19.88], [2.970, 29.82], [3.960, 39.76], [4.950, 49.70], [5.940, 59.64], [6.930, 69.58], [7.920, 79.52], [8.910, 89.46], [9.901, 99.40]],
+      beats: [["Plot the table: the points fall on a straight line through zero.", "ارسم الجدول: النقاط على خط مستقيم يمر بالصفر."],
+              ["The slope is I over U, which is 1 over R. So R = 1 / 10 mA per volt = 100 Ω.", "الميل = I/U = 1/R. إذن R = ١٠٠ Ω."]] },
+    { type: "end", rows: [["Measure a resistor with no source, and compare it with its colours."], ["Ammeter in series, voltmeter in parallel."], ["Current grows in step with voltage: V = I·R."]], eq: "<i>V</i> = <i>I</i> · <i>R</i>",
+      beats: [["That is Ohm's law, proved with your own readings.", "هذا قانون أوم، مثبت بقراءاتك أنت."]] }
+  ]
+});

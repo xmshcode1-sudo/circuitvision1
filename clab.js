@@ -3,7 +3,7 @@
    schematic and tables (checked against the simulator), and the bench at the bottom with «تحقق من توصيلي» and «اعرض الحل». */
 (function () {
   "use strict";
-  var VIDEO = { 1: "3:58", 2: "3:36", 3: "3:14", 4: "2:33", 5: "2:58", 6: "4:16", 7: "3:46", 8: "3:03", 9: "3:11", 10: "1:57" };   // clab-lab<n>.mp4: explainer videos made from this page's own bench and solutions (tools/videos)
+  var VIDEO = {1: "2:08", 2: "5:47", 3: "4:19", 4: "3:48", 5: "5:28", 6: "4:14", 7: "5:23", 8: "3:15", 9: "4:37", 10: "1:18"};   // clab-lab<n>.mp4: explainer videos made from this page's own bench and solutions (tools/videos)
   var S = CV.clabSim, X = CV.clabExps, EXP = X.list, KEY = "cv-clab-progress";
   var $ = function (s, r) { return (r || document).querySelector(s); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
