@@ -62,6 +62,8 @@
   .mod p { font-size: 14px; color: var(--fg-2); }
   a.mod { color: inherit; text-decoration: none; transition: border-color .2s, transform .2s; }
   a.mod:hover, a.mod:focus-visible { border-color: var(--glow); transform: translateY(-2px); }
+  .mod-wa .mod-ico { background: rgba(37,211,102,.14); color: #25d366; }
+  a.mod-wa:hover, a.mod-wa:focus-visible { border-color: #25d366; }
   @media (max-width: 1000px) { .mods { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 520px) { .mods { grid-template-columns: 1fr; } }
 
@@ -230,7 +232,8 @@
     club: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c.5-3.5 3-5 6-5s5.5 1.5 6 5M15 15c3 0 5 1.5 5.5 4.5"/>',
     realworld: '<path d="M4 12h3M17 12h3"/><rect x="7" y="9" width="10" height="6" rx="3"/><path d="M10 9v6M14 9v6"/>',
     portfolio: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
-    notebook: '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>'
+    notebook: '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>',
+    whatsapp: '<path d="M20 11.5a8 8 0 0 1-11.8 7l-4.2 1.2 1.2-4A8 8 0 1 1 20 11.5z"/><path d="M9 8.5c0 3.5 2.5 6.5 6.5 6.5l.8-1.6-1.9-.9-.8.9c-1.3-.5-2.4-1.6-2.9-2.9l.9-.8-.9-1.9z"/>'
   };
   var desc = {
     courses: "فصول ودروس منظمة لـ Circuits 1 و2 بشرح مبسّط وأمثلة محلولة خطوة بخطوة.",
@@ -244,12 +247,14 @@
     club: "النادي الطلابي: ورش عمل وبناء مشاريع جماعية وعرضها.",
     realworld: "مكتبة المكونات الحقيقية: الشكل والرمز وطريقة القياس والأعطال الشائعة.",
     portfolio: "ملف إنجاز هندسي تستخدمه في السيرة الذاتية والتدريب التعاوني.",
-    notebook: "وثّق ملاحظاتك وحساباتك وقياساتك وأخطاءك وتصحيحاتها."
+    notebook: "وثّق ملاحظاتك وحساباتك وقياساتك وأخطاءك وتصحيحاتها.",
+    whatsapp: "انضم لقروب طلاب CircuitVision على الواتساب: أسئلة، تنبيهات بالجديد، ونقاش مع زملائك."
   };
   var mods = document.getElementById("mods");
   CV.modules.filter(function (m) { return desc[m.id]; }).forEach(function (m) {
     var d = document.createElement("a");
     d.className = "mod card"; d.href = m.href || "dashboard.html";
+    if (m.external) { d.target = "_blank"; d.rel = "noopener"; d.classList.add("mod-wa"); }
     d.innerHTML = '<div class="mod-top"><span class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + icons[m.id] + '</svg></span></div>' +
       '<div><h3>' + m.ar + '</h3><div class="en">' + m.en + '</div></div><p>' + desc[m.id] + '</p>';
     mods.appendChild(d);

@@ -95,6 +95,8 @@
     "التحديات": "Challenges",
     "أكاديمية المشاريع": "Project Academy",
     "نادي Beyond Theory": "Beyond Theory Club",
+    "قروب الواتساب": "WhatsApp Group",
+    "انضم لقروب طلاب CircuitVision على الواتساب: أسئلة، تنبيهات بالجديد، ونقاش مع زملائك.": "Join the CircuitVision students’ WhatsApp group: questions, news of what’s new, and talk with classmates.",
     "ملف الإنجاز": "Portfolio",
     "دفتر المهندس": "Engineer’s Notebook",
     "مكتبة المكونات": "Component Library",

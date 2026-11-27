@@ -144,7 +144,8 @@
     { id: "notebook",   ar: "دفتر المهندس",           en: "Engineering Notebook",    step: 6, status: "build", href: "notebook.html" },
     { id: "logic",      ar: "معمل التصميم المنطقي",   en: "Logic Design Lab",        step: 6, status: "build", href: "logic.html" },
     { id: "lab2",       ar: "معمل الدوائر 2",         en: "Circuits 2 Lab",          step: 3, status: "build", href: "lab2.html" },
-    { id: "matlab",     ar: "MATLAB",                 en: "MATLAB",                  step: 3, status: "build", href: "matlab.html" }
+    { id: "matlab",     ar: "MATLAB",                 en: "MATLAB",                  step: 3, status: "build", href: "matlab.html" },
+    { id: "whatsapp",   ar: "قروب الواتساب",          en: "WhatsApp Group",          step: 1, status: "ok",    href: "https://chat.whatsapp.com/HXS31WkWNVaFc2B2OfoF4u", external: true }
   ];
 
   var statusLabel = { ok: "متاح", build: "متاح جزئيًا", plan: "مخطط" };
