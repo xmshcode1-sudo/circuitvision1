@@ -173,3 +173,16 @@ html.rp-open body { overflow: hidden; }
 .rp-t td, .rp-t th { border: 1px solid #999 !important; border-radius: 0 !important; outline: 0 !important; }
 .rp-t span { border: 0 !important; background: none !important; }
 .cl-t td.ltr, .rp-t td.ltr, .md-t td.ltr { display: table-cell !important; }
+
+/* ---------- tables laid out like the lab manual: full grid, shaded header row, shaded label column, equal cells ---------- */
+table.lg-t.cl-t { border-collapse: collapse; width: 100%; table-layout: fixed; border: 1.5px solid var(--fg-2, #3b4252); }
+table.lg-t.cl-t th, table.lg-t.cl-t td { border: 1px solid var(--fg-3, #8a93a3); padding: 6px 8px; text-align: center; vertical-align: middle; }
+table.lg-t.cl-t tr:first-child th { background: var(--surface-2, #eef1f6); font-weight: 700; border-bottom: 1.5px solid var(--fg-2, #3b4252); }
+table.lg-t.cl-t td.l { background: var(--surface-2, #eef1f6); font-weight: 600; text-align: start; width: 30%; }
+table.lg-t.cl-t td .input { width: 100%; min-width: 0; border-radius: 4px; text-align: center; }
+table.lg-t.cl-t td.cl-e, table.lg-t.cl-t td.cl-p { background: transparent; border: 1px solid var(--fg-3, #8a93a3); }
+table.lg-t.cl-t tr.cl-sum td { background: var(--surface-2, #eef1f6); font-weight: 700; }
+.cl-tbl > b { display: block; text-align: center; margin: 14px 0 6px; font-size: 14px; }
+@media (max-width: 640px) { table.lg-t.cl-t th, table.lg-t.cl-t td { padding: 4px 3px; font-size: 12.5px; } table.lg-t.cl-t td.l { width: 34%; } }
+.lg-sec h2 { flex-wrap: wrap; }
+.lg-sec h2 > *, .lg-sec h2 .bi-s { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }

@@ -122,7 +122,7 @@
   var CH2 = "الفصل 2: الملفات المقترنة مغناطيسيًا والمحولات";
   var coupled = function (dots, o) {
     o = o || {};
-    return cir(2, 4, [E([1, 0], [0, 0], o.src ? "V" : "T", 12, o.src ? { name: "V", vtext: o.src, plus: "b" } : {}), W([0, 0], [0, 1]), E([0, 1], [1, 1], "L", 1, { name: "L1", vtext: o.l1 || "", dot: dots[0] }), W([1, 0], [1, 1]),
+    return cir(2, 4, [E([1, 0], [0, 0], o.src ? "V" : "T", 12, o.src ? { name: "V", vtext: o.src, plus: "a" } : {}), W([0, 0], [0, 1]), E([0, 1], [1, 1], "L", 1, { name: "L1", vtext: o.l1 || "", dot: dots[0] }), W([1, 0], [1, 1]),
       E([0, 2], [1, 2], "L", 1, { name: "L2", vtext: o.l2 || "", dot: dots[1] }), W([0, 2], [0, 3]), E([0, 3], [1, 3], o.load ? "R" : "T", 1, o.load ? { name: "Z", vtext: o.load } : {}), W([1, 2], [1, 3])],
       { notes: [{ at: [0.5, 1.5], text: o.M || "M", dy: -6 }], arcs: [{ from: [0.18, 1.18], to: [0.18, 1.82], h: 20 }] });
   };

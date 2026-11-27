@@ -25,7 +25,7 @@
   function E(a, b, type, name, extra) { var e = { a: a, b: b, type: type, name: name || "", value: 1, vtext: "" }; for (var k in (extra || {})) e[k] = extra[k]; return e; }
   function Wr(a, b) { return { a: a, b: b, type: "W" }; }
   function Gen(a, b, text) { return { a: a, b: b, type: "V", gen: true, name: "vs", value: 0, vtext: text || "" }; }
-  function Dc(a, b, text) { return { a: a, b: b, type: "V", name: "Vs", value: 0, vtext: text || "", plus: "b" }; }
+  function Dc(a, b, text) { return { a: a, b: b, type: "V", name: "Vs", value: 0, vtext: text || "", plus: "a" }; }
   function Am(a, b, label) { return { a: a, b: b, type: "W", am: true, label: label || "" }; }
   function fig(rows, cols, edges, extra) { var o = { rows: rows, cols: cols, edges: edges }; for (var k in (extra || {})) o[k] = extra[k]; return o; }
   // generator – R – C loop; CH1 across C, CH2 across the generator

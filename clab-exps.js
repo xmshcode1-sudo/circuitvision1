@@ -24,7 +24,7 @@
   function E(a, b, type, name, value, extra) { var e = { a: a, b: b, type: type, name: name || "", value: value }; Object.keys(extra || {}).forEach(function (k) { e[k] = extra[k]; }); return e; }
   function Wr(a, b) { return { a: a, b: b, type: "W" }; }
   function Am(a, b, label) { return { a: a, b: b, type: "W", am: true, label: label || "" }; }
-  function Vs(a, b, name, text) { return { a: a, b: b, type: "V", name: name || "Vs", value: 0, vtext: text || "", plus: "b" }; }
+  function Vs(a, b, name, text) { return { a: a, b: b, type: "V", name: name || "Vs", value: 0, vtext: text || "", plus: "a" }; }
   function Gen(a, b, name, text) { return { a: a, b: b, type: "V", gen: true, name: name || "vs", value: 0, vtext: text || "" }; }
   function fig(rows, cols, edges, extra) { var c = { rows: rows, cols: cols, edges: edges }; Object.keys(extra || {}).forEach(function (k) { c[k] = extra[k]; }); return c; }
 
@@ -38,10 +38,10 @@
     return { "h:1:1": P("R1ka", "R1"), "v:1:2": P("R2k2", "R2"), "v:2:2": W, "h:1:2": P("R470a", "R3"), "v:1:3": P("R1k5", "R4"), "v:2:3": W, "h:1:3": P("R100", "R5"), "v:1:4": P("R220a", "R6"), "v:2:4": W,
       "v:0:2": W, "h:0:2": P("R3k3", "R7"), "h:0:3": W, "v:0:4": W, "h:3:2": W, "h:3:3": W };
   }
-  var LADDER_FIG = fig(3, 5, [Vs([2, 0], [0, 0], "Vs", "30 V"), E([0, 0], [0, 1], "R", "R1", 1000), E([0, 1], [0, 2], "R", "R3", 470), E([0, 2], [0, 3], "R", "R5", 100),
-    E([0, 1], [2, 1], "R", "R2", 2200), E([0, 2], [2, 2], "R", "R4", 1500), E([0, 3], [2, 3], "R", "R6", 220), Wr([2, 0], [2, 3]), Wr([0, 3], [0, 4]), E([0, 4], [2, 4], "W")],
-    { nodeLabels: [{ at: [0, 1], text: "a" }, { at: [0, 2], text: "b" }, { at: [0, 3], text: "c" }] });
-  // the ladder figure above cannot show R7 (a to c over the top); it is described in the steps
+  var LADDER_FIG = fig(4, 4, [Vs([3, 0], [1, 0], "Vs", "30 V"), E([1, 0], [1, 1], "R", "R1", 1000), E([1, 1], [1, 2], "R", "R3", 470), E([1, 2], [1, 3], "R", "R5", 100),
+    E([1, 1], [3, 1], "R", "R2", 2200), E([1, 2], [3, 2], "R", "R4", 1500), E([1, 3], [3, 3], "R", "R6", 220), Wr([3, 0], [3, 3]),
+    Wr([1, 1], [0, 1]), E([0, 1], [0, 2], "R", "R7", 3300), Wr([0, 2], [0, 3]), Wr([0, 3], [1, 3])],
+    { nodeLabels: [{ at: [1, 1], text: "a" }, { at: [1, 2], text: "b" }, { at: [1, 3], text: "c" }] });
 
   var BRIDGE_FIG = fig(3, 4, [Vs([2, 0], [0, 0], "Vs", "15 V"), Wr([0, 0], [0, 1]), Wr([0, 1], [0, 3]), E([0, 1], [1, 1], "R", "R1", 470), E([0, 3], [1, 3], "R", "R2", 220), E([1, 1], [1, 2], "R", "R5", 1000), Wr([1, 2], [1, 3]),
     E([1, 1], [2, 1], "R", "R3", 1000), E([1, 3], [2, 3], "R", "R4", 220), Wr([2, 0], [2, 1]), Wr([2, 1], [2, 3])], { nodeLabels: [{ at: [0, 1], text: "a" }, { at: [1, 1], text: "b" }, { at: [1, 3], text: "c" }], showGround: true, ground: [2, 1] });
@@ -165,6 +165,8 @@
           { label: "I من المصدر", q: ["Ips", "m"], unit: "mA" }, { label: "I1 في R1 = 100 Ω", q: ["I", "R1"], unit: "mA" }, { label: "I2 في R2 = 220 Ω", q: ["I", "R2"], unit: "mA" }] }] },
       { id: "p3", title: "الإجراء 3: دائرة Δ",
         steps: ["ركّب الدائرة: Rab = 470 Ω، Rac = 220 Ω، Rbc = 10 kΩ، Rbd = 1 kΩ، Rcd = 220 Ω، والمصدر 15 V بين a و d.", "قِس التيار I من المصدر، وقارنه بالمحسوب من تحويل Δ-Y في التحضير."],
+        fig: fig(3, 4, [Vs([2, 0], [0, 0], "Vs", "15 V"), Am([0, 0], [0, 1], "I"), Wr([0, 1], [0, 3]), E([0, 1], [1, 1], "R", "Rab", 470), E([0, 3], [1, 3], "R", "Rac", 220), E([1, 1], [1, 3], "R", "Rbc", 10000),
+          E([1, 1], [2, 1], "R", "Rbd", 1000), E([1, 3], [2, 3], "R", "Rcd", 220), Wr([2, 0], [2, 1]), Wr([2, 1], [2, 3])], { nodeLabels: [{ at: [0, 1], text: "a" }, { at: [1, 1], text: "b" }, { at: [1, 3], text: "c" }, { at: [2, 1], text: "d" }] }),
         layouts: [{ id: "L1", name: "دائرة Δ", parts: bridgeParts(P("R470a", "Rab"), P("R220a", "Rac"), P("R10k", "Rbc"), P("R1ka", "Rbd"), P("R220b", "Rcd")),
           leads: [["ps.m+", "d1.A"], ["d1.COM", "t:1:3:1"], ["ps.m-", "t:3:3:7"]], set: mix(psOn(15), { d1: { mode: "adc" } }), nodes: { a: "t:1:3", b: "t:2:2", c: "t:2:4", d: "t:3:3" } }],
         tables: [{ title: "التيار", kind: "mc", meas: "المقاس (mA)", calc: "المحسوب (mA)", rows: [{ label: "I من المصدر", q: ["Ips", "m"], unit: "mA" }] }] }
@@ -206,6 +208,7 @@
     procs: [
       { id: "p1", title: "الإجراء 1: الدائرة 1",
         steps: ["نفس الدائرة 1 في التجربة 4. ركّبها.", "قِس تيار كل مقاومة وتيار المصدر: افتح الفرع وضع الأميتر.", "قارن بالمحسوب من تحليل الحلقات."],
+        fig: BRIDGE_FIG,
         layouts: [{ id: "L1", name: "الدائرة 1", parts: bridgeParts(P("R470a", "R1"), P("R220a", "R2"), P("R1ka", "R5"), P("R1kb", "R3"), P("R220b", "R4")),
           leads: [["ps.m+", "d1.A"], ["d1.COM", "t:1:3:1"], ["ps.m-", "t:3:3:7"]], set: mix(psOn(15), { d1: { mode: "adc" } }), nodes: { a: "t:1:3", b: "t:2:2", c: "t:2:4", gnd: "t:3:3" } }],
         tables: [{ title: "تيارات الفروع", kind: "mc", meas: "المقاس (mA)", calc: "المحسوب (mA)", rows: [
@@ -245,6 +248,7 @@
           { label: "I4 في الدائرة الأصلية", L: "L1", q: ["I", "R4"], unit: "mA" }, { label: "I4 في مكافئ ثيفنن", L: "L4", q: ["I", "R4"], unit: "mA" }] }] },
       { id: "p2", title: "الإجراء 2: أقصى نقل للقدرة",
         steps: ["اجعل الحمل R4 صندوق المقاومات بين a و b، مع أميتر على التوالي وفولتميتر عليه.", "غيّر R4 حسب الجدول، وفي كل قيمة قِس I4 و V4، واحسب P4 = V4 · I4.", "ارسم P4 مقابل R4: عند أي قيمة أقصى قدرة؟ وقارنها بـ RTh."],
+        fig: fig(2, 4, [Vs([1, 0], [0, 0], "Vs", "15 V"), E([0, 0], [0, 1], "R", "R1", 470), E([0, 1], [1, 1], "R", "R2", 1000), E([0, 1], [0, 2], "R", "R3", 2200), Am([0, 2], [0, 3], "I4"), E([0, 3], [1, 3], "R", "R4", 0, { vtext: "متغيّر", variable: true }), Wr([1, 3], [1, 0])]),
         layouts: [{ id: "L1", name: "R4 متغيرة", parts: { "h:1:1": P("R470a", "R1"), "v:1:2": P("R1ka", "R2"), "v:2:2": W, "h:1:2": P("R2k2", "R3"), "h:3:2": W }, lbl: { rb: "R4" },
           leads: [["ps.m+", "t:1:1:3"], ["ps.m-", "t:3:2:6"], ["t:1:3:5", "d1.A"], ["d1.COM", "rb.a"], ["rb.b", "t:3:3:5"], ["d2.V", "rb.a"], ["d2.COM", "rb.b"]], set: mix(psOn(15), { rb: { d: [0, 4, 0, 0] }, d1: { mode: "adc" }, d2: { mode: "vdc" } }) }],
         tables: [{ title: "الجدول 6.2", kind: "pair", a: "I4 (mA)", b: "V4 (V)", power: true, plot: { x: "r", y: "p", xl: "R4 (kΩ)", yl: "P4 (mW)" },
@@ -274,6 +278,7 @@
           { label: "V3 (المصدران)", L: "L1", q: ["V", "R3"], unit: "V" }, { label: "I3 (المصدران)", L: "L1", q: ["I", "R3"], unit: "mA" }] }] },
       { id: "p2", title: "الإجراء 2: الدائرة 2 (قطبية Vs2 معكوسة)",
         steps: ["نفس الدائرة، لكن اعكس Vs2: + SLAVE إلى الأرضي و − SLAVE إلى R2.", "كرر نفس القياسات الثلاثة، ولاحظ إشارة V32."],
+        fig: fig(2, 3, [Vs([1, 0], [0, 0], "Vs1", "15 V"), E([0, 0], [0, 1], "R", "R1", 470), E([0, 1], [1, 1], "R", "R3", 100), E([0, 1], [0, 2], "R", "R2", 220), mix(Vs([1, 2], [0, 2], "Vs2", "10 V"), { plus: "b" }), Wr([1, 0], [1, 2])]),
         layouts: [
           { id: "L1", name: "المصدران", parts: { "h:1:1": P("R470a", "R1"), "v:1:2": P("R100", "R3"), "v:2:2": W, "h:1:2": P("R220a", "R2") }, leads: [["ps.m+", "t:1:1:3"], ["ps.m-", "t:3:2:6"], ["ps.s-", "t:1:3:5"], ["ps.s+", "t:3:2:8"], ["d2.V", "t:1:2:1"], ["d2.COM", "t:3:2:7"]], set: mix(psOn(15, 10), { d2: { mode: "vdc" } }) },
           { id: "L2", name: "Vs1 فقط", parts: { "h:1:1": P("R470a", "R1"), "v:1:2": P("R100", "R3"), "v:2:2": W, "h:1:2": P("R220a", "R2") }, leads: [["ps.m+", "t:1:1:3"], ["ps.m-", "t:3:2:6"], ["t:1:3:5", "t:3:2:8"], ["d2.V", "t:1:2:1"], ["d2.COM", "t:3:2:7"]], set: mix(psOn(15, 10), { d2: { mode: "vdc" } }) },
