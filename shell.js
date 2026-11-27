@@ -19,7 +19,7 @@
     portfolio: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
     notebook: '<path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18M10 8h5M10 12h5"/>',
     logic: '<rect x="7" y="5" width="10" height="14" rx="1.5"/><path d="M4 8h3M4 12h3M4 16h3M17 8h3M17 12h3M17 16h3"/>',
-    whatsapp: '<path d="M20 11.5a8 8 0 0 1-11.8 7l-4.2 1.2 1.2-4A8 8 0 1 1 20 11.5z"/><path d="M9 8.5c0 3.5 2.5 6.5 6.5 6.5l.8-1.6-1.9-.9-.8.9c-1.3-.5-2.4-1.6-2.9-2.9l.9-.8-.9-1.9z"/>',
+    whatsapp: '<rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="4" cy="12" r="1.6"/><circle cx="20" cy="12" r="1.6"/><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',
     pay: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/>',
     admin: '<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
     logout: '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/>',
@@ -36,7 +36,7 @@
     var html = "";
     order.forEach(function (id) {
       var m = byId[id], label = id === "club" ? "Beyond Theory" : m.ar;
-      if (m.href) html += '<a class="nv' + (id === opts.active ? ' active" aria-current="page' : '') + (m.external ? ' nv-wa' : '') + '" href="' + m.href + '"' + (m.external ? ' target="_blank" rel="noopener"' : '') + '>' + svg(id) + '<span class="lbl">' + label + '</span></a>';
+      if (m.href) html += '<a class="nv' + (id === opts.active ? ' active" aria-current="page' : '') + '" href="' + m.href + '"' + (m.external ? ' target="_blank" rel="noopener"' : '') + '>' + svg(id) + '<span class="lbl">' + label + '</span></a>';
       else html += '<span class="nv off" aria-disabled="true" title="يُفتح في الخطوة ' + m.step + '">' + svg(id) + '<span class="lbl">' + label + '</span><span class="soon">الخطوة ' + m.step + '</span></span>';
     });
     if (opts.onSettings) html += '<button class="nv" type="button" id="open-settings">' + svg("settings") + '<span class="lbl">الإعدادات</span></button>';
