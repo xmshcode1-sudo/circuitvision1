@@ -9,7 +9,9 @@
   function en(s) { s = String(s || ""); AR.forEach(function (p) { s = s.split(p[0]).join(p[1]); }); return s.replace(/\s+/g, " ").trim(); }
   var JACK = { "ps.m+": "MASTER +", "ps.m-": "MASTER −", "ps.s+": "SLAVE +", "ps.s-": "SLAVE −", "fg.out": "generator output", "fg.com": "generator ground", "sc.1": "CH1 probe", "sc.1g": "CH1 clip", "sc.2": "CH2 probe", "sc.2g": "CH2 clip",
     "d1.V": "Fluke VΩ", "d1.COM": "Fluke COM", "d1.A": "Fluke A", "d2.V": "PeakTech VΩ", "d2.COM": "PeakTech COM", "d2.mA": "PeakTech mA", "d2.10A": "PeakTech 10A", "rb.a": "decade box red", "rb.b": "decade box blue",
-    "lb.a": "inductor box red", "lb.b": "inductor box blue", "cb.a": "capacitor box red", "cb.b": "capacitor box blue", "mn.L": "power meter L", "mn.N": "power meter N", "lamp.a": "lamp L", "lamp.b": "lamp N" };
+    "lb.a": "inductor box red", "lb.b": "inductor box blue", "cb.a": "capacitor box red", "cb.b": "capacitor box blue", "mn.L": "power meter L", "mn.N": "power meter N", "lamp.a": "lamp L", "lamp.b": "lamp N", "va.L": "variac L", "va.N": "variac N", "cc.1": "coil 1 terminal 1 (dot)", "cc.1'": "coil 1 terminal 1'", "cc.A": "coil 2 terminal A", "cc.B": "coil 2 terminal B",
+    "tp.A": "transformer L1", "tp.B": "transformer L2", "tp.C": "transformer L3", "tp.N": "transformer N", "pm.1": "panel L1 in", "pm.2": "panel L2 in", "pm.3": "panel L3 in", "pm.N": "panel N in", "pm.1'": "panel L1 out", "pm.2'": "panel L2 out", "pm.3'": "panel L3 out", "pm.N'": "panel N out",
+    "r1.a": "rheostat 1 a", "r1.w": "rheostat 1 w", "r2.a": "rheostat 2 a", "r2.w": "rheostat 2 w", "r3.a": "rheostat 3 a", "r3.w": "rheostat 3 w" };
   function jack(p) { if (JACK[p]) return JACK[p]; var m = /^t:(\d+):(\d+):(\d+)/.exec(p); if (m) return "board " + String.fromCharCode(64 + +m[2]) + m[1] + "·" + m[3]; return p; }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   function lbl(pc) { return pc.lb || pc.name || (pc.t === "R" ? pc.v + " Ω" : pc.t); }
@@ -32,8 +34,8 @@
   function sentence(s) { return s.charAt(0).toUpperCase() + s.slice(1) + "."; }
   function build(P) {
     var acts = [], prev = { parts: {}, leads: [], inst: null }, i = 1, n = P.length - 1;
-    acts.push({ type: "title", chip: "Circuits 1 · Lab " + P.__n, h1: P.__en.replace(/(,| and | — )/, "<br>$1"), go: "In this lab you will", goals: [["Build the circuit part by part on the bench"], ["Take every reading with the instruments, wired the right way"], ["Compare what you measure with the theory"]],
-      beats: [["Welcome to this Circuits 1 lab. We work on the real bench, one wire at a time.", (P[0].lines || []).join(" ")], ["By the end you will have taken all the readings and checked them against theory.", ""]] });
+    acts.push({ type: "title", chip: (P.__chip || "Circuits 1 · Lab ") + P.__n, h1: P.__en.replace(/(,| and | — )/, "<br>$1"), go: "In this lab you will", goals: P.__goals || [["Build the circuit part by part on the bench"], ["Take every reading with the instruments, wired the right way"], ["Compare what you measure with the theory"]],
+      beats: [["Welcome to this " + (P.__course || "Circuits 1") + " lab. We work on the real bench, one wire at a time.", (P[0].lines || []).join(" ")], ["By the end you will have taken all the readings and checked them against theory.", ""]] });
     while (i < n) {
       var s = P[i], st = s.state, run = [i];
       while (i + run.length < n) { var q = P[i + run.length]; if (q.panel.table && s.panel.table && q.panel.table.title === s.panel.table.title && same(q.state.parts, st.parts) && same(q.state.leads, st.leads) && !same(q.state.inst, P[run[run.length - 1]].state.inst)) run.push(i + run.length); else break; }
@@ -51,9 +53,11 @@
       acts.push(a);
       var lastS = P[run[run.length - 1]].state; prev = { parts: lastS.parts, leads: lastS.leads, inst: lastS.inst }; i += run.length;
     }
-    acts.push({ type: "end", rows: [["Build the circuit part by part, wire by wire."], ["Wire each meter where it must go: voltmeter across, ammeter in series."], ["Compare every reading with theory and explain any difference."]], beats: [["That is the whole lab, from the bench.", (P[n].lines || []).join(" ")]] });
+    acts.push({ type: "end", rows: P.__end || [["Build the circuit part by part, wire by wire."], ["Wire each meter where it must go: voltmeter across, ammeter in series."], ["Compare every reading with theory and explain any difference."]], beats: [["That is the whole lab, from the bench.", (P[n].lines || []).join(" ")]] });
     return acts;
   }
+  window.CLX_AUTO = { build: build };
+  if (window.CLX_SKIP_C1) return;
   for (var k = 2; k <= 10; k++) (function (k) {
     LX.add("clab-lab" + k, { exp: "exp" + k, hdr: "Circuits 1 · Lab", title: "Experiment " + k, acts: function (P) { var e = LX.PLAN["exp" + k]; var arr = P.slice(); arr.__n = k; arr.__en = e.en; return build(arr); } });
   })(k);

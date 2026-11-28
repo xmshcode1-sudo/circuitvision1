@@ -407,4 +407,4 @@ if (require.main === module) {
   process.stdout.write(JSON.stringify(out));
   process.exit(PROBLEMS.length ? 1 : 0);
 }
-module.exports = { plan, PROBLEMS };
+module.exports = { plan, PROBLEMS, lib: { buildScenes, stateOf, instMarks, tableModel, partLabel, placeName } };

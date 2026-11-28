@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>CircuitVision · explainer studio (Circuits 2 lab)</title>
+<!-- One 1920×1080 frame of a Circuits 2 lab video in the design of the theory videos (explain-studio.html), drawn by clab-explain.js:
+     the lab's own bench (clab-bench.js) with the parts, leads and instrument settings of the lab simulator, animated step by step.
+     Driven by tools/videos/clab-explain-render.py: EX.frame(id, t). Not part of the site. -->
+<script>try { localStorage.clear(); localStorage.setItem("cv.lang", "en"); localStorage.setItem("cv.lang2", "solo"); } catch (e) {}</script>
+<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../clab-bench.css">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #060b1a; }
+  #frame { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #eaf0ff; direction: ltr; text-align: left;
+    font-family: "Inter", "DejaVu Sans", sans-serif; --c1: #7fa8ff; --c2: #3fb6ff; --c3: #ffb547; --acc: #3fb6ff; --dim: #8e9cc0; --edge: rgba(63,182,255,.32); }
+  #frame * { box-sizing: border-box; }
+  .bg { position: absolute; inset: 0; background: radial-gradient(110% 95% at 38% 34%, #0d1a3d, #060b1a 72%); }
+  .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(47,123,255,.065) 1px, transparent 1px), linear-gradient(90deg, rgba(47,123,255,.065) 1px, transparent 1px); background-size: 60px 60px; }
+  .hdr { position: absolute; left: 64px; right: 64px; top: 30px; display: flex; align-items: center; gap: 26px; font-size: 24px; color: #8e9cc0; }
+  .hdr .brand { display: flex; align-items: center; gap: 12px; color: #eaf0ff; font-weight: 600; font-size: 26px; }
+  .hdr .brand svg { width: 40px; height: 28px; }
+  .hdr .ttl { margin-left: auto; color: #c5d0ea; font-weight: 500; }
+  .lab { position: absolute; left: 64px; top: 92px; display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: 600; color: #3fb6ff; letter-spacing: .01em; }
+  .lab .dot { width: 14px; height: 14px; border-radius: 50%; background: #3fb6ff; box-shadow: 0 0 14px #3fb6ff; }
+  .pbar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(255,255,255,.06); } .pbar i { display: block; height: 100%; background: linear-gradient(90deg, #2f7bff, #3fb6ff); }
+  /* regions: bench 64–1194 × 150–880, text column 1236–1856 × 150–880; the bottom 180 px stay clear for the subtitles */
+  #dev { position: absolute; left: 64px; top: 150px; width: 1130px; height: 730px; border-radius: 26px; overflow: hidden; background: #0b1226; border: 1.5px solid var(--edge); box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+  #bench { position: absolute; inset: 0; }
+  #bench .wb { border: 0; border-radius: 0; background: transparent; height: 100%; }
+  #bench .wb-bar, #bench .wb-warn, #bench .wb-pop, #bench .wb-tool, #bench .wb-toast { display: none !important; }
+  #bench .wb-stage { background: transparent; height: 100%; }
+  #bench .wb-svg { width: 1130px; height: 730px; }
+  #bench .wb-svg text { font-family: "Inter", "DejaVu Sans", sans-serif !important; }
+  .col { position: absolute; left: 1236px; top: 150px; width: 620px; height: 730px; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 30px); mask-image: linear-gradient(transparent, #000 30px); }
+  .col.short { height: 250px; } .col.short .bt.old { display: none; } .col.short .bt { font-size: 30px; }
+  .tb td:first-child { white-space: nowrap; } .tb.xs { font-size: 18px; } .tb.xs td { padding: 1px 8px; } .tb.sm { font-size: 21px; } .tb.sm td { padding: 2px 10px; } .tb.sm th { padding: 6px 10px; font-size: 20px; }
+  .col-in { display: flex; flex-direction: column; gap: 22px; padding-top: 24px; }
+  .bt { font-size: 33px; line-height: 1.4; color: #eaf0ff; padding-left: 24px; border-left: 4px solid transparent; opacity: 0; }
+  .bt.now { border-left-color: #3fb6ff; } .bt.old { color: #9aa8c8; }
+  .tabbox { position: absolute; left: 1236px; top: 500px; width: 620px; opacity: 0; }
+  .tabbox .tt { font-size: 24px; letter-spacing: .08em; text-transform: uppercase; color: #ffb547; margin-bottom: 8px; }
+  .tb { border-collapse: separate; border-spacing: 0; font-size: 27px; width: 100%; }
+  .tb th { background: rgba(47,123,255,.3); color: #dbe6ff; padding: 10px 12px; text-align: center; font-weight: 600; font-size: 23px; } .tb th:first-child { border-top-left-radius: 14px; text-align: left; } .tb th:last-child { border-top-right-radius: 14px; }
+  .tb td { padding: 8px 12px; border-bottom: 1px solid rgba(63,182,255,.18); text-align: center; font-family: "DejaVu Sans Mono", monospace; } .tb td:first-child { text-align: left; font-family: "Inter", "DejaVu Sans", sans-serif; color: #c5d0ea; }
+  .tb tr.cur td { background: rgba(63,182,255,.12); } .tb td.v { color: #eaf0ff; } .tb td.e { color: #5f6e92; }
+  .tb td.pc { color: #ffb547; }
+  .tcard { position: absolute; left: 160px; right: 160px; top: 190px; display: none; flex-direction: column; gap: 26px; }
+  .tchip { align-self: flex-start; padding: 8px 24px; border-radius: 99px; background: rgba(47,123,255,.22); border: 1.5px solid var(--edge); color: #3fb6ff; font-size: 30px; font-weight: 600; opacity: 0; }
+  .tcard h1 { margin: 0; font-size: 100px; line-height: 1.08; font-weight: 700; letter-spacing: -.01em; opacity: 0; }
+  .trule { height: 4px; width: 900px; background: linear-gradient(90deg, #3fb6ff, transparent); transform-origin: 0 50%; transform: scaleX(0); }
+  .tgo { font-size: 32px; color: #3fb6ff; font-weight: 600; opacity: 0; }
+  .tcard ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 18px; }
+  .tcard li { font-size: 40px; line-height: 1.35; padding-left: 40px; position: relative; opacity: 0; } .tcard li::before { content: ""; position: absolute; left: 4px; top: 20px; width: 14px; height: 14px; border-radius: 50%; background: #3fb6ff; }
+  .rows { position: absolute; left: 160px; right: 160px; top: 190px; display: none; flex-direction: column; gap: 30px; }
+  .row { display: flex; gap: 30px; align-items: flex-start; font-size: 40px; line-height: 1.42; opacity: 0; }
+  .row .ic { flex: none; width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; font-size: 36px; font-weight: 700; background: rgba(63,182,255,.18); color: #3fb6ff; margin-top: -6px; }
+  .eqbox { position: absolute; left: 0; right: 0; bottom: 210px; display: none; justify-content: center; opacity: 0; }
+  .eqbox div { padding: 18px 54px; border-radius: 26px; border: 3px solid #3fb6ff; background: rgba(63,182,255,.06); box-shadow: 0 0 50px rgba(63,182,255,.25); font-size: 76px; }
+  .eqbox i { font-family: "DejaVu Serif", serif; font-style: italic; } .eqbox sub { font-size: .6em; }
+  .plot { position: absolute; left: 64px; top: 150px; width: 1130px; height: 730px; display: none; border-radius: 26px; background: rgba(255,255,255,.02); border: 1.5px solid var(--edge); }
+  .plot svg { width: 100%; height: 100%; } .plot text { font-family: "Inter", "DejaVu Sans", sans-serif; fill: #c5d0ea; }
+</style>
+</head>
+<body>
+<div id="frame"></div>
+<script>window.CV_CONFIG = {}; window.CLX_SKIP_C1 = true; window.CLX_PLANFILE = "_plan-c2.json";</script>
+<script src="../../bi.js"></script><script src="../../ui.en.js"></script><script src="../../labs.en.js"></script>
+<script src="../../draw.js"></script><script src="../../ac.js"></script><script src="../../sig-plot.js"></script>
+<script src="../../clab-sim.js"></script><script src="../../clab-bench.js"></script><script src="../../clab-exps.js"></script><script src="../../c2lab.js"></script>
+<script src="clab-explain.js"></script>
+<script src="clab-explain-auto.js"></script>
+<script src="c2lab-explain-auto.js"></script>
+</body>
+</html>

@@ -21,7 +21,7 @@
   function sameLead(a, b) { return (a[0] === b[0] && a[1] === b[1]) || (a[0] === b[1] && a[1] === b[0]); }
   function sub(s) { return String(s).replace(/_\{([^}]*)\}/g, "<sub>$1</sub>").replace(/\^\{([^}]*)\}/g, "<sup>$1</sup>"); }
 
-  LX.loadPlan = function () { var x = new XMLHttpRequest(); x.open("GET", "_plan.json?" + Date.now(), false); x.send(); LX.PLAN = JSON.parse(x.responseText); };
+  LX.loadPlan = function () { var x = new XMLHttpRequest(); x.open("GET", (window.CLX_PLANFILE || "_plan.json") + "?" + Date.now(), false); x.send(); LX.PLAN = JSON.parse(x.responseText); };
   LX.list = function () { return Object.keys(LX.S); };
 
   /* ---------- the plan of one video: where every act starts, what moves in it, which sounds fall where ---------- */
@@ -164,7 +164,7 @@
     if (bench && key === benchKey) return;
     if (bench) bench.destroy();
     try { localStorage.clear(); } catch (e) {}
-    var e = CV.clabExps.list.filter(function (x) { return x.id === LX.S[id].exp; })[0];
+    var e = CV.clabExps.list.filter(function (x) { return x.id === LX.S[id].exp; })[0] || (CV.c2lab && CV.c2lab.list.filter(function (x) { return x.id === LX.S[id].exp; })[0]);
     bench = CV.clabBench.mount(document.getElementById("bench"), { key: "video-" + LX.S[id].exp, inst: inst, kit: e ? e.kit : [] });
     benchKey = key; curKey = ""; curMarks = "";
   }
